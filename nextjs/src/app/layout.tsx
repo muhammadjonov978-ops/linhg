@@ -6,6 +6,9 @@ import AppLayout from "./app-layout";
 export const metadata: Metadata = {
   title: "PolyglotPro - 7 Tilda Til O'rganing",
   description: "PolyglotPro - Interaktiv 7 tilda til o'rganish platformasi. Reading, Listening, Writing, Speaking.",
+  other: {
+    "google-site-verification": "8tnaQE7U2UkHBXlq3-w4tutQwqYqQIykdlypLjokgJ8",
+  },
 };
 
 export default function RootLayout({
