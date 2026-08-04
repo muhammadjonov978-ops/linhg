@@ -1,5 +1,5 @@
 import { useApp } from '../context/AppContext';
-import { Flame, CalendarDays, Clock, Zap } from 'lucide-react';
+import { Flame, CalendarDays, Clock, Coins } from 'lucide-react';
 
 export default function StreakCalendar() {
   const { state } = useApp();
@@ -121,10 +121,10 @@ export default function StreakCalendar() {
           </div>
           <div className="bg-base-200 rounded-xl p-2 text-center">
             <div className="flex items-center justify-center gap-1 text-success">
-              <Zap className="w-3 h-3" />
-              <span className="font-bold text-sm">{state.xp}</span>
+              <Coins className="w-3 h-3" />
+              <span className="font-bold text-sm">{state.coins}</span>
             </div>
-            <p className="text-[10px] opacity-50">XP</p>
+            <p className="text-[10px] opacity-50">🪙</p>
           </div>
         </div>
 

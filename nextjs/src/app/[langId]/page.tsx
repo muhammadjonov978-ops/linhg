@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Lock, ChevronRight, Trophy, CheckCircle,
-  Crown, ArrowLeft, TrendingUp
+  Crown, ArrowLeft, TrendingUp, CreditCard
 } from 'lucide-react';
 import PaywallModal from '../../components/PaywallModal';
 import DailyChallenge from '../../components/DailyChallenge';
@@ -40,6 +40,10 @@ export default function LanguageDashboardPage({ params }: { params: Promise<{ la
       </div>
     );
   }
+
+  // Paid language gate
+  const isLangPaid = !!currentLang.price;
+  const isLangUnlocked = !isLangPaid || (state.unlockedLanguages || {})[currentLang.id];
 
   const handleLevelClick = (levelId: string) => {
     if (levelId === 'advanced' && !state.isPremium) {
@@ -91,7 +95,7 @@ export default function LanguageDashboardPage({ params }: { params: Promise<{ la
             <div className="flex flex-wrap gap-2 md:ml-auto">
               <div className="flex items-center gap-1 badge badge-primary badge-lg p-3">
                 <Trophy className="w-4 h-4 text-warning" />
-                <span className="font-bold">{state.xp} XP</span>
+                <span className="font-bold">{state.coins} 🪙</span>
               </div>
               <div className="badge badge-secondary badge-lg p-3">
                 <TrendingUp className="w-4 h-4" />
@@ -122,6 +126,31 @@ export default function LanguageDashboardPage({ params }: { params: Promise<{ la
         </div>
       </div>
 
+      {isLangPaid && !isLangUnlocked ? (
+        <div className="max-w-6xl mx-auto px-4 py-10">
+          <div className="card bg-base-100 border-2 border-warning/40 max-w-lg mx-auto text-center">
+            <div className="card-body items-center py-10">
+              <div className="w-20 h-20 rounded-full bg-warning/10 flex items-center justify-center mb-4">
+                <Lock className="w-10 h-10 text-warning" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">{currentLang.flag} {currentLang.name} qulflangan</h2>
+              <p className="text-sm opacity-60 mb-6 max-w-xs">
+                Bu til pullik kurs. Karta bilan to'lab, barcha darajalarga cheksiz kirishni oching.
+              </p>
+              <div className="text-3xl font-extrabold text-warning mb-6">
+                {(currentLang.price || 20000).toLocaleString('uz-UZ')} so'm
+              </div>
+              <button
+                onClick={() => setShowPaywall(true)}
+                className="btn btn-primary btn-lg gap-2"
+              >
+                <CreditCard className="w-5 h-5" />
+                Karta bilan ochish
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Levels */}
@@ -239,11 +268,20 @@ export default function LanguageDashboardPage({ params }: { params: Promise<{ la
           </div>
         </div>
       </div>
+      )}
 
       <PaywallModal
         isOpen={showPaywall}
+        lang={isLangPaid ? currentLang : null}
         onClose={() => setShowPaywall(false)}
-        onUnlock={handleUnlockPremium}
+        onUnlock={() => {
+          if (isLangPaid) {
+            dispatch({ type: 'UNLOCK_LANGUAGE', payload: currentLang.id });
+          } else {
+            handleUnlockPremium();
+          }
+          setShowPaywall(false);
+        }}
       />
     </div>
   );

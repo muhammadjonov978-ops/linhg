@@ -3,7 +3,8 @@
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
 import { useRouter } from 'next/navigation';
-import { Home, MessageCircle, Trophy, Zap, Brain, Sun, Moon, Award } from 'lucide-react';
+import { Home, MessageCircle, Trophy, Coins, Award } from 'lucide-react';
+import ThemePicker from './ThemePicker';
 
 export default function Navbar({ onToggleTutor }: { onToggleTutor?: () => void }) {
   const { state, dispatch } = useApp();
@@ -20,10 +21,14 @@ export default function Navbar({ onToggleTutor }: { onToggleTutor?: () => void }
   return (
     <nav className="navbar bg-base-100/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-base-200">
       <div className="navbar-start">
-        <a href="/" onClick={handleHomeClick} className="btn btn-ghost text-xl gap-2">
-          <Brain className="w-6 h-6 text-primary" />
+        <a href="/" onClick={handleHomeClick} className="btn btn-ghost text-xl gap-2 px-2">
+          <img
+            src="/logo.png"
+            alt="Lingohub"
+            className="w-9 h-9 rounded-lg object-cover shadow-sm ring-1 ring-base-300"
+          />
           <span className="font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hidden sm:inline">
-            PolyglotPro
+            Lingohub
           </span>
         </a>
       </div>
@@ -37,10 +42,10 @@ export default function Navbar({ onToggleTutor }: { onToggleTutor?: () => void }
         )}
 
         <div className="flex items-center gap-3 ml-4">
-          <div className="badge badge-primary gap-1 p-3 tooltip" data-tip="XP ball">
-            <Zap className="w-4 h-4" />
-            <span className="font-bold">{state.xp}</span>
-            <span className="text-xs opacity-70 hidden sm:inline">XP</span>
+          <div className="badge badge-primary gap-1 p-3 tooltip" data-tip="Tanga ball">
+            <Coins className="w-4 h-4" />
+            <span className="font-bold">{state.coins}</span>
+            <span className="text-xs opacity-70 hidden sm:inline">🪙</span>
           </div>
 
           {state.streak > 0 && (
@@ -61,17 +66,8 @@ export default function Navbar({ onToggleTutor }: { onToggleTutor?: () => void }
       </div>
 
       <div className="navbar-end gap-1">
-        <button
-          onClick={() => dispatch({ type: 'TOGGLE_THEME' })}
-          className="btn btn-ghost btn-sm btn-circle tooltip"
-          data-tip={state.theme === 'dark' ? "Yorug' rejim" : "Qorong'i rejim"}
-        >
-          {state.theme === 'dark' ? (
-            <Sun className="w-4 h-4 text-warning" />
-          ) : (
-            <Moon className="w-4 h-4 text-base-content" />
-          )}
-        </button>
+        {/* Theme Picker (35 themes) */}
+        <ThemePicker />
 
         {currentLang && (
           <button

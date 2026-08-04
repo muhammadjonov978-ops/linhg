@@ -5,7 +5,7 @@ import { languages } from '../data/languages';
 import { useRouter } from 'next/navigation';
 import {
   BookOpen, Headphones, Pencil, Mic, ArrowRight, TrendingUp,
-  Award, Star, Users, Sparkles, Zap, Shield, Trophy, Flame
+  Award, Star, Users, Sparkles, Coins, Shield, Trophy, Flame
 } from 'lucide-react';
 
 const features = [
@@ -76,8 +76,8 @@ export default function HomePage() {
               <div className="flex flex-wrap justify-center gap-4 mb-4">
                 {totalExercises > 0 && (
                   <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-primary/10">
-                    <Zap className="w-4 h-4 text-primary" />
-                    <span className="text-sm">{state.xp} XP</span>
+                    <Coins className="w-4 h-4 text-primary" />
+                    <span className="text-sm">{state.coins} 🪙</span>
                   </div>
                 )}
                 {totalCompletedLevels > 0 && (

@@ -1,11 +1,22 @@
+import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
-import { Home, MessageCircle, Trophy, Zap, Brain, Sun, Moon, Award } from 'lucide-react';
+import { Home, MessageCircle, Trophy, Coins, Award, LogIn, User } from 'lucide-react';
+import ThemePicker from './ThemePicker';
+import GoogleAuthModal from './GoogleAuthModal';
 
 export default function Navbar({ onToggleTutor }) {
   const { state, dispatch } = useApp();
+  const [showAuth, setShowAuth] = useState(false);
 
   const currentLang = languages.find(l => l.id === state.selectedLanguage);
+
+  // Load signed-in user (if any)
+  let savedUser = null;
+  try {
+    const raw = localStorage.getItem('lingohub_user');
+    if (raw) savedUser = JSON.parse(raw);
+  } catch { /* noop */ }
 
   return (
     <nav className="navbar bg-base-100/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-base-200">
@@ -13,10 +24,14 @@ export default function Navbar({ onToggleTutor }) {
         <a href="/" onClick={(e) => {
           e.preventDefault();
           dispatch({ type: 'SELECT_LANGUAGE', payload: null });
-        }} className="btn btn-ghost text-xl gap-2">
-          <Brain className="w-6 h-6 text-primary" />
+        }} className="btn btn-ghost text-xl gap-2 px-2">
+          <img
+            src="/logo.png"
+            alt="Lingohub"
+            className="w-9 h-9 rounded-lg object-cover shadow-sm ring-1 ring-base-300"
+          />
           <span className="font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hidden sm:inline">
-            Alpomish
+            Lingohub
           </span>
         </a>
       </div>
@@ -30,11 +45,11 @@ export default function Navbar({ onToggleTutor }) {
         )}
 
         <div className="flex items-center gap-3 ml-4">
-          {/* XP Display */}
-          <div className="badge badge-primary gap-1 p-3 tooltip" data-tip="XP ball">
-            <Zap className="w-4 h-4" />
-            <span className="font-bold">{state.xp}</span>
-            <span className="text-xs opacity-70 hidden sm:inline">XP</span>
+          {/* Coins Display */}
+          <div className="badge badge-primary gap-1 p-3 tooltip" data-tip="Tanga ball">
+            <Coins className="w-4 h-4" />
+            <span className="font-bold">{state.coins}</span>
+            <span className="text-xs opacity-70 hidden sm:inline">🪙</span>
           </div>
           
           {/* Streak Display */}
@@ -57,18 +72,35 @@ export default function Navbar({ onToggleTutor }) {
       </div>
 
       <div className="navbar-end gap-1">
-        {/* Theme Toggle */}
-        <button
-          onClick={() => dispatch({ type: 'TOGGLE_THEME' })}
-          className="btn btn-ghost btn-sm btn-circle tooltip"
-          data-tip={state.theme === 'dark' ? 'Yorug\' rejim' : 'Qorong\'i rejim'}
-        >
-          {state.theme === 'dark' ? (
-            <Sun className="w-4 h-4 text-warning" />
-          ) : (
-            <Moon className="w-4 h-4 text-base-content" />
-          )}
-        </button>
+        {/* Google sign-in / profile */}
+        {savedUser ? (
+          <button
+            onClick={() => setShowAuth(true)}
+            className="btn btn-ghost btn-sm gap-2 tooltip"
+            data-tip={savedUser.name || 'Hisob'}
+          >
+            <span className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center bg-primary/20">
+              {savedUser.picture ? (
+                <img src={savedUser.picture} alt={savedUser.name} className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-4 h-4 text-primary" />
+              )}
+            </span>
+            <span className="hidden sm:inline text-xs font-medium">{savedUser.givenName || savedUser.name}</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => setShowAuth(true)}
+            className="btn btn-ghost btn-sm gap-1.5 tooltip"
+            data-tip="Google bilan kirish"
+          >
+            <LogIn className="w-4 h-4 text-primary" />
+            <span className="hidden sm:inline text-xs">Kirish</span>
+          </button>
+        )}
+
+        {/* Theme Picker (35 themes) */}
+        <ThemePicker />
 
         {currentLang && (
           <>
@@ -92,6 +124,9 @@ export default function Navbar({ onToggleTutor }) {
           <Home className="w-4 h-4" />
         </button>
       </div>
+
+      {/* Google auth modal */}
+      <GoogleAuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
     </nav>
   );
 }

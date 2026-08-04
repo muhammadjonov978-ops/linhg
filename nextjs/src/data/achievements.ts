@@ -5,7 +5,8 @@ export interface Achievement {
   name: string;
   description: string;
   icon: string;
-  xpReward: number;
+  coinReward: number;
+  xpReward?: number; // legacy field
   condition: (stats: Stats) => boolean;
   unlocked?: boolean;
   justUnlocked?: boolean;
@@ -16,7 +17,7 @@ export interface Stats {
   totalExercises: number;
   perfectScores: number;
   completedLevels: number;
-  totalXp: number;
+  totalCoins: number;
   streak: number;
   skillsMastered: number;
   readingCount: number;
@@ -35,7 +36,7 @@ export const achievements: Achievement[] = [
     name: 'Birinchi Qadam',
     description: 'Birinchi mashqni bajaring',
     icon: '🌱',
-    xpReward: 50,
+    coinReward: 50,
     condition: (stats) => stats.totalExercises >= 1,
   },
   {
@@ -43,7 +44,7 @@ export const achievements: Achievement[] = [
     name: 'Mukammal Natija',
     description: "Har qanday mashqdan 100% oling",
     icon: '💎',
-    xpReward: 100,
+    coinReward: 100,
     condition: (stats) => stats.perfectScores >= 1,
   },
   {
@@ -51,7 +52,7 @@ export const achievements: Achievement[] = [
     name: 'Izchillik',
     description: "3 kun ketma-ket o\'qing",
     icon: '🔥',
-    xpReward: 150,
+    coinReward: 150,
     condition: (stats) => stats.streak >= 3,
   },
   {
@@ -59,7 +60,7 @@ export const achievements: Achievement[] = [
     name: 'Hafta Qahramoni',
     description: "7 kun ketma-ket o\'qing",
     icon: '⭐',
-    xpReward: 300,
+    coinReward: 300,
     condition: (stats) => stats.streak >= 7,
   },
   {
@@ -67,7 +68,7 @@ export const achievements: Achievement[] = [
     name: 'Boshlovchi',
     description: 'Beginner darajasini tugating',
     icon: '🎯',
-    xpReward: 100,
+    coinReward: 100,
     condition: (stats) => stats.completedLevels >= 1,
   },
   {
@@ -75,7 +76,7 @@ export const achievements: Achievement[] = [
     name: "O\'rganuvchi",
     description: 'Elementary darajasini tugating',
     icon: '📚',
-    xpReward: 200,
+    coinReward: 200,
     condition: (stats) => stats.completedLevels >= 2,
   },
   {
@@ -83,7 +84,7 @@ export const achievements: Achievement[] = [
     name: 'Bilimdon',
     description: 'Pre-Intermediate darajasini tugating',
     icon: '🧠',
-    xpReward: 300,
+    coinReward: 300,
     condition: (stats) => stats.completedLevels >= 3,
   },
   {
@@ -91,7 +92,7 @@ export const achievements: Achievement[] = [
     name: 'Poliglot',
     description: 'Advanced darajasini tugating',
     icon: '👑',
-    xpReward: 500,
+    coinReward: 500,
     condition: (stats) => stats.completedLevels >= 4,
   },
   {
@@ -99,7 +100,7 @@ export const achievements: Achievement[] = [
     name: "Ko\'nikma Ustasi",
     description: 'Barcha 4 ko\'nikmadan 80%+ oling',
     icon: '🎭',
-    xpReward: 250,
+    coinReward: 250,
     condition: (stats) => stats.skillsMastered >= 4,
   },
   {
@@ -107,31 +108,31 @@ export const achievements: Achievement[] = [
     name: 'XP Yig\'uvchi',
     description: '500 XP to\'plang',
     icon: '💰',
-    xpReward: 200,
-    condition: (stats) => stats.totalXp >= 500,
+    coinReward: 200,
+    condition: (stats) => stats.totalCoins >= 500,
   },
   {
     id: 'xp_1000',
     name: 'XP Ustasi',
     description: '1000 XP to\'plang',
     icon: '💫',
-    xpReward: 400,
-    condition: (stats) => stats.totalXp >= 1000,
+    coinReward: 400,
+    condition: (stats) => stats.totalCoins >= 1000,
   },
   {
     id: 'xp_5000',
     name: 'XP Legendasi',
     description: '5000 XP to\'plang',
     icon: '🏆',
-    xpReward: 1000,
-    condition: (stats) => stats.totalXp >= 5000,
+    coinReward: 1000,
+    condition: (stats) => stats.totalCoins >= 5000,
   },
   {
     id: 'reading_10',
     name: 'Kitobxon',
     description: '10 ta reading mashqini bajaring',
     icon: '📖',
-    xpReward: 150,
+    coinReward: 150,
     condition: (stats) => stats.readingCount >= 10,
   },
   {
@@ -139,7 +140,7 @@ export const achievements: Achievement[] = [
     name: 'Tinglovchi',
     description: '10 ta listening mashqini bajaring',
     icon: '🎧',
-    xpReward: 150,
+    coinReward: 150,
     condition: (stats) => stats.listeningCount >= 10,
   },
   {
@@ -147,7 +148,7 @@ export const achievements: Achievement[] = [
     name: 'Yozuvchi',
     description: '10 ta writing mashqini bajaring',
     icon: '✍️',
-    xpReward: 150,
+    coinReward: 150,
     condition: (stats) => stats.writingCount >= 10,
   },
   {
@@ -155,7 +156,7 @@ export const achievements: Achievement[] = [
     name: 'Notiq',
     description: '10 ta speaking mashqini bajaring',
     icon: '🎤',
-    xpReward: 150,
+    coinReward: 150,
     condition: (stats) => stats.speakingCount >= 10,
   },
   {
@@ -163,7 +164,7 @@ export const achievements: Achievement[] = [
     name: 'Poliglot Master',
     description: 'Barcha 7 tildan mashq qiling',
     icon: '🌍',
-    xpReward: 500,
+    coinReward: 500,
     condition: (stats) => stats.languagesStudied >= 7,
   },
   {
@@ -171,7 +172,7 @@ export const achievements: Achievement[] = [
     name: 'Haftalik Qahramon',
     description: '7 ta kunlik topshiriqni bajaring',
     icon: '📅',
-    xpReward: 200,
+    coinReward: 200,
     condition: (stats) => stats.dailyChallengesDone >= 7,
   },
   {
@@ -179,7 +180,7 @@ export const achievements: Achievement[] = [
     name: 'Mukammal Hafta',
     description: 'Bir haftada barcha kunlik topshiriqlarni bajaring',
     icon: '🌟',
-    xpReward: 500,
+    coinReward: 500,
     condition: (stats) => stats.perfectWeeks >= 1,
   },
   {
@@ -187,7 +188,7 @@ export const achievements: Achievement[] = [
     name: 'Xatolardan O\'rganuvchi',
     description: '10 ta xatoni ko\'rib chiqing',
     icon: '🔄',
-    xpReward: 100,
+    coinReward: 100,
     condition: (stats) => stats.mistakesReviewed >= 10,
   },
 ];
@@ -251,7 +252,7 @@ export function calculateStats(state: AppState): Stats {
     totalExercises,
     perfectScores,
     completedLevels,
-    totalXp: state.xp,
+    totalCoins: state.coins,
     streak: state.streak,
     skillsMastered: skillsMastered.size,
     readingCount,
@@ -259,7 +260,7 @@ export function calculateStats(state: AppState): Stats {
     writingCount,
     speakingCount,
     languagesStudied: languagesStudied.size,
-    dailyChallengesDone: state.dailyChallenges?.challenges.filter(c => c.completed).length || 0,
+    dailyChallengesDone: state.dailyChallenges?.challenges?.filter(c => c.completed).length || 0,
     perfectWeeks: state.perfectWeeks || 0,
     mistakesReviewed: state.mistakesReviewed || 0,
   };

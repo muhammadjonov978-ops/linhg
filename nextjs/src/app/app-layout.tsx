@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from 'react';
 import { useApp } from '../context/AppContext';
 import Navbar from '../components/Navbar';
+import ErrorBoundary from '../components/ErrorBoundary';
 import AITutor from '../components/AITutor';
 import DailyChallenge from '../components/DailyChallenge';
 import WordOfTheDay from '../components/WordOfTheDay';
@@ -10,7 +11,7 @@ import StatsDashboard from '../components/StatsDashboard';
 import AchievementsPanel from '../components/AchievementsPanel';
 import MistakesReview from '../components/MistakesReview';
 import StreakCalendar from '../components/StreakCalendar';
-import { Brain, Sparkles, X, PanelRightOpen, MessageCircle } from 'lucide-react';
+import { Sparkles, X, PanelRightOpen, MessageCircle } from 'lucide-react';
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { state, dispatch } = useApp();
@@ -25,7 +26,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-base-200 transition-colors duration-300">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-base-200 transition-colors duration-300">
       <Navbar onToggleTutor={handleToggleTutor} />
 
       <div className="flex">
@@ -36,14 +38,18 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <footer className="bg-base-300/30 py-8 mt-8">
               <div className="max-w-6xl mx-auto px-4 text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
-                  <Brain className="w-5 h-5 text-primary" />
-                  <span className="font-bold">PolyglotPro</span>
+                  <img
+                    src="/logo.png"
+                    alt="Lingohub"
+                    className="w-7 h-7 rounded-md object-cover"
+                  />
+                  <span className="font-bold">Lingohub</span>
                 </div>
                 <p className="text-xs opacity-50">
                   7 tilda interaktiv o'rganish platformasi. Reading, Listening, Writing, Speaking.
                 </p>
                 <p className="text-xs opacity-30 mt-2">
-                  &copy; 2026 PolyglotPro. Barcha huquqlar himoyalangan.
+                  &copy; 2026 Lingohub. Barcha huquqlar himoyalangan.
                 </p>
               </div>
             </footer>
@@ -109,6 +115,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           <AITutor />
         </>
       )}
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }

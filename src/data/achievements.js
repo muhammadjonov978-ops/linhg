@@ -4,7 +4,7 @@ export const achievements = [
     name: 'Birinchi Qadam',
     description: 'Birinchi darsni tugating',
     icon: '🌱',
-    xpReward: 50,
+    coinReward: 50,
     condition: (stats) => stats.completedLessons >= 1,
   },
   {
@@ -12,7 +12,7 @@ export const achievements = [
     name: 'Mukammal Natija',
     description: 'Har qanday darsdan 100% oling',
     icon: '💎',
-    xpReward: 100,
+    coinReward: 100,
     condition: (stats) => stats.perfectScores >= 1,
   },
   {
@@ -20,7 +20,7 @@ export const achievements = [
     name: 'Izchillik',
     description: "3 kun ketma-ket o'qing",
     icon: '🔥',
-    xpReward: 150,
+    coinReward: 150,
     condition: (stats) => stats.streak >= 3,
   },
   {
@@ -28,7 +28,7 @@ export const achievements = [
     name: "Hafta Qahramoni",
     description: "7 kun ketma-ket o'qing",
     icon: '⭐',
-    xpReward: 300,
+    coinReward: 300,
     condition: (stats) => stats.streak >= 7,
   },
   {
@@ -36,7 +36,7 @@ export const achievements = [
     name: 'Alifbo Ustasi',
     description: 'Barcha alifbo darslarini tugating',
     icon: '🔤',
-    xpReward: 150,
+    coinReward: 150,
     condition: (stats) => stats.alphabetCompleted >= 10,
   },
   {
@@ -44,7 +44,7 @@ export const achievements = [
     name: 'O\'rganuvchi',
     description: '10 ta darsni tugating',
     icon: '📚',
-    xpReward: 100,
+    coinReward: 100,
     condition: (stats) => stats.completedLessons >= 10,
   },
   {
@@ -52,7 +52,7 @@ export const achievements = [
     name: 'Bilimdon',
     description: '25 ta darsni tugating',
     icon: '🧠',
-    xpReward: 200,
+    coinReward: 200,
     condition: (stats) => stats.completedLessons >= 25,
   },
   {
@@ -60,7 +60,7 @@ export const achievements = [
     name: 'Tilshunos',
     description: '50 ta darsni tugating',
     icon: '🎓',
-    xpReward: 350,
+    coinReward: 350,
     condition: (stats) => stats.completedLessons >= 50,
   },
   {
@@ -68,7 +68,7 @@ export const achievements = [
     name: 'Poliglot',
     description: '75 ta darsni tugating',
     icon: '👑',
-    xpReward: 500,
+    coinReward: 500,
     condition: (stats) => stats.completedLessons >= 75,
   },
   {
@@ -76,39 +76,39 @@ export const achievements = [
     name: 'Til Ustasi',
     description: 'Barcha 100 ta darsni tugating!',
     icon: '🏆',
-    xpReward: 1000,
+    coinReward: 1000,
     condition: (stats) => stats.completedLessons >= 100,
   },
   {
     id: 'xp_500',
-    name: "XP Yig'uvchi",
-    description: '500 XP to\'plang',
+    name: "Tanga Yig'uvchi",
+    description: '500 tanga to\'plang',
     icon: '💰',
-    xpReward: 200,
-    condition: (stats) => stats.totalXp >= 500,
+    coinReward: 200,
+    condition: (stats) => stats.totalCoins >= 500,
   },
   {
     id: 'xp_1000',
-    name: 'XP Ustasi',
-    description: '1000 XP to\'plang',
+    name: 'Tanga Ustasi',
+    description: '1000 tanga to\'plang',
     icon: '💫',
-    xpReward: 400,
-    condition: (stats) => stats.totalXp >= 1000,
+    coinReward: 400,
+    condition: (stats) => stats.totalCoins >= 1000,
   },
   {
     id: 'xp_5000',
-    name: 'XP Legendasi',
-    description: '5000 XP to\'plang',
+    name: 'Tanga Legendasi',
+    description: '5000 tanga to\'plang',
     icon: '🏆',
-    xpReward: 1000,
-    condition: (stats) => stats.totalXp >= 5000,
+    coinReward: 1000,
+    condition: (stats) => stats.totalCoins >= 5000,
   },
   {
     id: 'daily_7',
     name: 'Haftalik Qahramon',
     description: "7 ta kunlik topshiriqni bajaring",
     icon: '📅',
-    xpReward: 200,
+    coinReward: 200,
     condition: (stats) => stats.dailyChallengesDone >= 7,
   },
   {
@@ -116,7 +116,7 @@ export const achievements = [
     name: 'Mukammal Hafta',
     description: 'Bir haftada barcha kunlik topshiriqlarni bajaring',
     icon: '🌟',
-    xpReward: 500,
+    coinReward: 500,
     condition: (stats) => stats.perfectWeeks >= 1,
   },
   {
@@ -124,7 +124,7 @@ export const achievements = [
     name: "Xatolardan O'rganuvchi",
     description: '10 ta xatoni ko\'rib chiqing',
     icon: '🔄',
-    xpReward: 100,
+    coinReward: 100,
     condition: (stats) => stats.mistakesReviewed >= 10,
   },
   {
@@ -132,7 +132,7 @@ export const achievements = [
     name: 'Poliglot Master',
     description: 'Barcha 7 tildan dars qiling',
     icon: '🌍',
-    xpReward: 500,
+    coinReward: 500,
     condition: (stats) => stats.languagesStudied >= 7,
   },
 ];
@@ -157,7 +157,7 @@ export function checkNewAchievements(stats, currentAchievements) {
 export function calculateStats(state) {
   let completedLessons = 0;
   let perfectScores = 0;
-  let totalXp = state.xp || 0;
+  let totalCoins = state.coins ?? state.xp ?? 0; // old 'xp' field fallback
   let alphabetCompleted = 0;
   let languagesStudied = new Set();
 
@@ -180,11 +180,11 @@ export function calculateStats(state) {
   return {
     completedLessons,
     perfectScores,
-    totalXp,
+    totalCoins,
     streak: state.streak || 0,
     alphabetCompleted,
     languagesStudied: languagesStudied.size,
-    dailyChallengesDone: state.dailyChallenges?.filter(c => c.completed).length || 0,
+    dailyChallengesDone: state.dailyChallenges?.challenges?.filter(c => c.completed).length || 0,
     perfectWeeks: state.perfectWeeks || 0,
     mistakesReviewed: state.mistakesReviewed || 0,
   };

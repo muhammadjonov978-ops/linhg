@@ -1,35 +1,104 @@
 import { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { checkNewAchievements, calculateStats } from '../data/achievements';
+import { isThemeId, DEFAULT_THEME } from '../data/themes';
 
 const AppContext = createContext();
 
-const STORAGE_KEY = 'alpomish_data';
+export const STORAGE_KEY = 'lingohub_data';
+
+// Legacy key used by the old app version — migrate only safe fields,
+// and NEVER carry over dailyChallenges (their check functions were stripped
+// by JSON, which caused the "check is not a function" crash).
+const LEGACY_STORAGE_KEY = 'alpomish_data';
+
+function loadLegacyData() {
+  try {
+    const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+    if (!legacy) return null;
+    const parsed = JSON.parse(legacy);
+    const data = {
+      progress: parsed.progress || {},
+      coins: parsed.coins ?? parsed.xp ?? 0,
+      streak: parsed.streak || 0,
+      lastActive: parsed.lastActive || null,
+      isPremium: parsed.isPremium || false,
+      unlockedLanguages: parsed.unlockedLanguages || {},
+      theme: isThemeId(parsed.theme) ? parsed.theme : DEFAULT_THEME,
+      achievements: (parsed.achievements || []).map(a => ({
+        ...a,
+        coinReward: a.coinReward ?? a.xpReward ?? 0,
+      })),
+    };
+    // Legacy data fully consumed — remove it to avoid confusion / future re-reads
+    try {
+      localStorage.removeItem(LEGACY_STORAGE_KEY);
+    } catch (e) {
+      /* ignore */
+    }
+    return data;
+  } catch (e) {
+    console.warn('Failed to migrate legacy data:', e);
+    return null;
+  }
+}
+
+// Migrate old XP-based saved data to coins
+function migrateSaved(parsed) {
+  return {
+    selectedLanguage: null,
+    currentLevel: null,
+    progress: parsed.progress || {},
+    tutorMessages: parsed.tutorMessages || [],
+    isTutorOpen: parsed.isTutorOpen || false,
+    isPremium: parsed.isPremium || false,
+    unlockedLanguages: parsed.unlockedLanguages || {},
+    coins: parsed.coins ?? parsed.xp ?? 0, // old "xp" field becomes "coins"
+    streak: parsed.streak || 0,
+    lastActive: parsed.lastActive || null,
+    achievements: (parsed.achievements || []).map(a => ({
+      ...a,
+      // migrate old reward field name
+      coinReward: a.coinReward ?? a.xpReward ?? 0,
+    })),
+    dailyChallenges: parsed.dailyChallenges || null,
+    theme: parsed.theme || DEFAULT_THEME,
+    mistakesReviewed: parsed.mistakesReviewed || 0,
+    perfectWeeks: parsed.perfectWeeks || 0,
+  };
+}
 
 function loadInitialState() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
-      const parsed = JSON.parse(saved);
-      return {
-        selectedLanguage: null,
-        currentLevel: null,
-        progress: parsed.progress || {},
-        tutorMessages: parsed.tutorMessages || [],
-        isTutorOpen: parsed.isTutorOpen || false,
-        isPremium: parsed.isPremium || false,
-        xp: parsed.xp || 0,
-        streak: parsed.streak || 0,
-        lastActive: parsed.lastActive || null,
-        achievements: parsed.achievements || [],
-        dailyChallenges: parsed.dailyChallenges || null,
-        theme: parsed.theme || 'light',
-        mistakesReviewed: parsed.mistakesReviewed || 0,
-        perfectWeeks: parsed.perfectWeeks || 0,
-      };
+      return migrateSaved(JSON.parse(saved));
     }
   } catch (e) {
     console.warn('Failed to load saved data:', e);
   }
+
+  // No new-key data: try migrating safe fields from the legacy key
+  const legacy = loadLegacyData();
+  if (legacy) {
+    return {
+      selectedLanguage: null,
+      currentLevel: null,
+      progress: legacy.progress,
+      tutorMessages: [],
+      isTutorOpen: false,
+      isPremium: legacy.isPremium,
+      unlockedLanguages: legacy.unlockedLanguages,
+      coins: legacy.coins,
+      streak: legacy.streak,
+      lastActive: legacy.lastActive,
+      achievements: legacy.achievements,
+      dailyChallenges: null, // deliberately dropped — functions lost in JSON
+      theme: legacy.theme,
+      mistakesReviewed: 0,
+      perfectWeeks: 0,
+    };
+  }
+
   return {
     selectedLanguage: null,
     currentLevel: null,
@@ -37,12 +106,13 @@ function loadInitialState() {
     tutorMessages: [],
     isTutorOpen: false,
     isPremium: false,
-    xp: 0,
+    unlockedLanguages: {},
+    coins: 0,
     streak: 0,
     lastActive: null,
     achievements: [],
     dailyChallenges: null,
-    theme: 'light',
+    theme: DEFAULT_THEME,
     mistakesReviewed: 0,
     perfectWeeks: 0,
   };
@@ -80,9 +150,9 @@ function appReducer(state, action) {
         newStreak = 1;
       }
 
+      // NOTE: coins are auto-awarded in LevelPage.handleAnswer — do NOT double-award here
       return {
         ...state,
-        xp: state.xp + Math.floor(score / 5),
         streak: newStreak,
         lastActive: now,
         progress: {
@@ -95,6 +165,15 @@ function appReducer(state, action) {
     case 'UNLOCK_PREMIUM':
       return { ...state, isPremium: true };
 
+    case 'UNLOCK_LANGUAGE':
+      return {
+        ...state,
+        unlockedLanguages: {
+          ...(state.unlockedLanguages || {}),
+          [action.payload]: true,
+        },
+      };
+
     case 'ADD_TUTOR_MESSAGE':
       return {
         ...state,
@@ -104,8 +183,8 @@ function appReducer(state, action) {
     case 'TOGGLE_TUTOR':
       return { ...state, isTutorOpen: !state.isTutorOpen };
 
-    case 'ADD_XP':
-      return { ...state, xp: state.xp + action.payload };
+    case 'ADD_COINS':
+      return { ...state, coins: state.coins + action.payload };
 
     case 'UPDATE_DAILY_CHALLENGES':
       return { ...state, dailyChallenges: action.payload };
@@ -113,8 +192,8 @@ function appReducer(state, action) {
     case 'SET_ACHIEVEMENTS':
       return { ...state, achievements: action.payload };
 
-    case 'CLAIM_ACHIEVEMENT_XP':
-      return { ...state, xp: state.xp + action.payload };
+    case 'CLAIM_ACHIEVEMENT_COINS':
+      return { ...state, coins: state.coins + action.payload };
 
     case 'REMOVE_ACHIEVEMENT':
       return { ...state, achievements: state.achievements.filter(a => a.id !== action.payload) };
@@ -132,7 +211,7 @@ function appReducer(state, action) {
       return {
         ...state,
         progress: {},
-        xp: 0,
+        coins: 0,
         streak: 0,
         tutorMessages: [],
         achievements: [],
@@ -160,7 +239,8 @@ export function AppProvider({ children }) {
         tutorMessages: state.tutorMessages,
         isTutorOpen: state.isTutorOpen,
         isPremium: state.isPremium,
-        xp: state.xp,
+        unlockedLanguages: state.unlockedLanguages || {},
+        coins: state.coins,
         streak: state.streak,
         lastActive: state.lastActive,
         achievements: state.achievements,
@@ -175,7 +255,7 @@ export function AppProvider({ children }) {
     }
   }, [
     state.progress, state.tutorMessages, state.isTutorOpen,
-    state.isPremium, state.xp, state.streak, state.lastActive,
+    state.isPremium, state.unlockedLanguages, state.coins, state.streak, state.lastActive,
     state.achievements, state.dailyChallenges, state.theme,
     state.mistakesReviewed, state.perfectWeeks,
   ]);
@@ -191,27 +271,28 @@ export function AppProvider({ children }) {
       }
     }
 
-    // Check for new achievements
+    // Check for new achievements — rewards are AUTO-COLLECTED as coins
     const stats = calculateStats(state);
     const newAchievements = checkNewAchievements(stats, state.achievements);
     if (newAchievements.length > 0) {
-      // Add new achievements with justUnlocked flag
+      // Auto-claim coin rewards immediately
+      const totalCoins = newAchievements.reduce((sum, a) => sum + (a.coinReward || 0), 0);
+      if (totalCoins > 0) {
+        dispatch({ type: 'ADD_COINS', payload: totalCoins });
+      }
+
       const updatedAchievements = [
         ...state.achievements,
         ...newAchievements.map(a => ({ ...a, justUnlocked: true })),
       ];
       dispatch({ type: 'SET_ACHIEVEMENTS', payload: updatedAchievements });
     }
-  }, [state.progress, state.xp, state.streak]);
+  }, [state.progress, state.coins, state.streak]);
 
   // Apply theme
   useEffect(() => {
     const html = document.documentElement;
-    if (state.theme === 'dark') {
-      html.setAttribute('data-theme', 'dark');
-    } else {
-      html.setAttribute('data-theme', 'light');
-    }
+    html.setAttribute('data-theme', isThemeId(state.theme) ? state.theme : DEFAULT_THEME);
   }, [state.theme]);
 
   const getLessonProgress = useCallback((langId, lessonNumber) => {

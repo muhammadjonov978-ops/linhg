@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { Award, Lock, Sparkles, Zap, Trophy, ChevronRight, Gift } from 'lucide-react';
 
@@ -6,16 +6,30 @@ export default function AchievementsPanel({ limit }) {
   const { state, dispatch } = useApp();
   const [showAll, setShowAll] = useState(false);
 
+  // Clear the justUnlocked flag a few seconds after showing, so the Navbar
+  // "Yangi yutuqlar" pulse badge doesn't stay forever.
+  useEffect(() => {
+    const justUnlocked = (state.achievements || []).filter(a => a.unlocked && a.justUnlocked);
+    if (justUnlocked.length === 0) return;
+    const t = setTimeout(() => {
+      dispatch({
+        type: 'SET_ACHIEVEMENTS',
+        payload: (state.achievements || []).map(a =>
+          a.justUnlocked ? { ...a, justUnlocked: false } : a
+        ),
+      });
+    }, 5000);
+    return () => clearTimeout(t);
+  }, [state.achievements]);
+
   const achievements = state.achievements || [];
   const unlocked = achievements.filter(a => a.unlocked);
   const locked = limit ? [] : achievements.filter(a => !a.unlocked);
   const displayAchievements = limit ? unlocked.slice(0, limit) : achievements;
   const showViewAll = limit && unlocked.length > limit;
 
-  const handleClaimReward = (achievement) => {
-    dispatch({ type: 'CLAIM_ACHIEVEMENT_XP', payload: achievement.xpReward });
-    dispatch({ type: 'REMOVE_ACHIEVEMENT', payload: achievement.id });
-  };
+  // Rewards are auto-collected in AppContext when achievements unlock.
+  // No manual claim needed anymore.
 
   if (!achievements.length && !limit) {
     return (
@@ -71,10 +85,10 @@ export default function AchievementsPanel({ limit }) {
                 <p className={`text-xs font-medium ${isUnlocked ? '' : 'opacity-50'}`}>
                   {achievement.name}
                 </p>
-                {isUnlocked && achievement.xpReward && (
+                {isUnlocked && (achievement.coinReward || achievement.xpReward) && (
                   <div className="flex items-center justify-center gap-1 mt-1 text-xs text-warning">
                     <Zap className="w-3 h-3" />
-                    +{achievement.xpReward}
+                    +{achievement.coinReward ?? achievement.xpReward} 🪙
                   </div>
                 )}
                 {isUnlocked && achievement.justUnlocked && (
@@ -90,7 +104,7 @@ export default function AchievementsPanel({ limit }) {
           })}
         </div>
 
-        {/* Show new achievements that need claiming */}
+        {/* Show new achievements — rewards auto-collected as coins */}
         {unlocked.filter(a => a.justUnlocked).length > 0 && (
           <div className="mt-3 space-y-2">
             {unlocked.filter(a => a.justUnlocked).map(achievement => (
@@ -105,13 +119,10 @@ export default function AchievementsPanel({ limit }) {
                   </div>
                   <p className="text-xs opacity-60">{achievement.description}</p>
                 </div>
-                <button
-                  onClick={() => handleClaimReward(achievement)}
-                  className="btn btn-success btn-sm gap-1"
-                >
+                <div className="badge badge-success badge-sm gap-1">
                   <Zap className="w-3 h-3" />
-                  {achievement.xpReward} XP
-                </button>
+                  +{achievement.coinReward ?? achievement.xpReward} 🪙
+                </div>
               </div>
             ))}
           </div>

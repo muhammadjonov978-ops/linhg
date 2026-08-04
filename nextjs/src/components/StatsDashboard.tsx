@@ -146,8 +146,8 @@ export default function StatsDashboard() {
                 <p className="text-xs opacity-50">O'rtacha natija</p>
               </div>
               <div className="bg-base-200 rounded-xl p-3 text-center">
-                <p className="text-2xl font-bold text-warning">{state.xp}</p>
-                <p className="text-xs opacity-50">XP ball</p>
+                <p className="text-2xl font-bold text-warning">{state.coins}</p>
+                <p className="text-xs opacity-50">🪙 Tangalar</p>
               </div>
               <div className="bg-base-200 rounded-xl p-3 text-center">
                 <p className="text-2xl font-bold text-secondary">{stats.completedLevels}/{levels.length}</p>

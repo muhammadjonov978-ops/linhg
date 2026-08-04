@@ -11,7 +11,7 @@ interface AchievementsPanelProps {
 export default function AchievementsPanel({ limit }: AchievementsPanelProps) {
   const { state, dispatch } = useApp();
   const [showAll, setShowAll] = useState(false);
-  const [newAchievement, setNewAchievement] = useState<{ name: string; icon: string; xpReward: number } | null>(null);
+  const [newAchievement, setNewAchievement] = useState<{ name: string; icon: string; coinReward: number } | null>(null);
 
   const unlockedAchievements = state.achievements?.filter(a => a.unlocked) || [];
   const newUnlocked = unlockedAchievements.filter(a => a.justUnlocked);
@@ -23,9 +23,8 @@ export default function AchievementsPanel({ limit }: AchievementsPanelProps) {
       setNewAchievement(latest);
       setTimeout(() => setNewAchievement(null), 5000);
 
-      // Remove justUnlocked flag after showing
+      // Rewards are auto-collected in AppContext; just clear the flag after showing
       setTimeout(() => {
-        dispatch({ type: 'CLAIM_ACHIEVEMENT_XP', payload: latest.xpReward });
         dispatch({ type: 'REMOVE_ACHIEVEMENT', payload: latest.id });
         // Re-add without justUnlocked
         const updated = unlockedAchievements.map(a =>
@@ -85,7 +84,7 @@ export default function AchievementsPanel({ limit }: AchievementsPanelProps) {
                 <p className="text-[10px] opacity-50 mt-1">{achievement.description}</p>
                 <div className="flex items-center justify-center gap-1 mt-1 text-[10px] text-warning font-bold">
                   <Zap className="w-2.5 h-2.5" />
-                  +{achievement.xpReward} XP
+                  +{achievement.coinReward ?? achievement.xpReward} 🪙
                 </div>
               </div>
             ))}
@@ -124,7 +123,7 @@ export default function AchievementsPanel({ limit }: AchievementsPanelProps) {
                 Yangi yutuq!
               </div>
               <p className="font-bold">{newAchievement.name}</p>
-              <p className="text-xs opacity-80">+{newAchievement.xpReward} XP</p>
+              <p className="text-xs opacity-80">+{newAchievement.coinReward} 🪙</p>
             </div>
             <button onClick={() => setNewAchievement(null)} className="btn btn-ghost btn-xs btn-circle ml-auto">
               <X className="w-3 h-3" />

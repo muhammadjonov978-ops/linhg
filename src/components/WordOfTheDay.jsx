@@ -95,7 +95,7 @@ export default function WordOfTheDay() {
             onClick={() => {
               setIsSaved(!isSaved);
               if (!isSaved) {
-                dispatch({ type: 'ADD_XP', payload: 5 });
+                dispatch({ type: 'ADD_COINS', payload: 5 });
               }
             }}
             className="btn btn-ghost btn-xs btn-circle"
@@ -147,7 +147,7 @@ export default function WordOfTheDay() {
 
         {isSaved && (
           <div className="text-center text-xs text-success animate-[fadeIn_0.3s_ease-out]">
-            ✅ Saqlandi! +5 XP
+            ✅ Saqlandi! +5 🪙
           </div>
         )}
       </div>

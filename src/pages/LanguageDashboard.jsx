@@ -5,7 +5,7 @@ import {
   Lock, ChevronRight, Trophy, CheckCircle,
   ArrowLeft, TrendingUp, Sparkles, Award, Target,
   BookOpen, Headphones, Pencil, Mic, Search, ChevronLeft,
-  GraduationCap, Star, Zap, Crown
+  GraduationCap, Star, Coins, Crown, CreditCard
 } from 'lucide-react';
 import PaywallModal from '../components/PaywallModal';
 import DailyChallenge from '../components/DailyChallenge';
@@ -35,6 +35,10 @@ export default function LanguageDashboard({ onSelectLevel }) {
 
   const currentLang = languages.find(l => l.id === state.selectedLanguage);
   if (!currentLang) return null;
+
+  // Paid language gate: if this language costs money and isn't unlocked, show a lock screen
+  const isLangPaid = !!currentLang.price;
+  const isLangUnlocked = !isLangPaid || (state.unlockedLanguages || {})[currentLang.id];
 
   const allLessons = useMemo(() => getLessons(state.selectedLanguage), [state.selectedLanguage]);
   const stats = useMemo(() => getLanguageStats(state.selectedLanguage, state.progress), [state.selectedLanguage, state.progress]);
@@ -97,8 +101,8 @@ export default function LanguageDashboard({ onSelectLevel }) {
             </div>
             <div className="flex flex-wrap gap-2 md:ml-auto">
               <div className="flex items-center gap-1 badge badge-primary badge-lg p-3">
-                <Zap className="w-4 h-4" />
-                <span className="font-bold">{state.xp} XP</span>
+                <Coins className="w-4 h-4" />
+                <span className="font-bold">{state.coins} 🪙</span>
               </div>
               <div className="badge badge-secondary badge-lg p-3">
                 <TrendingUp className="w-4 h-4" />
@@ -133,6 +137,33 @@ export default function LanguageDashboard({ onSelectLevel }) {
         </div>
       </div>
 
+      {isLangPaid && !isLangUnlocked && (
+        <div className="max-w-6xl mx-auto px-4 py-10">
+          <div className="card bg-base-100 border-2 border-warning/40 max-w-lg mx-auto text-center">
+            <div className="card-body items-center py-10">
+              <div className="w-20 h-20 rounded-full bg-warning/10 flex items-center justify-center mb-4">
+                <Lock className="w-10 h-10 text-warning" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">{currentLang.flag} {currentLang.name} qulflangan</h2>
+              <p className="text-sm opacity-60 mb-6 max-w-xs">
+                Bu til pullik kurs. Karta bilan to'lab, barcha 100 darsga cheksiz kirishni oching.
+              </p>
+              <div className="text-3xl font-extrabold text-warning mb-6">
+                {currentLang.price.toLocaleString('uz-UZ')} so'm
+              </div>
+              <button
+                onClick={() => setShowPaywall(true)}
+                className="btn btn-primary btn-lg gap-2"
+              >
+                <CreditCard className="w-5 h-5" />
+                Karta bilan ochish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {(!isLangPaid || isLangUnlocked) && (
       <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Lessons */}
@@ -293,7 +324,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
             <div className="card bg-base-100 border border-base-300">
               <div className="card-body p-4">
                 <h3 className="font-bold text-sm flex items-center gap-2 mb-3">
-                  <Zap className="w-4 h-4 text-primary" />
+                  <Coins className="w-4 h-4 text-primary" />
                   Tezkor statistika
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
@@ -324,13 +355,19 @@ export default function LanguageDashboard({ onSelectLevel }) {
           </div>
         </div>
       </div>
+      )}
 
-      {/* Paywall Modal */}
+      {/* Paywall Modal — supports both premium and paid language modes */}
       <PaywallModal
         isOpen={showPaywall}
+        lang={isLangPaid ? currentLang : null}
         onClose={() => setShowPaywall(false)}
         onUnlock={() => {
-          dispatch({ type: 'UNLOCK_PREMIUM' });
+          if (isLangPaid) {
+            dispatch({ type: 'UNLOCK_LANGUAGE', payload: currentLang.id });
+          } else {
+            dispatch({ type: 'UNLOCK_PREMIUM' });
+          }
           setShowPaywall(false);
         }}
       />

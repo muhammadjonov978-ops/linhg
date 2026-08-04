@@ -11,6 +11,7 @@ import StreakCalendar from './components/StreakCalendar';
 import HomePage from './pages/HomePage';
 import LanguageDashboard from './pages/LanguageDashboard';
 import LevelPage from './pages/LevelPage';
+import SMSReminder from './components/SMSReminder';
 import {
   MessageCircle, X, Award, BarChart3,
   Sparkles, Target, RotateCcw, RefreshCw, PanelRightOpen
@@ -110,6 +111,9 @@ function AppContent() {
           <span className="hidden sm:inline text-xs">Widgets</span>
         </button>
       )}
+
+      {/* SMS reminder when a day is missed */}
+      <SMSReminder />
 
       {/* AI Tutor Floating Button */}
       {state.selectedLanguage && (

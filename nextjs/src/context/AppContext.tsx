@@ -3,6 +3,7 @@
 import { createContext, useContext, useReducer, useEffect, useCallback, type ReactNode } from 'react';
 import { checkNewAchievements, calculateStats } from '../data/achievements';
 import type { Achievement } from '../data/achievements';
+import { isThemeId, DEFAULT_THEME } from '../data/themes';
 
 // === TYPES ===
 
@@ -33,7 +34,7 @@ export interface DailyChallengeItem {
   title: string;
   description: string;
   icon: string;
-  xpReward: number;
+  coinReward: number;
   completed?: boolean;
   check?: () => boolean;
 }
@@ -50,12 +51,13 @@ export interface AppState {
   tutorMessages: TutorMessage[];
   isTutorOpen: boolean;
   isPremium: boolean;
-  xp: number;
+  unlockedLanguages: Record<string, boolean>;
+  coins: number;
   streak: number;
   lastActive: number | null;
   achievements: Achievement[];
   dailyChallenges: DailyChallengesData | null;
-  theme: 'light' | 'dark';
+  theme: string;
   mistakesReviewed: number;
   perfectWeeks: number;
 }
@@ -65,15 +67,16 @@ type AppAction =
   | { type: 'SET_CURRENT_LEVEL'; payload: string | null }
   | { type: 'COMPLETE_EXERCISE'; payload: { langId: string; levelId: string; skill: string; score: number } }
   | { type: 'UNLOCK_PREMIUM' }
+  | { type: 'UNLOCK_LANGUAGE'; payload: string }
   | { type: 'ADD_TUTOR_MESSAGE'; payload: TutorMessage }
   | { type: 'TOGGLE_TUTOR' }
-  | { type: 'ADD_XP'; payload: number }
+  | { type: 'ADD_COINS'; payload: number }
   | { type: 'UPDATE_DAILY_CHALLENGES'; payload: DailyChallengesData }
   | { type: 'SET_ACHIEVEMENTS'; payload: Achievement[] }
-  | { type: 'CLAIM_ACHIEVEMENT_XP'; payload: number }
+  | { type: 'CLAIM_ACHIEVEMENT_COINS'; payload: number }
   | { type: 'REMOVE_ACHIEVEMENT'; payload: string }
   | { type: 'MARK_MISTAKE_REVIEWED' }
-  | { type: 'SET_THEME'; payload: 'light' | 'dark' }
+  | { type: 'SET_THEME'; payload: string }
   | { type: 'TOGGLE_THEME' }
   | { type: 'RESET_PROGRESS' }
   | { type: 'RESET_STREAK' };
@@ -90,7 +93,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | null>(null);
 
-const STORAGE_KEY = 'polyglotpro_data';
+export const STORAGE_KEY = 'polyglotpro_data';
 
 function loadInitialState(): AppState {
   try {
@@ -105,12 +108,16 @@ function loadInitialState(): AppState {
           tutorMessages: parsed.tutorMessages || [],
           isTutorOpen: parsed.isTutorOpen || false,
           isPremium: parsed.isPremium || false,
-          xp: parsed.xp || 0,
+          unlockedLanguages: parsed.unlockedLanguages || {},
+          coins: parsed.coins ?? parsed.xp ?? 0, // migrate old xp field
           streak: parsed.streak || 0,
           lastActive: parsed.lastActive || null,
-          achievements: parsed.achievements || [],
+          achievements: (parsed.achievements || []).map((a: Achievement) => ({
+            ...a,
+            coinReward: a.coinReward ?? a.xpReward ?? 0,
+          })),
           dailyChallenges: parsed.dailyChallenges || null,
-          theme: parsed.theme || 'light',
+          theme: parsed.theme || DEFAULT_THEME,
           mistakesReviewed: parsed.mistakesReviewed || 0,
           perfectWeeks: parsed.perfectWeeks || 0,
         };
@@ -126,12 +133,13 @@ function loadInitialState(): AppState {
     tutorMessages: [],
     isTutorOpen: false,
     isPremium: false,
-    xp: 0,
+    unlockedLanguages: {},
+    coins: 0,
     streak: 0,
     lastActive: null,
     achievements: [],
     dailyChallenges: null,
-    theme: 'light',
+    theme: DEFAULT_THEME,
     mistakesReviewed: 0,
     perfectWeeks: 0,
   };
@@ -181,7 +189,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
       return {
         ...state,
-        xp: state.xp + Math.floor(score / 10),
+        coins: state.coins + Math.floor(score / 10),
         streak: newStreak,
         lastActive: now,
         progress: {
@@ -194,6 +202,15 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'UNLOCK_PREMIUM':
       return { ...state, isPremium: true };
 
+    case 'UNLOCK_LANGUAGE':
+      return {
+        ...state,
+        unlockedLanguages: {
+          ...(state.unlockedLanguages || {}),
+          [action.payload]: true,
+        },
+      };
+
     case 'ADD_TUTOR_MESSAGE':
       return {
         ...state,
@@ -203,8 +220,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'TOGGLE_TUTOR':
       return { ...state, isTutorOpen: !state.isTutorOpen };
 
-    case 'ADD_XP':
-      return { ...state, xp: state.xp + action.payload };
+    case 'ADD_COINS':
+      return { ...state, coins: state.coins + action.payload };
 
     case 'UPDATE_DAILY_CHALLENGES':
       return { ...state, dailyChallenges: action.payload };
@@ -212,8 +229,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_ACHIEVEMENTS':
       return { ...state, achievements: action.payload };
 
-    case 'CLAIM_ACHIEVEMENT_XP':
-      return { ...state, xp: state.xp + action.payload };
+    case 'CLAIM_ACHIEVEMENT_COINS':
+      return { ...state, coins: state.coins + action.payload };
 
     case 'REMOVE_ACHIEVEMENT':
       return { ...state, achievements: state.achievements.filter(a => a.id !== action.payload) };
@@ -231,7 +248,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         progress: {},
-        xp: 0,
+        coins: 0,
         streak: 0,
         tutorMessages: [],
         achievements: [],
@@ -259,7 +276,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         tutorMessages: state.tutorMessages,
         isTutorOpen: state.isTutorOpen,
         isPremium: state.isPremium,
-        xp: state.xp,
+        unlockedLanguages: state.unlockedLanguages || {},
+        coins: state.coins,
         streak: state.streak,
         lastActive: state.lastActive,
         achievements: state.achievements,
@@ -276,7 +294,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [
     state.progress, state.tutorMessages, state.isTutorOpen,
-    state.isPremium, state.xp, state.streak, state.lastActive,
+    state.isPremium, state.unlockedLanguages, state.coins, state.streak, state.lastActive,
     state.achievements, state.dailyChallenges, state.theme,
     state.mistakesReviewed, state.perfectWeeks,
   ]);
@@ -295,23 +313,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const stats = calculateStats(state);
     const newAchievements = checkNewAchievements(stats, state.achievements);
     if (newAchievements.length > 0) {
+      // Auto-collect coin rewards immediately
+      const totalCoins = newAchievements.reduce((sum, a) => sum + (a.coinReward || 0), 0);
+      if (totalCoins > 0) {
+        dispatch({ type: 'ADD_COINS', payload: totalCoins });
+      }
       const updatedAchievements = [
         ...state.achievements,
         ...newAchievements.map(a => ({ ...a, justUnlocked: true })),
       ];
       dispatch({ type: 'SET_ACHIEVEMENTS', payload: updatedAchievements });
     }
-  }, [state.progress, state.xp, state.streak]);
+  }, [state.progress, state.coins, state.streak]);
 
   // Apply theme
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const html = document.documentElement;
-      if (state.theme === 'dark') {
-        html.setAttribute('data-theme', 'dark');
-      } else {
-        html.setAttribute('data-theme', 'light');
-      }
+      html.setAttribute('data-theme', isThemeId(state.theme) ? state.theme : DEFAULT_THEME);
     }
   }, [state.theme]);
 

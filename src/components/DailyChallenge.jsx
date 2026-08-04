@@ -17,7 +17,7 @@ export default function DailyChallenge() {
         title: 'Mashqlar',
         description: '3 ta darsni tugating',
         icon: '📝',
-        xpReward: 30,
+        coinReward: 30,
         check: () => {
           const progressValues = Object.values(state.progress);
           return progressValues.filter(p => p.completed).length >= 3;
@@ -28,7 +28,7 @@ export default function DailyChallenge() {
         title: 'Dars',
         description: '1 ta darsni bajaring',
         icon: '🎤',
-        xpReward: 40,
+        coinReward: 40,
         check: () => {
           const progressValues = Object.values(state.progress);
           return progressValues.some(p => p.completed);
@@ -39,7 +39,7 @@ export default function DailyChallenge() {
         title: '80%+ Natija',
         description: 'Har qanday darsdan 80%+ oling',
         icon: '🎯',
-        xpReward: 50,
+        coinReward: 50,
         check: () => {
           const progressValues = Object.values(state.progress);
           return progressValues.some(p => p.score >= 80);
@@ -50,7 +50,7 @@ export default function DailyChallenge() {
         title: 'AI Tutor',
         description: 'AI Tutor bilan suhbatlashing',
         icon: '🤖',
-        xpReward: 35,
+        coinReward: 35,
         check: () => state.tutorMessages.length >= 2,
       },
       {
@@ -58,7 +58,7 @@ export default function DailyChallenge() {
         title: 'Streak',
         description: 'Bugun kamida 1 ta dars bajaring',
         icon: '🔥',
-        xpReward: 25,
+        coinReward: 25,
         check: () => {
           const progressValues = Object.values(state.progress);
           const now = Date.now();
@@ -82,30 +82,44 @@ export default function DailyChallenge() {
     return picked;
   };
 
+  // IMPORTANT: always regenerate challenges fresh so that `check` functions exist.
+  // Saved challenges from localStorage lose their functions (JSON cannot store functions),
+  // which caused the "t.check is not a function" crash.
   const [dailyChallenges, setDailyChallenges] = useState(() => {
     const saved = state.dailyChallenges;
     const today = new Date().toDateString();
-    if (saved && saved.date === today) {
-      return saved.challenges;
+    const fresh = generateDailyChallenges();
+    if (saved && saved.date === today && Array.isArray(saved.challenges)) {
+      const completedIds = new Set(saved.challenges.filter(c => c.completed).map(c => c.id));
+      return fresh.map(c => ({ ...c, completed: completedIds.has(c.id) }));
     }
-    return generateDailyChallenges();
+    return fresh;
   });
 
   const [completedChallenges, setCompletedChallenges] = useState(() => {
     const saved = state.dailyChallenges;
     const today = new Date().toDateString();
-    if (saved && saved.date === today) {
+    if (saved && saved.date === today && Array.isArray(saved.challenges)) {
       return new Set(saved.challenges.filter(c => c.completed).map(c => c.id));
     }
     return new Set();
   });
 
-  // Check and auto-complete challenges
+  // Check and auto-complete challenges (rewards auto-collected as coins)
   useEffect(() => {
+    // IMPORTANT: regenerate fresh `check` functions from CURRENT state each time.
+    // Stored challenges may carry stale closures (or no function after JSON round-trip),
+    // which would make auto-completion never fire.
+    const freshChallenges = generateDailyChallenges();
+    const freshById = new Map(freshChallenges.map(f => [f.id, f]));
+
     let changed = false;
+    let totalReward = 0;
     const updated = dailyChallenges.map(c => {
-      if (!completedChallenges.has(c.id) && c.check()) {
+      const check = freshById.get(c.id)?.check || c.check;
+      if (!completedChallenges.has(c.id) && check && check()) {
         changed = true;
+        totalReward += c.coinReward || 0;
         setShowReward(c);
         setTimeout(() => setShowReward(null), 3000);
         return { ...c, completed: true };
@@ -119,12 +133,17 @@ export default function DailyChallenge() {
       setCompletedChallenges(newCompleted);
       setDailyChallenges(updated);
 
-      // Save to context
+      // Auto-collect coin reward
+      if (totalReward > 0) {
+        dispatch({ type: 'ADD_COINS', payload: totalReward });
+      }
+
+      // Save to context (strip check functions - only serializable data)
       dispatch({
         type: 'UPDATE_DAILY_CHALLENGES',
         payload: {
           date: new Date().toDateString(),
-          challenges: updated,
+          challenges: updated.map(({ check, ...rest }) => rest),
         },
       });
     }
@@ -138,7 +157,8 @@ export default function DailyChallenge() {
       type: 'UPDATE_DAILY_CHALLENGES',
       payload: {
         date: new Date().toDateString(),
-        challenges: newChallenges.map(c => ({ ...c, completed: false })),
+        // strip check functions — only serializable data is stored
+        challenges: newChallenges.map(({ check, ...rest }) => ({ ...rest, completed: false })),
       },
     });
   };
@@ -198,7 +218,7 @@ export default function DailyChallenge() {
                 </div>
                 <div className="flex items-center gap-1 text-xs font-bold text-warning">
                   <Zap className="w-3 h-3" />
-                  +{challenge.xpReward}
+                  +{challenge.coinReward} 🪙
                 </div>
               </div>
             );
@@ -224,7 +244,7 @@ export default function DailyChallenge() {
               <Gift className="w-5 h-5" />
               <div>
                 <p className="font-bold text-sm">Topshiriq bajarildi!</p>
-                <p className="text-xs opacity-80">+{showReward.xpReward} XP</p>
+                <p className="text-xs opacity-80">+{showReward.coinReward} 🪙 tanga</p>
               </div>
             </div>
           </div>

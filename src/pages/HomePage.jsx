@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
 import {
   BookOpen, Headphones, Pencil, Mic, ArrowRight, TrendingUp,
-  Award, Star, Users, Sparkles, Zap, Shield, Trophy, Flame,
-  Brain, GraduationCap
+  Award, Star, Users, Sparkles, Coins, Shield, Trophy, Flame,
+  GraduationCap, Lock, CreditCard, CheckCircle
 } from 'lucide-react';
+import PaywallModal from '../components/PaywallModal';
 
 const features = [
   { icon: GraduationCap, title: 'Alifbo', desc: "Harflarni o'rganish" },
@@ -16,8 +18,15 @@ const features = [
 
 export default function HomePage() {
   const { state, dispatch } = useApp();
+  const [payingLang, setPayingLang] = useState(null);
 
   const handleLanguageSelect = (langId) => {
+    const lang = languages.find(l => l.id === langId);
+    // Paid language: open payment modal unless already unlocked
+    if (lang?.price && !(state.unlockedLanguages || {})[langId]) {
+      setPayingLang(lang);
+      return;
+    }
     dispatch({ type: 'SELECT_LANGUAGE', payload: langId });
   };
 
@@ -47,7 +56,7 @@ export default function HomePage() {
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold mb-4">
               <span className="bg-gradient-to-r from-primary via-purple-500 to-secondary bg-clip-text text-transparent">
-                7 Tilda Erkin Gaplashing
+                27 Tilda Erkin Gaplashing
               </span>
             </h1>
             <p className="text-lg md:text-xl opacity-70 max-w-2xl mx-auto mb-8">
@@ -63,7 +72,7 @@ export default function HomePage() {
               </div>
               <div className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-warning" />
-                <span className="font-bold">7 xil til</span>
+                <span className="font-bold">27 xil til</span>
               </div>
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-success" />
@@ -76,8 +85,8 @@ export default function HomePage() {
               <div className="flex flex-wrap justify-center gap-4 mb-4">
                 {totalExercises > 0 && (
                   <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-primary/10">
-                    <Zap className="w-4 h-4 text-primary" />
-                    <span className="text-sm">{state.xp} XP</span>
+                    <Coins className="w-4 h-4 text-primary" />
+                    <span className="text-sm">{state.coins} 🪙</span>
                   </div>
                 )}
                 {totalCompletedLessons > 0 && (
@@ -111,6 +120,8 @@ export default function HomePage() {
               );
               const completedCount = langLessonKeys.length;
               const totalLessons = 100;
+              const isPaid = !!lang.price;
+              const isUnlocked = !isPaid || (state.unlockedLanguages || {})[lang.id];
 
               return (
                 <button
@@ -122,12 +133,32 @@ export default function HomePage() {
                   <div className="card-body p-5">
                     <div className="flex items-center justify-between mb-3">
                       <span className="text-4xl">{lang.flag}</span>
-                      <span className="badge badge-ghost badge-sm">
-                        {Math.round((completedCount / totalLessons) * 100)}%
-                      </span>
+                      {isPaid && !isUnlocked ? (
+                        <span className="badge badge-warning badge-sm gap-1">
+                          <Lock className="w-3 h-3" /> 20 000 so'm
+                        </span>
+                      ) : (
+                        <span className="badge badge-ghost badge-sm">
+                          {Math.round((completedCount / totalLessons) * 100)}%
+                        </span>
+                      )}
                     </div>
-                    <h2 className="text-lg font-bold mb-1">{lang.name}</h2>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h2 className="text-lg font-bold">{lang.name}</h2>
+                      {isPaid && isUnlocked && (
+                        <CheckCircle className="w-4 h-4 text-success" />
+                      )}
+                      {isPaid && !isUnlocked && (
+                        <Lock className="w-3.5 h-3.5 opacity-40" />
+                      )}
+                    </div>
                     <p className="text-xs opacity-60 mb-3">{lang.description}</p>
+                    {isPaid && !isUnlocked && (
+                      <div className="flex items-center gap-1 text-[11px] text-warning font-medium mb-2">
+                        <CreditCard className="w-3 h-3" />
+                        Karta bilan oching
+                      </div>
+                    )}
                     
                     {/* Progress bar */}
                     <div className="w-full h-1.5 bg-base-200 rounded-full overflow-hidden mb-2">
@@ -192,14 +223,14 @@ export default function HomePage() {
               <h3 className="text-xl font-bold">Yutuqlar va Statistika</h3>
             </div>
             <p className="text-sm opacity-60 mb-6 max-w-lg mx-auto">
-              Mashqlarni bajarib, yutuqlarni oching, XP yig'ing va boshqa o'quvchilar bilan raqobatlashing!
+              Mashqlarni bajarib, yutuqlarni oching, tanga yig'ing va boshqa o'quvchilar bilan raqobatlashing!
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto">
               {[
                 { icon: '🌱', title: 'Birinchi Qadam', desc: '1-mashq' },
                 { icon: '🔥', title: 'Izchillik', desc: '3 kun streak' },
                 { icon: '👑', title: 'Poliglot', desc: '100 ta dars' },
-                { icon: '🏆', title: 'XP Legendasi', desc: '5000 XP' },
+                { icon: '🏆', title: 'Tanga Legendasi', desc: '5000 tanga' },
               ].map((item, i) => (
                 <div key={i} className="bg-base-100 rounded-xl p-4 border border-base-300 hover:border-primary/30 transition-all">
                   <div className="text-2xl mb-1">{item.icon}</div>
@@ -212,17 +243,36 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Payment modal for paid languages */}
+      {payingLang && (
+        <PaywallModal
+          isOpen={!!payingLang}
+          lang={payingLang}
+          onClose={() => setPayingLang(null)}
+          onUnlock={() => {
+            dispatch({ type: 'UNLOCK_LANGUAGE', payload: payingLang.id });
+            dispatch({ type: 'SELECT_LANGUAGE', payload: payingLang.id });
+            setPayingLang(null);
+          }}
+        />
+      )}
+
       {/* Footer */}
       <footer className="bg-base-300/30 py-8 mt-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <Brain className="w-5 h-5 text-primary" />              <span className="font-bold">Alpomish</span>
+            <img
+              src="/logo.png"
+              alt="Lingohub"
+              className="w-7 h-7 rounded-md object-cover"
+            />
+            <span className="font-bold">Lingohub</span>
           </div>
           <p className="text-xs opacity-50">
-            7 tilda interaktiv o'rganish platformasi. Reading, Listening, Writing, Speaking.
+            27 tilda interaktiv o'rganish platformasi. Reading, Listening, Writing, Speaking.
           </p>
           <p className="text-xs opacity-30 mt-2">
-            © 2026 Alpomish. Barcha huquqlar himoyalangan.
+            © 2026 Lingohub. Barcha huquqlar himoyalangan.
           </p>
         </div>
       </footer>

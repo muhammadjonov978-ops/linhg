@@ -4,6 +4,7 @@ export interface Language {
   flag: string;
   color: string;
   description: string;
+  price?: number;
   totalLearners: number;
 }
 
@@ -132,6 +133,7 @@ export const languages: Language[] = [
     color: 'error',
     description: "Musiqa va taom tili",
     totalLearners: 54000,
+    price: 20000,
   },
   {
     id: 'portuguese',
@@ -140,6 +142,7 @@ export const languages: Language[] = [
     color: 'info',
     description: 'Janubiy Amerika va Yevropa tili',
     totalLearners: 48000,
+    price: 20000,
   },
   {
     id: 'russian',
@@ -148,6 +151,7 @@ export const languages: Language[] = [
     color: 'neutral',
     description: 'MDH va Sharqiy Yevropa tili',
     totalLearners: 62000,
+    price: 20000,
   },
 ];
 

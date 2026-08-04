@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { languages, getLessons, alphabets } from '../data/languages';
+import { languages, getLessons } from '../data/languages';
+import { speak, stopSpeaking } from '../utils/speech';
 import {
-  ArrowLeft, CheckCircle, Trophy, Star, Sparkles,
+  ArrowLeft, CheckCircle, Trophy,
   ChevronLeft, ChevronRight, Volume2, RefreshCw,
-  BookOpen, GraduationCap, Zap
+  BookOpen, GraduationCap, Coins, VolumeX
 } from 'lucide-react';
 
 export default function LevelPage({ onBack }) {
@@ -19,7 +20,100 @@ export default function LevelPage({ onBack }) {
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [score, setScore] = useState(0);
-  const [xpEarned, setXpEarned] = useState(0);
+  const [coinsEarned, setCoinsEarned] = useState(0);
+  const [speakingIdx, setSpeakingIdx] = useState(null);
+  const stopPlaybackRef = useRef(false);
+
+  // Clean the example: strip romanization in parentheses, e.g. "가방 (gabang)" -> "가방"
+  const cleanExample = (example) => {
+    if (!example) return '';
+    return example.replace(/\s*\([^)]*\)/g, '').trim();
+  };
+
+  // Stop any ongoing speech when leaving the page
+  useEffect(() => {
+    return () => stopSpeaking();
+  }, []);
+
+  // Stop playback when navigating to another lesson
+  useEffect(() => {
+    stopPlaybackRef.current = true;
+    stopSpeaking();
+    setSpeakingIdx(null);
+  }, [lessonNumber]);
+
+  const handleStop = () => {
+    stopPlaybackRef.current = true;
+    stopSpeaking();
+    setSpeakingIdx(null);
+  };
+
+  const speakLetter = (letter, idx, example) => {
+    if (!letter) return;
+    stopPlaybackRef.current = true; // cancel any running play-all sequence
+    setSpeakingIdx(idx);
+    // Speak the letter itself, then the example word for full pronunciation
+    speak(letter, state.selectedLanguage, {
+      onEnd: () => {
+        const cleaned = cleanExample(example);
+        if (cleaned) {
+          speak(cleaned, state.selectedLanguage, {
+            onEnd: () => setSpeakingIdx(null),
+            onError: () => setSpeakingIdx(null),
+          });
+        } else {
+          setSpeakingIdx(null);
+        }
+      },
+      onError: () => setSpeakingIdx(null),
+    });
+  };
+
+  const speakAllLetters = () => {
+    const letters = lesson?.content?.letters;
+    if (!letters?.length) return;
+    stopPlaybackRef.current = false;
+    let idx = 0;
+
+    const playNext = () => {
+      if (stopPlaybackRef.current) {
+        setSpeakingIdx(null);
+        return;
+      }
+      if (idx >= letters.length) {
+        setSpeakingIdx(null);
+        return;
+      }
+      const item = letters[idx];
+      setSpeakingIdx(idx);
+      const cleaned = cleanExample(item.example);
+      speak(item.letter, state.selectedLanguage, {
+        onEnd: () => {
+          if (cleaned) {
+            speak(cleaned, state.selectedLanguage, {
+              onEnd: () => {
+                idx += 1;
+                playNext();
+              },
+              onError: () => {
+                idx += 1;
+                playNext();
+              },
+            });
+          } else {
+            idx += 1;
+            playNext();
+          }
+        },
+        onError: () => {
+          idx += 1;
+          playNext();
+        },
+      });
+    };
+
+    playNext();
+  };
 
   if (!currentLang || !lesson) {
     return (
@@ -45,12 +139,21 @@ export default function LevelPage({ onBack }) {
     setShowResult(true);
 
     if (correct) {
-      const earnedXp = isAlphabet ? 15 : 25;
-      setXpEarned(earnedXp);
+      const earnedCoins = isAlphabet ? 15 : 25;
+      setCoinsEarned(earnedCoins);
       setScore(100);
+      // Auto-collect coins immediately — no need to press a button.
+      // Only award on the first completion (prevents re-farming coins).
+      if (!isCompleted) {
+        dispatch({ type: 'ADD_COINS', payload: earnedCoins });
+      }
     } else {
       setScore(50);
-      setXpEarned(5);
+      setCoinsEarned(5);
+      // Auto-collect 5 coins for the attempt (mistake reward) — only on first completion
+      if (!isCompleted) {
+        dispatch({ type: 'ADD_COINS', payload: 5 });
+      }
     }
   };
 
@@ -77,7 +180,7 @@ export default function LevelPage({ onBack }) {
     setSelectedAnswer(null);
     setShowResult(false);
     setScore(0);
-    setXpEarned(0);
+    setCoinsEarned(0);
 
     const nextLesson = allLessons.find(l => l.number === lessonNumber + 1);
     if (nextLesson) {
@@ -89,7 +192,7 @@ export default function LevelPage({ onBack }) {
     setSelectedAnswer(null);
     setShowResult(false);
     setScore(0);
-    setXpEarned(0);
+    setCoinsEarned(0);
 
     const prevLesson = allLessons.find(l => l.number === lessonNumber - 1);
     if (prevLesson) {
@@ -165,16 +268,61 @@ export default function LevelPage({ onBack }) {
         {isAlphabet && lesson.content.letters && lesson.content.letters.length > 0 && (
           <div className="card bg-base-100 border border-base-300 mb-6 overflow-hidden">
             <div className="card-body p-4">
-              <h3 className="font-semibold text-sm flex items-center gap-2 mb-4">
-                <GraduationCap className="w-4 h-4 text-info" />
-                Harflarni o'rganing
-              </h3>
+              <div className="flex items-center justify-between mb-4 gap-2">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <GraduationCap className="w-4 h-4 text-info" />
+                  Harflarni o'rganing
+                </h3>
+                <div className="flex gap-1.5">
+                  {speakingIdx !== null && (
+                    <button
+                      onClick={handleStop}
+                      className="btn btn-xs btn-ghost gap-1"
+                    >
+                      <VolumeX className="w-3 h-3" /> To'xtatish
+                    </button>
+                  )}
+                  <button
+                    onClick={speakAllLetters}
+                    className="btn btn-xs btn-info gap-1"
+                    disabled={speakingIdx !== null}
+                  >
+                    <Volume2 className="w-3 h-3" /> Hammasini eshitish
+                  </button>
+                </div>
+              </div>
+
+              <p className="text-xs opacity-50 mb-3 flex items-center gap-1">
+                <Volume2 className="w-3 h-3" />
+                Harf ustiga bosing — talaffuzini eshitasiz
+              </p>
+
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {lesson.content.letters.map((item, idx) => (
-                  <div
+                  <button
                     key={idx}
-                    className="bg-base-200 rounded-xl p-4 text-center hover:bg-info/10 transition-all duration-200 group cursor-default"
+                    onClick={() => speakLetter(item.letter, idx, item.example)}
+                    className={`bg-base-200 rounded-xl p-4 text-center hover:bg-info/10 transition-all duration-200 group cursor-pointer relative overflow-hidden ${
+                      speakingIdx === idx ? 'ring-2 ring-info bg-info/10 scale-105' : ''
+                    }`}
                   >
+                    {speakingIdx === idx && (
+                      <span className="absolute top-2 right-2 flex gap-0.5 items-end">
+                        {[0, 1, 2].map(i => (
+                          <span
+                            key={i}
+                            className="w-1 rounded-full bg-info animate-pulse"
+                            style={{
+                              height: '6px',
+                              animationDelay: `${i * 150}ms`,
+                            }}
+                          />
+                        ))}
+                      </span>
+                    )}
+                    {speakingIdx !== idx && (
+                      <Volume2 className="absolute top-2 right-2 w-3.5 h-3.5 opacity-0 group-hover:opacity-40 transition-opacity" />
+                    )}
                     <div className="text-3xl font-bold mb-1 group-hover:scale-110 transition-transform">
                       {item.letter}
                     </div>
@@ -183,7 +331,7 @@ export default function LevelPage({ onBack }) {
                       <div className="text-sm font-medium">{item.example}</div>
                       <div className="text-[10px] opacity-40">{item.exampleUz}</div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -283,7 +431,7 @@ export default function LevelPage({ onBack }) {
                     </>
                   )}
                   <span className="text-sm opacity-50 ml-auto">
-                    +{xpEarned} XP
+                    +{coinsEarned} 🪙
                   </span>
                 </div>
                 {!isCorrect && (
@@ -312,8 +460,8 @@ export default function LevelPage({ onBack }) {
           <div className="flex gap-2">
             {showResult && !isCompleted && (
               <button onClick={handleComplete} className="btn btn-primary btn-sm gap-2">
-                <Zap className="w-4 h-4" />
-                {xpEarned} XP olish
+                <Coins className="w-4 h-4" />
+                Davom etish{coinsEarned > 0 ? ` (+${coinsEarned} 🪙)` : ''}
               </button>
             )}
             {isCompleted && lessonNumber < allLessons.length && (
@@ -343,7 +491,7 @@ export default function LevelPage({ onBack }) {
                   setSelectedAnswer(null);
                   setShowResult(false);
                   setScore(0);
-                  setXpEarned(0);
+                  setCoinsEarned(0);
                 }}
                 className={`w-6 h-6 rounded-full text-[10px] font-bold transition-all ${
                   l.number === lessonNumber
