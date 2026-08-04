@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Navbar from './components/Navbar';
 import AITutor from './components/AITutor';
@@ -12,15 +12,34 @@ import HomePage from './pages/HomePage';
 import LanguageDashboard from './pages/LanguageDashboard';
 import LevelPage from './pages/LevelPage';
 import SMSReminder from './components/SMSReminder';
-import {
-  MessageCircle, X, Award, BarChart3,
-  Sparkles, Target, RotateCcw, RefreshCw, PanelRightOpen
-} from 'lucide-react';
+import AdminPanel from './pages/AdminPanel';
+import LiveVisitorsBadge from './components/LiveVisitorsBadge';
+import { startPresence, stopPresence } from './utils/presence';
+import { MessageCircle, X, Sparkles, PanelRightOpen } from 'lucide-react';
 
 function AppContent() {
   const { state, dispatch } = useApp();
   const [isTutorOpen, setIsTutorOpen] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+
+  // Minimal hash router: #/admin opens the admin panel
+  const [hash, setHash] = useState(() => window.location.hash);
+  useEffect(() => {
+    const onHashChange = () => setHash(window.location.hash);
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  // Count this visitor as 'site' while on the main app
+  useEffect(() => {
+    startPresence('site');
+    return () => stopPresence();
+  }, []);
+
+  // Admin panel route
+  if (hash.startsWith('#/admin')) {
+    return <AdminPanel />;
+  }
 
   const handleToggleTutor = () => {
     setIsTutorOpen(prev => {
@@ -114,6 +133,9 @@ function AppContent() {
 
       {/* SMS reminder when a day is missed */}
       <SMSReminder />
+
+      {/* Live visitors badge (links to admin panel) */}
+      <LiveVisitorsBadge />
 
       {/* AI Tutor Floating Button */}
       {state.selectedLanguage && (

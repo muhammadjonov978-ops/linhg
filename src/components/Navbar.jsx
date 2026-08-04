@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
-import { Home, MessageCircle, Trophy, Coins, Award, LogIn, User } from 'lucide-react';
+import { Home, MessageCircle, Trophy, Coins, Award, LogIn, User, Shield } from 'lucide-react';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal from './GoogleAuthModal';
 
@@ -98,6 +98,16 @@ export default function Navbar({ onToggleTutor }) {
             <span className="hidden sm:inline text-xs">Kirish</span>
           </button>
         )}
+
+        {/* Admin Panel Button */}
+        <a
+          href="#/admin"
+          className="btn btn-ghost btn-sm gap-1.5 tooltip"
+          data-tip="Admin panel"
+        >
+          <Shield className="w-4 h-4 text-secondary" />
+          <span className="hidden sm:inline text-xs">Admin</span>
+        </a>
 
         {/* Theme Picker (35 themes) */}
         <ThemePicker />
