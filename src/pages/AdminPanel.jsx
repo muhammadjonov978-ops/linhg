@@ -7,7 +7,7 @@ import { HAS_FIREBASE } from '../firebase';
 import {
   Shield, KeyRound, User as UserIcon, Eye, EyeOff, LogOut, ArrowLeft,
   Copy, Check, Activity, Users, Radio, Lock, Clock, AlertTriangle,
-  ChevronDown, Globe, Server, Wifi, WifiOff, Crown, BadgeCheck,
+  Globe, Server, Wifi, WifiOff, Crown, BadgeCheck,
 } from 'lucide-react';
 
 const AUTH_KEY = 'lingohub_admin_auth';
@@ -79,7 +79,6 @@ function LoginScreen({ onSuccess }) {
   const [error, setError] = useState('');
   const [attempts, setAttempts] = useState(() => readJSON(AUTH_KEY, { failed: 0, lockUntil: 0 }));
   const [now, setNow] = useState(Date.now());
-  const [showAccounts, setShowAccounts] = useState(false);
 
   // Live countdown for lockout
   useEffect(() => {
@@ -230,31 +229,6 @@ function LoginScreen({ onSuccess }) {
               </form>
             )}
 
-            {/* Accounts helper (for the 20+ staff members) */}
-            <div className="divider text-xs opacity-50 mt-6">Hisoblar ro\u2018yxati</div>
-            <button
-              onClick={() => setShowAccounts((v) => !v)}
-              className="btn btn-ghost btn-sm w-full gap-2"
-            >
-              <Users className="w-4 h-4" />
-              {showAccounts ? 'Hisoblarni yopish' : `${ADMIN_USERS.length} ta hisobni ko\u2018rsatish`}
-              <ChevronDown className={`w-4 h-4 transition-transform ${showAccounts ? 'rotate-180' : ''}`} />
-            </button>
-            {showAccounts && (
-              <div className="mt-3 max-h-56 overflow-y-auto rounded-xl border border-base-300 divide-y divide-base-200 animate-[fadeIn_0.3s_ease-out]">
-                {ADMIN_USERS.map((u) => (
-                  <div key={u.username} className="flex items-center justify-between gap-2 px-3 py-2 text-xs">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-mono font-bold">{u.username}</span>
-                      <span className="opacity-40 font-mono">/</span>
-                      <span className="font-mono opacity-70">{u.password}</span>
-                    </div>
-                    <CopyButton text={`${u.username}\n${u.password}`} label="Nusxalash" />
-                  </div>
-                ))}
-              </div>
-            )}
-
             <a href="#/" className="btn btn-ghost btn-sm mt-2 gap-2 text-xs">
               <ArrowLeft className="w-3.5 h-3.5" /> Saytga qaytish
             </a>
@@ -273,7 +247,6 @@ function LoginScreen({ onSuccess }) {
 function Dashboard({ session, onLogout }) {
   const [presence, setPresence] = useState({ total: 0, site: 0, admin: 0, mode: 'local' });
   const [log] = useState(() => readJSON(LOG_KEY, []));
-  const [showPasswords, setShowPasswords] = useState(false);
 
   // Track this visitor as "admin" while the dashboard is open,
   // then move back to "site" when leaving (presence keeps running).
@@ -457,13 +430,6 @@ function Dashboard({ session, onLogout }) {
                   <p className="text-[11px] opacity-50">{totalAccounts} ta foydalanuvchi tizimga kirishi mumkin</p>
                 </div>
               </div>
-              <button
-                onClick={() => setShowPasswords((v) => !v)}
-                className="btn btn-ghost btn-sm gap-2"
-              >
-                {showPasswords ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                {showPasswords ? 'Parollarni yashirish' : 'Parollarni ko\u2018rsatish'}
-              </button>
             </div>
 
             <div className="overflow-x-auto rounded-xl border border-base-300">
@@ -473,7 +439,6 @@ function Dashboard({ session, onLogout }) {
                     <th className="w-10">#</th>
                     <th>Foydalanuvchi</th>
                     <th>Ism</th>
-                    <th>Parol</th>
                     <th>Rol</th>
                     <th className="text-right">Amal</th>
                   </tr>
@@ -484,13 +449,6 @@ function Dashboard({ session, onLogout }) {
                       <td className="text-xs opacity-50">{i + 1}</td>
                       <td className="font-mono text-xs font-bold">{u.username}</td>
                       <td className="text-xs">{u.name}</td>
-                      <td className="font-mono text-xs">
-                        {showPasswords ? (
-                          <span className="badge badge-ghost badge-sm font-mono">{u.password}</span>
-                        ) : (
-                          <span className="opacity-30">••••••••</span>
-                        )}
-                      </td>
                       <td>
                         {u.role === 'owner' ? (
                           <span className="badge badge-warning badge-sm gap-1">

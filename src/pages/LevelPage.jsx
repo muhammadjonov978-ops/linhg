@@ -7,6 +7,7 @@ import {
   ChevronLeft, ChevronRight, Volume2, RefreshCw,
   BookOpen, GraduationCap, Coins, VolumeX
 } from 'lucide-react';
+import CoinRewardBanner from '../components/CoinRewardBanner';
 
 export default function LevelPage({ onBack }) {
   const { state, dispatch, getLessonProgress } = useApp();
@@ -142,22 +143,18 @@ export default function LevelPage({ onBack }) {
       const earnedCoins = isAlphabet ? 15 : 25;
       setCoinsEarned(earnedCoins);
       setScore(100);
-      // Auto-collect coins immediately — no need to press a button.
-      // Only award on the first completion (prevents re-farming coins).
-      if (!isCompleted) {
-        dispatch({ type: 'ADD_COINS', payload: earnedCoins });
-      }
     } else {
       setScore(50);
-      setCoinsEarned(5);
-      // Auto-collect 5 coins for the attempt (mistake reward) — only on first completion
-      if (!isCompleted) {
-        dispatch({ type: 'ADD_COINS', payload: 5 });
-      }
+      setCoinsEarned(0);
     }
   };
 
   const handleComplete = () => {
+    // Coins faqat to'g'ri javob bilan dars tugatilganda beriladi (birinchi marta)
+    if (isCorrect && !isCompleted && coinsEarned > 0) {
+      dispatch({ type: 'ADD_COINS', payload: coinsEarned });
+    }
+
     dispatch({
       type: 'COMPLETE_LESSON',
       payload: {
@@ -238,6 +235,11 @@ export default function LevelPage({ onBack }) {
 
       {/* Lesson content */}
       <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* 5000 tanga — 2 ta pullik til banneri */}
+        <div className="mb-6">
+          <CoinRewardBanner />
+        </div>
+
         {/* Lesson header */}
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">{lesson.icon}</div>
@@ -430,9 +432,11 @@ export default function LevelPage({ onBack }) {
                       <span className="font-bold text-error">Noto'g'ri</span>
                     </>
                   )}
-                  <span className="text-sm opacity-50 ml-auto">
-                    +{coinsEarned} 🪙
-                  </span>
+                  {coinsEarned > 0 && (
+                    <span className="text-sm opacity-50 ml-auto">
+                      +{coinsEarned} 🪙
+                    </span>
+                  )}
                 </div>
                 {!isCorrect && (
                   <p className="text-sm opacity-70">

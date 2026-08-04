@@ -150,7 +150,7 @@ function appReducer(state, action) {
         newStreak = 1;
       }
 
-      // NOTE: coins are auto-awarded in LevelPage.handleAnswer — do NOT double-award here
+      // NOTE: coins LevelPage.handleComplete da beriladi (faqat dars tugatilganda) — bu yerda qayta bermang
       return {
         ...state,
         streak: newStreak,

@@ -1,16 +1,16 @@
 // ==== ADMIN PANEL ACCOUNTS ====
-// Owner:  shox.. / shox.kea
-// Staff:  admin1..admin20  (parol = login bilan bir xil)
+// Barcha hisoblar uchun parol bir xil: shox1010
+// Egas:  shox / shox1010
 //
 // NOTE: bu foydalanuvchilar ro'yxati mijoz (brauzer) tomonida saqlanadi —
 // statik sayt uchun mo'ljallangan demo himoya. Haqiqiy xavfsizlik uchun
 // backend + server tomonida autentifikatsiya kerak bo'ladi.
 
 export const ADMIN_USERS = [
-  { username: 'shox..', password: 'shox.kea', name: 'Shox', role: 'owner' },
+  { username: 'shox', password: 'shox1010', name: 'Shox', role: 'owner' },
   ...Array.from({ length: 20 }, (_, i) => ({
     username: `admin${i + 1}`,
-    password: `admin${i + 1}`,
+    password: 'shox1010',
     name: `Admin ${i + 1}`,
     role: 'admin',
   })),
