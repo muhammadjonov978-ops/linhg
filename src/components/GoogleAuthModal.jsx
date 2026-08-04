@@ -1,7 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useApp } from '../context/AppContext';
-import { GOOGLE_CLIENT_ID, HAS_GOOGLE_AUTH } from '../config';
-import { X, LogOut, User, Loader2, Shield, CheckCircle } from 'lucide-react';
+import { useState } from 'react';
+import { X, LogOut, User, LogIn, CheckCircle, Sparkles } from 'lucide-react';
 
 const USER_STORAGE_KEY = 'lingohub_user';
 
@@ -14,33 +12,23 @@ function loadSavedUser() {
   }
 }
 
-function decodeJwt(token) {
+function saveUser(u) {
   try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    const json = decodeURIComponent(atob(base64).split('').map(c =>
-      '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-    ).join(''));
-    return JSON.parse(json);
-  } catch {
-    return null;
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(u));
+  } catch (e) {
+    console.warn('Failed to save user:', e);
   }
 }
 
+// Oddiy (Google'siz) kirish — faqat ism kiritiladi.
+// Profil brauzerda saqlanadi, taraqqiyot bilan birga qoladi.
 export default function GoogleAuthModal({ isOpen, onClose }) {
-  const { dispatch } = useApp();
   const [user, setUser] = useState(loadSavedUser);
-  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState('');
   const [error, setError] = useState('');
-  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [saved, setSaved] = useState(false);
 
-  const saveUser = (u) => {
-    setUser(u);
-    try {
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(u));
-    } catch (e) {
-      console.warn('Failed to save user:', e);
-    }
-  };
+  if (!isOpen) return null;
 
   const signOut = () => {
     setUser(null);
@@ -49,78 +37,31 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
     } catch (e) {
       console.warn('Failed to clear user:', e);
     }
-    // Also revoke GIS session if available
-    if (window.google?.accounts?.id) {
-      try {
-        window.google.accounts.id.disableAutoSelect();
-        window.google.accounts.id.revoke(user?.sub || '', () => {});
-      } catch (e) { /* noop */ }
-    }
   };
 
-  // Load Google Identity Services script once
-  useEffect(() => {
-    if (!HAS_GOOGLE_AUTH || typeof window === 'undefined') return;
-    if (window.google?.accounts?.id) {
-      setScriptLoaded(true);
-      return;
-    }
-    const s = document.createElement('script');
-    s.src = 'https://accounts.google.com/gsi/client';
-    s.async = true;
-    s.defer = true;
-    s.onload = () => setScriptLoaded(true);
-    document.head.appendChild(s);
-  }, []);
-
-  const handleCredential = useCallback((response) => {
-    const payload = decodeJwt(response?.credential);
-    if (!payload) {
-      setError("Google javobini o'qib bo'lmadi. Qayta urinib ko'ring.");
-      setLoading(false);
+  const handleSignIn = (e) => {
+    e.preventDefault();
+    const clean = String(name || '').trim();
+    if (clean.length < 2) {
+      setError('Iltimos, ismingizni kiriting (kamida 2 ta harf)');
       return;
     }
     const profile = {
-      sub: payload.sub,
-      name: payload.name || 'Foydalanuvchi',
-      email: payload.email || '',
-      picture: payload.picture || '',
-      givenName: payload.given_name || '',
+      sub: `local-${Date.now()}`,
+      name: clean,
+      givenName: clean,
+      picture: '',
     };
     saveUser(profile);
+    setUser(profile);
     setError('');
-    setLoading(false);
-    onClose();
-  }, [onClose]);
-
-  // Render Google button when modal opens
-  useEffect(() => {
-    if (!isOpen || !HAS_GOOGLE_AUTH || !scriptLoaded) return;
-    if (!window.google?.accounts?.id) return;
-
-    try {
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleCredential,
-        auto_select: false,
-      });
-      const container = document.getElementById('google-signin-button');
-      if (container) {
-        container.innerHTML = '';
-        window.google.accounts.id.renderButton(container, {
-          theme: 'outline',
-          size: 'large',
-          width: 280,
-          shape: 'pill',
-          text: 'continue_with',
-        });
-      }
-    } catch (e) {
-      setError("Google tugmasi ishga tushmadi: " + (e?.message || 'noma\'lum xato'));
-    }
-  }, [isOpen, scriptLoaded, handleCredential]);
-
-  if (!isOpen) return null;
+    setSaved(true);
+    setName('');
+    setTimeout(() => {
+      setSaved(false);
+      onClose();
+    }, 900);
+  };
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -135,17 +76,17 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
         </button>
 
         {user ? (
-          /* Logged in profile */
+          /* ---------- LOGGED IN PROFILE ---------- */
           <div className="p-8 text-center">
-            <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-4xl mb-4 overflow-hidden">
+            <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-3xl font-bold text-white mb-4 overflow-hidden">
               {user.picture ? (
                 <img src={user.picture} alt={user.name} className="w-full h-full object-cover" />
               ) : (
-                <User className="w-10 h-10 text-white" />
+                user.name?.charAt(0).toUpperCase()
               )}
             </div>
             <h2 className="text-xl font-bold">{user.name}</h2>
-            <p className="text-sm opacity-60 mb-1">{user.email}</p>
+            <p className="text-sm opacity-60 mb-1">Xush kelibsiz!</p>
             <div className="badge badge-success badge-sm gap-1 mb-6 mt-2">
               <CheckCircle className="w-3 h-3" /> Tizimga kirdingiz
             </div>
@@ -157,7 +98,7 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
             </div>
           </div>
         ) : (
-          /* Sign in form */
+          /* ---------- SIGN IN FORM (Google'siz) ---------- */
           <div className="p-8">
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -166,32 +107,53 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
             </div>
             <h2 className="text-2xl font-bold text-center mb-2">Hisobga kirish</h2>
             <p className="text-sm opacity-60 text-center mb-6">
-              Google orqali ro'yxatdan o'ting yoki kiring — taraqqiyotingiz xavfsiz saqlanadi
+              Ismingizni yozing — taraqqiyotingiz shu brauzerda saqlanadi
             </p>
 
-            {HAS_GOOGLE_AUTH ? (
-              <div className="flex flex-col items-center gap-3">
-                {loading && <Loader2 className="w-5 h-5 animate-spin text-primary" />}
-                <div id="google-signin-button" className="min-h-[40px] flex justify-center" />
-                {error && <p className="text-xs text-error">{error}</p>}
-                <p className="text-[11px] opacity-50 flex items-center gap-1 mt-2">
-                  <Shield className="w-3 h-3 text-success" />
-                  Google sizning hisobingizni himoya qiladi
-                </p>
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="relative">
+                <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 opacity-40" />
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => { setName(e.target.value); setError(''); }}
+                  placeholder="Ismingizni kiriting"
+                  autoFocus
+                  className="input input-bordered w-full pl-10 focus:outline-none focus:border-primary transition-colors"
+                />
               </div>
-            ) : (
-              <div className="text-center">
-                <div className="alert alert-warning text-sm text-left mb-4">
-                  Google kirish hozircha yoqilmagan. Buni yoqish uchun:
-                  <ol className="list-decimal ml-4 mt-2 space-y-1 text-xs">
-                    <li>Google Cloud Console'da OAuth Client ID yarating</li>
-                    <li>Uni <code className="badge badge-ghost">.env</code> faylida <code>VITE_GOOGLE_CLIENT_ID</code> ga qo'ying</li>
-                    <li>Saytni qayta yuklang</li>
-                  </ol>
+
+              {error && (
+                <div className="alert alert-error text-sm py-2.5 animate-[fadeIn_0.3s_ease-out]">
+                  <span>{error}</span>
                 </div>
-                <button onClick={onClose} className="btn btn-primary w-full">Yopish</button>
-              </div>
-            )}
+              )}
+
+              <button
+                type="submit"
+                disabled={String(name || '').trim().length < 2}
+                className="btn btn-primary w-full gap-2 btn-wave"
+              >
+                <LogIn className="w-4 h-4" />
+                Kirish
+              </button>
+            </form>
+
+            <div className="flex items-center justify-center gap-1.5 mt-4 text-[11px] opacity-50">
+              <Sparkles className="w-3 h-3 text-warning" />
+              Hech qanday parol kerak emas — shunchaki ism yozing
+            </div>
+          </div>
+        )}
+
+        {/* Muvaffaqiyatli kirish animatsiyasi */}
+        {saved && (
+          <div className="absolute inset-0 z-20 bg-base-100/90 backdrop-blur-sm flex flex-col items-center justify-center animate-[fadeIn_0.3s_ease-out]">
+            <div className="w-16 h-16 rounded-full bg-success/15 flex items-center justify-center mb-3">
+              <CheckCircle className="w-9 h-9 text-success animate-[scaleIn_0.4s_ease-out]" />
+            </div>
+            <p className="font-bold text-lg">Muvaffaqiyatli kirdingiz!</p>
+            <p className="text-sm opacity-60">Xush kelibsiz, {user?.name} 👋</p>
           </div>
         )}
       </div>
