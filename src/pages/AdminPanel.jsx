@@ -149,14 +149,7 @@ function LoginScreen({ onSuccess }) {
               </button>
             </form>
 
-            <div className="mt-3 text-center">
-              <div className="badge badge-ghost badge-sm gap-1 py-2.5">
-                <Crown className="w-3 h-3 text-warning" />
-                Hamma uchun umumiy kirish: shox / shox1010
-              </div>
-            </div>
-
-            <a href="#/" className="btn btn-ghost btn-sm mt-2 gap-2 text-xs">
+            <a href="#/" className="btn btn-ghost btn-sm mt-4 gap-2 text-xs">
               <ArrowLeft className="w-3.5 h-3.5" /> Saytga qaytish
             </a>
           </div>

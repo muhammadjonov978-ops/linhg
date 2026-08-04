@@ -36,12 +36,25 @@ export default function LevelPage({ onBack }) {
     return () => stopSpeaking();
   }, []);
 
-  // Stop playback when navigating to another lesson
+  // Stop playback AND reset answer state when navigating to another lesson.
+  // This prevents the previous lesson's selection/result from appearing
+  // in the newly opened lesson (e.g. after pressing "Davom etish").
   useEffect(() => {
     stopPlaybackRef.current = true;
     stopSpeaking();
     setSpeakingIdx(null);
+    resetAnswerState();
   }, [lessonNumber]);
+
+  // Javob holatini tozalash — keyingi darsga o'tganda eski javob/natija
+  // ko'rinib qolmasligi uchun (bitta joyda, 5 ta joyda takrorlanmaydi)
+  const resetAnswerState = () => {
+    setSelectedAnswer(null);
+    setShowResult(false);
+    setIsCorrect(false);
+    setScore(0);
+    setCoinsEarned(0);
+  };
 
   const handleStop = () => {
     stopPlaybackRef.current = true;
@@ -159,6 +172,11 @@ export default function LevelPage({ onBack }) {
       },
     });
 
+    // Answer state darhol tozalanadi — keyingi darsda eski javob
+    // yoki natija ko'rinib qolmasligi uchun (oldin davom etish bosilganda
+    // keyingi darsda avtomatik belgilangan javob chiqib qolardi)
+    resetAnswerState();
+
     // Navigate to next lesson
     const nextLesson = allLessons.find(l => l.number === lessonNumber + 1);
     if (nextLesson) {
@@ -169,10 +187,7 @@ export default function LevelPage({ onBack }) {
   };
 
   const handleNextLesson = () => {
-    setSelectedAnswer(null);
-    setShowResult(false);
-    setScore(0);
-    setCoinsEarned(0);
+    resetAnswerState();
 
     const nextLesson = allLessons.find(l => l.number === lessonNumber + 1);
     if (nextLesson) {
@@ -181,10 +196,7 @@ export default function LevelPage({ onBack }) {
   };
 
   const handlePrevLesson = () => {
-    setSelectedAnswer(null);
-    setShowResult(false);
-    setScore(0);
-    setCoinsEarned(0);
+    resetAnswerState();
 
     const prevLesson = allLessons.find(l => l.number === lessonNumber - 1);
     if (prevLesson) {
@@ -486,10 +498,7 @@ export default function LevelPage({ onBack }) {
                 key={l.number}
                 onClick={() => {
                   dispatch({ type: 'SET_CURRENT_LEVEL', payload: `lesson-${l.number}` });
-                  setSelectedAnswer(null);
-                  setShowResult(false);
-                  setScore(0);
-                  setCoinsEarned(0);
+                  resetAnswerState();
                 }}
                 className={`w-6 h-6 rounded-full text-[10px] font-bold transition-all ${
                   l.number === lessonNumber
