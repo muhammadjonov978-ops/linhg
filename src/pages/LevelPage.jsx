@@ -139,19 +139,17 @@ export default function LevelPage({ onBack }) {
     setIsCorrect(correct);
     setShowResult(true);
 
-    if (correct) {
-      const earnedCoins = isAlphabet ? 15 : 25;
-      setCoinsEarned(earnedCoins);
-      setScore(100);
-    } else {
-      setScore(50);
-      setCoinsEarned(0);
-    }
+    // Tanga faqat oxirida foizga qarab beriladi (avtomatik emas):
+    // 100% -> to'liq (15/25), 50% -> yarmi.
+    const resultScore = correct ? 100 : 50;
+    setScore(resultScore);
+    setCoinsEarned(Math.round((isAlphabet ? 15 : 25) * (resultScore / 100)));
   };
 
   const handleComplete = () => {
-    // Coins faqat to'g'ri javob bilan dars tugatilganda beriladi (birinchi marta)
-    if (isCorrect && !isCompleted && coinsEarned > 0) {
+    // Coins foizga qarab beriladi — faqat dars birinchi marta tugatilganda,
+    // "Davom etish" tugmasi bosilganda (avtomatik emas).
+    if (!isCompleted && coinsEarned > 0) {
       dispatch({ type: 'ADD_COINS', payload: coinsEarned });
     }
 

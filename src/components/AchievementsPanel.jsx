@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Award, Lock, Sparkles, Zap, Trophy, ChevronRight, Gift } from 'lucide-react';
+import { Award, Lock, Sparkles, Zap, Trophy, ChevronRight, Gift, CheckCircle } from 'lucide-react';
 
 export default function AchievementsPanel({ limit }) {
   const { state, dispatch } = useApp();
@@ -23,6 +23,13 @@ export default function AchievementsPanel({ limit }) {
   }, [state.achievements]);
 
   const achievements = state.achievements || [];
+
+  const handleClaim = (achievement) => {
+    dispatch({
+      type: 'CLAIM_ACHIEVEMENT',
+      payload: { id: achievement.id, coinReward: achievement.coinReward ?? achievement.xpReward ?? 0 },
+    });
+  };
   const unlocked = achievements.filter(a => a.unlocked);
   const locked = limit ? [] : achievements.filter(a => !a.unlocked);
   const displayAchievements = limit ? unlocked.slice(0, limit) : achievements;
@@ -86,10 +93,20 @@ export default function AchievementsPanel({ limit }) {
                   {achievement.name}
                 </p>
                 {isUnlocked && (achievement.coinReward || achievement.xpReward) && (
-                  <div className="flex items-center justify-center gap-1 mt-1 text-xs text-warning">
-                    <Zap className="w-3 h-3" />
-                    +{achievement.coinReward ?? achievement.xpReward} 🪙
-                  </div>
+                  achievement.claimed ? (
+                    <div className="flex items-center justify-center gap-1 mt-1 text-[11px] text-success font-medium">
+                      <CheckCircle className="w-3 h-3" />
+                      +{achievement.coinReward ?? achievement.xpReward} 🪙 olindi
+                    </div>
+                  ) : (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleClaim(achievement); }}
+                      className="btn btn-xs btn-warning gap-1 mt-1.5 animate-[fadeIn_0.4s_ease-out] btn-wave"
+                    >
+                      <Zap className="w-3 h-3" />
+                      +{achievement.coinReward ?? achievement.xpReward} 🪙 olib olish
+                    </button>
+                  )
                 )}
                 {isUnlocked && achievement.justUnlocked && (
                   <div className="absolute -top-1 -right-1">

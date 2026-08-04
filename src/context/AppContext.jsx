@@ -195,6 +195,15 @@ function appReducer(state, action) {
     case 'CLAIM_ACHIEVEMENT_COINS':
       return { ...state, coins: state.coins + action.payload };
 
+    case 'CLAIM_ACHIEVEMENT':
+      return {
+        ...state,
+        coins: state.coins + (action.payload.coinReward || 0),
+        achievements: (state.achievements || []).map(a =>
+          a.id === action.payload.id ? { ...a, claimed: true } : a
+        ),
+      };
+
     case 'REMOVE_ACHIEVEMENT':
       return { ...state, achievements: state.achievements.filter(a => a.id !== action.payload) };
 
@@ -271,19 +280,14 @@ export function AppProvider({ children }) {
       }
     }
 
-    // Check for new achievements — rewards are AUTO-COLLECTED as coins
+    // Check for new achievements — coins are NOT auto-collected anymore.
+    // The student claims the coin reward manually from the achievements panel.
     const stats = calculateStats(state);
     const newAchievements = checkNewAchievements(stats, state.achievements);
     if (newAchievements.length > 0) {
-      // Auto-claim coin rewards immediately
-      const totalCoins = newAchievements.reduce((sum, a) => sum + (a.coinReward || 0), 0);
-      if (totalCoins > 0) {
-        dispatch({ type: 'ADD_COINS', payload: totalCoins });
-      }
-
       const updatedAchievements = [
         ...state.achievements,
-        ...newAchievements.map(a => ({ ...a, justUnlocked: true })),
+        ...newAchievements.map(a => ({ ...a, justUnlocked: true, claimed: false })),
       ];
       dispatch({ type: 'SET_ACHIEVEMENTS', payload: updatedAchievements });
     }

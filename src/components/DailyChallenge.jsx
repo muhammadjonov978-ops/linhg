@@ -4,7 +4,6 @@ import { Target, CheckCircle, Clock, Zap, Gift, Sparkles, RotateCcw } from 'luci
 
 export default function DailyChallenge() {
   const { state, dispatch } = useApp();
-  const [showReward, setShowReward] = useState(null);
 
   const generateDailyChallenges = () => {
     const today = new Date().toDateString();
@@ -90,8 +89,11 @@ export default function DailyChallenge() {
     const today = new Date().toDateString();
     const fresh = generateDailyChallenges();
     if (saved && saved.date === today && Array.isArray(saved.challenges)) {
-      const completedIds = new Set(saved.challenges.filter(c => c.completed).map(c => c.id));
-      return fresh.map(c => ({ ...c, completed: completedIds.has(c.id) }));
+      const savedById = new Map(saved.challenges.map(c => [c.id, c]));
+      return fresh.map(c => {
+        const s = savedById.get(c.id);
+        return s ? { ...c, completed: !!s.completed, claimed: !!s.claimed } : c;
+      });
     }
     return fresh;
   });
@@ -105,6 +107,16 @@ export default function DailyChallenge() {
     return new Set();
   });
 
+  // Tangalar avtomatik emas — foydalanuvchi "Olib olish" tugmasini bosganda beriladi
+  const [claimedIds, setClaimedIds] = useState(() => {
+    const saved = state.dailyChallenges;
+    const today = new Date().toDateString();
+    if (saved && saved.date === today && Array.isArray(saved.challenges)) {
+      return new Set(saved.challenges.filter(c => c.completed && c.claimed).map(c => c.id));
+    }
+    return new Set();
+  });
+
   // Check and auto-complete challenges (rewards auto-collected as coins)
   useEffect(() => {
     // IMPORTANT: regenerate fresh `check` functions from CURRENT state each time.
@@ -114,15 +126,11 @@ export default function DailyChallenge() {
     const freshById = new Map(freshChallenges.map(f => [f.id, f]));
 
     let changed = false;
-    let totalReward = 0;
     const updated = dailyChallenges.map(c => {
       const check = freshById.get(c.id)?.check || c.check;
       if (!completedChallenges.has(c.id) && check && check()) {
         changed = true;
-        totalReward += c.coinReward || 0;
-        setShowReward(c);
-        setTimeout(() => setShowReward(null), 3000);
-        return { ...c, completed: true };
+        return { ...c, completed: true, claimed: false };
       }
       return c;
     });
@@ -133,10 +141,7 @@ export default function DailyChallenge() {
       setCompletedChallenges(newCompleted);
       setDailyChallenges(updated);
 
-      // Auto-collect coin reward
-      if (totalReward > 0) {
-        dispatch({ type: 'ADD_COINS', payload: totalReward });
-      }
+      // Tanga avtomatik berilmaydi — "Olib olish" tugmasi bosilganda beriladi
 
       // Save to context (strip check functions - only serializable data)
       dispatch({
@@ -149,10 +154,26 @@ export default function DailyChallenge() {
     }
   }, [state.progress, state.tutorMessages]);
 
+  const handleClaim = (challenge) => {
+    if (!challenge.completed || claimedIds.has(challenge.id)) return;
+    dispatch({ type: 'ADD_COINS', payload: challenge.coinReward || 0 });
+    setClaimedIds(prev => new Set(prev).add(challenge.id));
+    const next = dailyChallenges.map(c => c.id === challenge.id ? { ...c, claimed: true } : c);
+    setDailyChallenges(next);
+    dispatch({
+      type: 'UPDATE_DAILY_CHALLENGES',
+      payload: {
+        date: new Date().toDateString(),
+        challenges: next.map(({ check, ...rest }) => rest),
+      },
+    });
+  };
+
   const handleRefresh = () => {
     const newChallenges = generateDailyChallenges();
     setDailyChallenges(newChallenges);
     setCompletedChallenges(new Set());
+    setClaimedIds(new Set());
     dispatch({
       type: 'UPDATE_DAILY_CHALLENGES',
       payload: {
@@ -216,10 +237,25 @@ export default function DailyChallenge() {
                   </div>
                   <p className="text-xs opacity-50">{challenge.description}</p>
                 </div>
-                <div className="flex items-center gap-1 text-xs font-bold text-warning">
-                  <Zap className="w-3 h-3" />
-                  +{challenge.coinReward} 🪙
-                </div>
+                {isCompleted && claimedIds.has(challenge.id) ? (
+                  <div className="flex items-center gap-1 text-xs font-bold text-success">
+                    <CheckCircle className="w-3 h-3" />
+                    +{challenge.coinReward} 🪙
+                  </div>
+                ) : isCompleted ? (
+                  <button
+                    onClick={() => handleClaim(challenge)}
+                    className="btn btn-xs btn-warning gap-1 animate-[fadeIn_0.4s_ease-out]"
+                  >
+                    <Zap className="w-3 h-3" />
+                    +{challenge.coinReward} 🪙
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-1 text-xs font-bold text-warning">
+                    <Zap className="w-3 h-3" />
+                    +{challenge.coinReward} 🪙
+                  </div>
+                )}
               </div>
             );
           })}
@@ -237,18 +273,7 @@ export default function DailyChallenge() {
           </div>
         )}
 
-        {/* Reward notification */}
-        {showReward && (
-          <div className="fixed top-20 right-4 z-50 animate-[fadeIn_0.3s_ease-out]">
-            <div className="bg-success text-success-content px-4 py-3 rounded-xl shadow-lg flex items-center gap-3">
-              <Gift className="w-5 h-5" />
-              <div>
-                <p className="font-bold text-sm">Topshiriq bajarildi!</p>
-                <p className="text-xs opacity-80">+{showReward.coinReward} 🪙 tanga</p>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
     </div>
   );

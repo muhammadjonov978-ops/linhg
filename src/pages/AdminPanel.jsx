@@ -291,7 +291,7 @@ function Dashboard({ session, onLogout }) {
       value: totalAccounts,
       icon: BadgeCheck,
       color: 'warning',
-      note: '21 ta admin hisob',
+      note: `${totalAccounts} ta admin hisob`,
     },
   ];
 
@@ -427,7 +427,7 @@ function Dashboard({ session, onLogout }) {
                 </div>
                 <div>
                   <h3 className="font-bold text-sm">Admin hisoblar</h3>
-                  <p className="text-[11px] opacity-50">{totalAccounts} ta foydalanuvchi tizimga kirishi mumkin</p>
+                  <p className="text-[11px] opacity-50">{totalAccounts} ta hisob — login va parol bilan kiradi</p>
                 </div>
               </div>
             </div>

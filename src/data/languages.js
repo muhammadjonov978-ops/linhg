@@ -110,14 +110,6 @@ export const languages = [
     price: 20000,
   },
   {
-    id: 'hindi',
-    name: 'हिन्दी',
-    flag: '🇮🇳',
-    color: 'error',
-    description: 'Hindistonning asosiy tili',
-    totalLearners: 34000,
-  },
-  {
     id: 'turkish',
     name: 'Türkçe',
     flag: '🇹🇷',
@@ -182,14 +174,6 @@ export const languages = [
     totalLearners: 17000,
   },
   {
-    id: 'hebrew',
-    name: 'עברית',
-    flag: '🇮🇱',
-    color: 'neutral',
-    description: 'Isroil va qadimiy til',
-    totalLearners: 13000,
-  },
-  {
     id: 'thai',
     name: 'ไทย',
     flag: '🇹🇭',
@@ -238,6 +222,8 @@ export const languages = [
     totalLearners: 25000,
   },
 ];
+
+import { languageTitles } from './languageTitles';
 
 // ===================== ALPHABET DATA =====================
 
@@ -1685,7 +1671,9 @@ export function generateLessons(langId) {
     const letters = isAlphabet ? getAlphabetLetters(langId, i) : [];
     const title = isAlphabet && titles[i - 1]
       ? titles[i - 1]
-      : commonLessonTitles[i - 1] || `Dars ${i}`;
+      : (languageTitles[langId] && languageTitles[langId][i - 11])
+        ? languageTitles[langId][i - 11]
+        : commonLessonTitles[i - 1] || `Dars ${i}`;
 
     const exercise = isAlphabet
       ? generateAlphabetExercise(langId, i, letters)
