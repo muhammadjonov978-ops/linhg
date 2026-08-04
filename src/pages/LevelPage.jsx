@@ -5,7 +5,7 @@ import { speak, stopSpeaking } from '../utils/speech';
 import {
   ArrowLeft, CheckCircle, Trophy,
   ChevronLeft, ChevronRight, Volume2, RefreshCw,
-  BookOpen, GraduationCap, Coins, VolumeX
+  BookOpen, GraduationCap, VolumeX, Coins
 } from 'lucide-react';
 import CoinRewardBanner from '../components/CoinRewardBanner';
 
@@ -138,21 +138,18 @@ export default function LevelPage({ onBack }) {
     const correct = answerIndex === lesson.exercise.correctAnswer;
     setIsCorrect(correct);
     setShowResult(true);
+    setScore(correct ? 100 : 50);
 
-    // Tanga faqat oxirida foizga qarab beriladi (avtomatik emas):
-    // 100% -> to'liq (15/25), 50% -> yarmi.
-    const resultScore = correct ? 100 : 50;
-    setScore(resultScore);
-    setCoinsEarned(Math.round((isAlphabet ? 15 : 25) * (resultScore / 100)));
+    // Alifbo darsida tanga umuman berilmaydi.
+    // Oddiy darslarda faqat TO'G'RI javobda +15 tanga.
+    setCoinsEarned(!isAlphabet && correct ? 15 : 0);
   };
 
   const handleComplete = () => {
-    // Coins foizga qarab beriladi — faqat dars birinchi marta tugatilganda,
-    // "Davom etish" tugmasi bosilganda (avtomatik emas).
-    if (!isCompleted && coinsEarned > 0) {
+    // Oddiy darslarda to'g'ri javob uchun +15 tanga (alifboda yo'q)
+    if (coinsEarned > 0 && !isCompleted) {
       dispatch({ type: 'ADD_COINS', payload: coinsEarned });
     }
-
     dispatch({
       type: 'COMPLETE_LESSON',
       payload: {
@@ -430,9 +427,9 @@ export default function LevelPage({ onBack }) {
                       <span className="font-bold text-error">Noto'g'ri</span>
                     </>
                   )}
-                  {coinsEarned > 0 && (
-                    <span className="text-sm opacity-50 ml-auto">
-                      +{coinsEarned} 🪙
+                  {coinsEarned > 0 && !isCompleted && (
+                    <span className="ml-auto flex items-center gap-1 font-bold text-warning animate-bounceIn">
+                      +{coinsEarned} <Coins className="w-4 h-4" />
                     </span>
                   )}
                 </div>
@@ -461,9 +458,8 @@ export default function LevelPage({ onBack }) {
 
           <div className="flex gap-2">
             {showResult && !isCompleted && (
-              <button onClick={handleComplete} className="btn btn-primary btn-sm gap-2">
-                <Coins className="w-4 h-4" />
-                Davom etish{coinsEarned > 0 ? ` (+${coinsEarned} 🪙)` : ''}
+              <button onClick={handleComplete} className="btn btn-primary btn-sm gap-2 btn-wave">
+                {coinsEarned > 0 ? `Davom etish (+${coinsEarned} 🪙)` : 'Davom etish'}
               </button>
             )}
             {isCompleted && lessonNumber < allLessons.length && (

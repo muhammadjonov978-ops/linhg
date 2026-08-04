@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Crown, Star, Check, X, Sparkles, Shield, Zap, Infinity, CreditCard, Lock, Coins, Loader2 } from 'lucide-react';
+import { useSiteConfig, getLangPrice } from '../data/siteConfig';
 
 /**
  * PaywallModal
@@ -7,6 +8,7 @@ import { Crown, Star, Check, X, Sparkles, Shield, Zap, Infinity, CreditCard, Loc
  * - mode "language": pullik til (20 000 so'm) — karta bilan ochish
  */
 export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
+  const config = useSiteConfig();
   const [processing, setProcessing] = useState(false);
   const [method, setMethod] = useState('card');
   const [cardNumber, setCardNumber] = useState('');
@@ -16,7 +18,7 @@ export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
   if (!isOpen) return null;
 
   const isLanguageMode = !!lang;
-  const price = lang?.price || 20000;
+  const price = isLanguageMode ? (getLangPrice(config, lang) || 20000) : 20000;
 
   const handlePay = (plan) => {
     // Simulate payment processing (real gateway: Payme/Click/UzCard/HUMO)

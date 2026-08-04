@@ -60,7 +60,7 @@ const wordDatabase = {
 };
 
 export default function WordOfTheDay() {
-  const { state, dispatch } = useApp();
+  const { state } = useApp();
   const [isSaved, setIsSaved] = useState(false);
   const [showMeaning, setShowMeaning] = useState(false);
 
@@ -92,12 +92,7 @@ export default function WordOfTheDay() {
             <h3 className="font-bold text-sm">Kun so'zi</h3>
           </div>
           <button
-            onClick={() => {
-              setIsSaved(!isSaved);
-              if (!isSaved) {
-                dispatch({ type: 'ADD_COINS', payload: 5 });
-              }
-            }}
+            onClick={() => setIsSaved(!isSaved)}
             className="btn btn-ghost btn-xs btn-circle"
             title={isSaved ? 'Saqlangan' : 'Saqlash'}
           >
@@ -147,7 +142,7 @@ export default function WordOfTheDay() {
 
         {isSaved && (
           <div className="text-center text-xs text-success animate-[fadeIn_0.3s_ease-out]">
-            ✅ Saqlandi! +5 🪙
+            ✅ Saqlandi!
           </div>
         )}
       </div>

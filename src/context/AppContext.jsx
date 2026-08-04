@@ -64,6 +64,7 @@ function migrateSaved(parsed) {
     theme: parsed.theme || DEFAULT_THEME,
     mistakesReviewed: parsed.mistakesReviewed || 0,
     perfectWeeks: parsed.perfectWeeks || 0,
+    courseRewards: parsed.courseRewards || {},
   };
 }
 
@@ -96,6 +97,7 @@ function loadInitialState() {
       theme: legacy.theme,
       mistakesReviewed: 0,
       perfectWeeks: 0,
+      courseRewards: {},
     };
   }
 
@@ -115,6 +117,7 @@ function loadInitialState() {
     theme: DEFAULT_THEME,
     mistakesReviewed: 0,
     perfectWeeks: 0,
+    courseRewards: {},
   };
 }
 
@@ -150,8 +153,9 @@ function appReducer(state, action) {
         newStreak = 1;
       }
 
-      // NOTE: coins LevelPage.handleComplete da beriladi (faqat dars tugatilganda) — bu yerda qayta bermang
-      return {
+      // Tanga dars ichida berilmaydi — +15 faqat oddiy darslarda to'g'ri javob uchun
+      // LevelPage tomonidan ADD_COINS orqali beriladi. Bu yerda faqat progress saqlanadi.
+      const next = {
         ...state,
         streak: newStreak,
         lastActive: now,
@@ -160,6 +164,7 @@ function appReducer(state, action) {
           [key]: { score: bestScore, completed, timestamp: now },
         },
       };
+      return next;
     }
 
     case 'UNLOCK_PREMIUM':
@@ -257,6 +262,7 @@ export function AppProvider({ children }) {
         theme: state.theme,
         mistakesReviewed: state.mistakesReviewed,
         perfectWeeks: state.perfectWeeks,
+        courseRewards: state.courseRewards || {},
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     } catch (e) {
@@ -266,7 +272,7 @@ export function AppProvider({ children }) {
     state.progress, state.tutorMessages, state.isTutorOpen,
     state.isPremium, state.unlockedLanguages, state.coins, state.streak, state.lastActive,
     state.achievements, state.dailyChallenges, state.theme,
-    state.mistakesReviewed, state.perfectWeeks,
+    state.mistakesReviewed, state.perfectWeeks, state.courseRewards,
   ]);
 
   // Check streak and update achievements

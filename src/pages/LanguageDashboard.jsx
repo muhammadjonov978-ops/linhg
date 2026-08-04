@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages, getLessons, getLanguageStats } from '../data/languages';
+import { useSiteConfig, getLangPrice } from '../data/siteConfig';
 import {
   Lock, ChevronRight, Trophy, CheckCircle,
   ArrowLeft, TrendingUp, Sparkles, Award, Target,
@@ -28,6 +29,7 @@ const skillFilters = [
 
 export default function LanguageDashboard({ onSelectLevel }) {
   const { state, dispatch } = useApp();
+  const config = useSiteConfig();
   const [showPaywall, setShowPaywall] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,7 +39,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
   if (!currentLang) return null;
 
   // Paid language gate: if this language costs money and isn't unlocked, show a lock screen
-  const isLangPaid = !!currentLang.price;
+  const isLangPaid = getLangPrice(config, currentLang) > 0;
   const isLangUnlocked = !isLangPaid || (state.unlockedLanguages || {})[currentLang.id];
 
   const allLessons = useMemo(() => getLessons(state.selectedLanguage), [state.selectedLanguage]);
@@ -149,7 +151,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
                 Bu til pullik kurs. Karta bilan to'lab, barcha 100 darsga cheksiz kirishni oching.
               </p>
               <div className="text-3xl font-extrabold text-warning mb-6">
-                {currentLang.price.toLocaleString('uz-UZ')} so'm
+                {getLangPrice(config, currentLang).toLocaleString('uz-UZ')} so'm
               </div>
               <button
                 onClick={() => setShowPaywall(true)}

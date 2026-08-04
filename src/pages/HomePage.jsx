@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
+import { useSiteConfig, getSiteText, getLangPrice } from '../data/siteConfig';
 import {
   BookOpen, Headphones, Pencil, Mic, ArrowRight, TrendingUp,
   Award, Star, Users, Sparkles, Coins, Shield, Trophy, Flame,
@@ -18,12 +19,13 @@ const features = [
 
 export default function HomePage() {
   const { state, dispatch } = useApp();
+  const config = useSiteConfig();
   const [payingLang, setPayingLang] = useState(null);
 
   const handleLanguageSelect = (langId) => {
     const lang = languages.find(l => l.id === langId);
     // Paid language: open payment modal unless already unlocked
-    if (lang?.price && !(state.unlockedLanguages || {})[langId]) {
+    if (getLangPrice(config, lang) > 0 && !(state.unlockedLanguages || {})[langId]) {
       setPayingLang(lang);
       return;
     }
@@ -51,17 +53,16 @@ export default function HomePage() {
             <div className="flex items-center justify-center gap-3 mb-6">
               <div className="badge badge-primary badge-lg gap-2 px-4 py-3">
                 <Sparkles className="w-4 h-4" />
-                Interaktiv til o'rganish
+                {getSiteText(config, 'heroBadge', 'Interaktiv til o\u2018rganish')}
               </div>
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold mb-4">
               <span className="bg-gradient-to-r from-primary via-purple-500 to-secondary bg-clip-text text-transparent">
-                27 Tilda Erkin Gaplashing
+                {getSiteText(config, 'heroTitle', '27 Tilda Erkin Gaplashing')}
               </span>
             </h1>
             <p className="text-lg md:text-xl opacity-70 max-w-2xl mx-auto mb-8">
-              Reading, Listening, Writing va Speaking — 4 ta asosiy ko'nikmani 
-              interaktiv mashqlar orqali rivojlantiring
+              {getSiteText(config, 'heroSubtitle', "Reading, Listening, Writing va Speaking — 4 ta asosiy ko'nikmani interaktiv mashqlar orqali rivojlantiring")}
             </p>
 
             {/* Stats */}
@@ -120,7 +121,7 @@ export default function HomePage() {
               );
               const completedCount = langLessonKeys.length;
               const totalLessons = 100;
-              const isPaid = !!lang.price;
+              const isPaid = getLangPrice(config, lang) > 0;
               const isUnlocked = !isPaid || (state.unlockedLanguages || {})[lang.id];
 
               return (
@@ -135,7 +136,7 @@ export default function HomePage() {
                       <span className="text-4xl">{lang.flag}</span>
                       {isPaid && !isUnlocked ? (
                         <span className="badge badge-warning badge-sm gap-1">
-                          <Lock className="w-3 h-3" /> 20 000 so'm
+                          <Lock className="w-3 h-3" /> {getLangPrice(config, lang).toLocaleString('uz-UZ')} so'm
                         </span>
                       ) : (
                         <span className="badge badge-ghost badge-sm">
@@ -196,7 +197,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-2xl font-bold text-center mb-8">
             <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              5 ta Asosiy Bo'lim
+              {getSiteText(config, 'featureTitle', "5 ta Asosiy Bo'lim")}
             </span>
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -223,7 +224,7 @@ export default function HomePage() {
               <h3 className="text-xl font-bold">Yutuqlar va Statistika</h3>
             </div>
             <p className="text-sm opacity-60 mb-6 max-w-lg mx-auto">
-              Mashqlarni bajarib, yutuqlarni oching, tanga yig'ing va boshqa o'quvchilar bilan raqobatlashing!
+              {getSiteText(config, 'featureDesc', "Mashqlarni bajarib, yutuqlarni oching, tanga yig'ing va boshqa o'quvchilar bilan raqobatlashing!")}
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto">
               {[
@@ -269,7 +270,7 @@ export default function HomePage() {
             <span className="font-bold">Lingohub</span>
           </div>
           <p className="text-xs opacity-50">
-            27 tilda interaktiv o'rganish platformasi. Reading, Listening, Writing, Speaking.
+            {getSiteText(config, 'footerText', "27 tilda interaktiv o'rganish platformasi. Reading, Listening, Writing, Speaking.")}
           </p>
           <p className="text-xs opacity-30 mt-2">
             © 2026 Lingohub. Barcha huquqlar himoyalangan.

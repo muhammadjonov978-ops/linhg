@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
+import { useSiteConfig, getLangPrice } from '../data/siteConfig';
 import { Coins, Sparkles, Check, X, Lock, CheckCircle } from 'lucide-react';
 
 const COIN_REWARD = 5000;
 const MAX_FREE_LANGS = 2;
 
-// Pullik tillar (faqat bir martadan, id bo'yicha unikal)
-const PAID_LANGS = Array.from(
-  new Map(languages.filter(l => l.price).map(l => [l.id, l])).values()
-);
-
 export default function CoinRewardBanner() {
   const { state, dispatch } = useApp();
+  const config = useSiteConfig();
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState([]);
+
+  // Pullik tillar (admin narx sozlagan tillar; id bo'yicha unikal)
+  const PAID_LANGS = Array.from(
+    new Map(languages.filter(l => getLangPrice(config, l) > 0).map(l => [l.id, l])).values()
+  );
 
   const unlocked = state.unlockedLanguages || {};
   const availableLangs = PAID_LANGS.filter(l => !unlocked[l.id]);
@@ -155,7 +157,7 @@ export default function CoinRewardBanner() {
                       <span className="flex-1 min-w-0">
                         <span className="font-bold text-sm block">{lang.name}</span>
                         <span className="text-[11px] opacity-50 flex items-center gap-1">
-                          <Coins className="w-3 h-3" /> 20 000 so'm — BEPUL
+                          <Coins className="w-3 h-3" /> {getLangPrice(config, lang).toLocaleString('uz-UZ')} so'm — BEPUL
                         </span>
                       </span>
                       <span className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${

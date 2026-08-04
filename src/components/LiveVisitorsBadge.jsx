@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { subscribePresence } from '../utils/presence';
-import { Radio, Wifi, WifiOff } from 'lucide-react';
+import { Radio } from 'lucide-react';
 
 // Small floating badge showing how many people are viewing the site right now.
 // Clicking it opens the admin panel.
@@ -25,11 +25,6 @@ export default function LiveVisitorsBadge() {
       <Radio className="w-3.5 h-3.5 text-success" />
       <span className="font-bold text-sm tabular-nums">{presence.total}</span>
       <span className="text-[11px] opacity-60 hidden sm:inline">onlayn</span>
-      {presence.mode === 'firebase' ? (
-        <Wifi className="w-3 h-3 text-primary opacity-60 hidden sm:block" />
-      ) : (
-        <WifiOff className="w-3 h-3 text-warning opacity-60 hidden sm:block" />
-      )}
     </a>
   );
 }

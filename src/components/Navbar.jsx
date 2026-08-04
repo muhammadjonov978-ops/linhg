@@ -4,6 +4,7 @@ import { languages } from '../data/languages';
 import { Home, MessageCircle, Trophy, Coins, Award, LogIn, User, Shield } from 'lucide-react';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal from './GoogleAuthModal';
+import GiftEnvelope from './GiftEnvelope';
 
 export default function Navbar({ onToggleTutor }) {
   const { state, dispatch } = useApp();
@@ -72,6 +73,9 @@ export default function Navbar({ onToggleTutor }) {
       </div>
 
       <div className="navbar-end gap-1">
+        {/* Ochiladigan konvert — xat */}
+        <GiftEnvelope />
+
         {/* Google sign-in / profile */}
         {savedUser ? (
           <button

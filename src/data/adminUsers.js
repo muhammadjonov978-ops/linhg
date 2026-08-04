@@ -1,27 +1,30 @@
-// ==== ADMIN PANEL ACCOUNTS ====
-// Barcha hisoblar uchun parol bir xil: shox1010
-// Egas:  shox / shox1010
-// Jami 5 ta hisob panelga kira oladi (egasi + 4 ta admin).
+// ==== ADMIN PANEL LOGIN ====
+// Hamma uchun BIRTA umumiy login:  shox / shox1010
+// Admin panelda qo'shilgan qo'shimcha hisoblar ham (login + parol bilan) kira oladi.
 //
-// NOTE: bu foydalanuvchilar ro'yxati mijoz (brauzer) tomonida saqlanadi —
-// statik sayt uchun mo'ljallangan demo himoya. Haqiqiy xavfsizlik uchun
-// backend + server tomonida autentifikatsiya kerak bo'ladi.
+// NOTE: bu himoya mijoz (brauzer) tomonida — statik sayt uchun demo. Haqiqiy
+// xavfsizlik uchun backend + server tomonida autentifikatsiya kerak bo'ladi.
 
-export const ADMIN_USERS = [
-  { username: 'shox', password: 'shox1010', name: 'Shox', role: 'owner' },
-  { username: 'admin1', password: 'shox1010', name: 'Admin 1', role: 'admin' },
-  { username: 'admin2', password: 'shox1010', name: 'Admin 2', role: 'admin' },
-  { username: 'admin3', password: 'shox1010', name: 'Admin 3', role: 'admin' },
-  { username: 'admin4', password: 'shox1010', name: 'Admin 4', role: 'admin' },
-];
+import { loadConfig } from './siteConfig';
+
+// Umumiy kirish — hamma shu login/parol bilan panelga kira oladi
+export const UNIVERSAL_USERNAME = 'shox';
+export const UNIVERSAL_PASSWORD = 'shox1010';
+
+export const getAdminAccounts = () => loadConfig().accounts || [];
 
 export const findAdminUser = (username, password) => {
-  const user = ADMIN_USERS.find(
-    (u) => u.username.toLowerCase() === String(username || '').trim().toLowerCase()
-  );
-  if (!user) return null;
-  if (user.password !== password) return null;
-  return user;
-};
+  const u = String(username || '').trim().toLowerCase();
+  const p = String(password || '');
 
-export const isOwner = (user) => user?.role === 'owner';
+  // Bitta umumiy login/parol — hamma uchun
+  if (u === UNIVERSAL_USERNAME && p === UNIVERSAL_PASSWORD) {
+    return { username: UNIVERSAL_USERNAME, password: UNIVERSAL_PASSWORD, name: 'Shox', role: 'owner' };
+  }
+
+  // Admin panelda qo'shilgan boshqa hisoblar (egasi emas)
+  const account = getAdminAccounts().find(
+    (a) => a.role !== 'owner' && String(a.username || '').toLowerCase() === u && a.password === p
+  );
+  return account ? { ...account } : null;
+};
