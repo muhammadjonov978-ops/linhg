@@ -13,8 +13,10 @@ import LanguageDashboard from './pages/LanguageDashboard';
 import LevelPage from './pages/LevelPage';
 import SMSReminder from './components/SMSReminder';
 import AdminPanel from './pages/AdminPanel';
+import PortfolioPage from './pages/PortfolioPage';
 import LiveVisitorsBadge from './components/LiveVisitorsBadge';
 import { startPresence, stopPresence } from './utils/presence';
+import { startVisitsTracking } from './utils/visits';
 import { MessageCircle, X, Sparkles, PanelRightOpen } from 'lucide-react';
 
 function AppContent() {
@@ -34,9 +36,10 @@ function AppContent() {
     return () => window.removeEventListener('hashchange', onHashChange);
   }, []);
 
-  // Count this visitor as 'site' while on the main app
+  // Count this visitor as 'site' while on the main app + record visit stats
   useEffect(() => {
     startPresence('site');
+    startVisitsTracking();
     return () => stopPresence();
   }, []);
 
@@ -44,6 +47,9 @@ function AppContent() {
   if (hash.startsWith('#/admin')) {
     return <AdminPanel />;
   }
+
+  // Portfolio route (shown inside the app shell with the navbar)
+  const showPortfolio = hash.startsWith('#/portfolio');
 
   const handleToggleTutor = () => {
     dispatch({ type: 'TOGGLE_TUTOR' });
@@ -68,18 +74,19 @@ function AppContent() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Main content */}
-        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${showSidebar && (showDashboard || showHome) ? 'lg:mr-80' : ''}`}>
-          {showHome && <HomePage />}
-          {showDashboard && (
+        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${!showPortfolio && showSidebar && (showDashboard || showHome) ? 'lg:mr-80' : ''}`}>
+          {showPortfolio && <PortfolioPage />}
+          {!showPortfolio && showHome && <HomePage />}
+          {!showPortfolio && showDashboard && (
             <LanguageDashboard onSelectLevel={handleSelectLevel} />
           )}
-          {showLevel && (
+          {!showPortfolio && showLevel && (
             <LevelPage onBack={handleBackToDashboard} />
           )}
         </main>
 
         {/* Sidebar with widgets (only on Home and Dashboard) */}
-        {(showDashboard || showHome) && showSidebar && (
+        {!showPortfolio && (showDashboard || showHome) && showSidebar && (
           <aside className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-80 bg-base-100 border-l border-base-300 overflow-y-auto z-30 shadow-lg animate-[slideIn_0.3s_ease-out]">
             <div className="p-4 space-y-4">
               {/* Sidebar Header */}
@@ -121,7 +128,7 @@ function AppContent() {
       </div>
 
       {/* Sidebar toggle button (on Home and Dashboard) */}
-      {(showDashboard || showHome) && !showSidebar && (
+      {!showPortfolio && (showDashboard || showHome) && !showSidebar && (
         <button
           onClick={() => setShowSidebar(true)}
           className="fixed right-4 top-20 z-30 btn btn-sm btn-ghost bg-base-100/80 backdrop-blur-sm shadow-sm border border-base-300 hover:bg-base-200 transition-all duration-300"
@@ -139,7 +146,7 @@ function AppContent() {
       <LiveVisitorsBadge />
 
       {/* AI Tutor Floating Button */}
-      {state.selectedLanguage && (
+      {!showPortfolio && state.selectedLanguage && (
         <>
           {!isTutorOpen && (
             <button

@@ -1,18 +1,22 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { findAdminUser } from '../data/adminUsers';
 import { useSiteConfig, saveConfig, getLangPrice } from '../data/siteConfig';
 import { languages } from '../data/languages';
 import {
   startPresence, setPresenceLocation, subscribePresence,
 } from '../utils/presence';
+import { subscribeVisits, refreshVisits } from '../utils/visits';
 import {
   Shield, KeyRound, User as UserIcon, Eye, EyeOff, LogOut, ArrowLeft,
   Copy, Check, Activity, Users, Radio, Clock, Crown,
-  UserPlus, Trash2, Coins, Type, Save, RotateCcw,
+  UserPlus, Trash2, Coins, Type, Save, RotateCcw, RefreshCw,
+  Search, Upload, Link2, X, ChevronRight, FileSpreadsheet,
+  TrendingUp, MousePointerClick, BarChart3,
 } from 'lucide-react';
 
 const SESSION_KEY = 'lingohub_admin_session';
 const LOG_KEY = 'lingohub_admin_log';
+const GSC_KEY = 'lingohub_gsc_data';
 
 // ---- localStorage helpers ----
 function readJSON(key, fallback) {
@@ -82,77 +86,73 @@ function LoginScreen({ onSuccess }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-base-200 via-base-100 to-base-200 p-4">
-      <div className="w-full max-w-md">
+    <div data-theme="dark" className="admin-shell min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-md animate-[fadeInUp_0.5s_ease-out]">
         <div className="text-center mb-6">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-lg shadow-primary/30 mb-3 animate-[bounceIn_0.6s_ease-out]">
-            <Shield className="w-8 h-8 text-white" />
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-[#facc15] to-[#f59e0b] flex items-center justify-center shadow-lg shadow-[#facc15]/30 mb-3 animate-[bounceIn_0.6s_ease-out]">
+            <Shield className="w-8 h-8 text-black" />
           </div>
-          <h1 className="text-2xl font-extrabold">
-            <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Admin Panel</span>
-          </h1>
-          <p className="text-sm opacity-60 mt-1">Lingohub boshqaruv tizimi</p>
+          <h1 className="text-2xl font-extrabold text-white">Admin Panel</h1>
+          <p className="text-sm text-white/50 mt-1">Lingohub boshqaruv tizimi</p>
         </div>
 
-        <div className="card bg-base-100 border border-base-300 shadow-xl animate-[fadeInUp_0.5s_ease-out]">
-          <div className="card-body p-6 md:p-8">
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="admin-login" className="label text-xs font-medium opacity-70">Login</label>
-                <div className="relative">
-                  <UserIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 opacity-40" />
-                  <input
-                    id="admin-login"
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Loginni kiriting"
-                    className="input input-bordered w-full pl-10 focus:outline-none focus:border-primary transition-colors"
-                    autoComplete="username"
-                    required
-                  />
-                </div>
+        <div className="admin-card p-6 md:p-8 shadow-2xl">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label htmlFor="admin-login" className="label text-xs font-medium text-white/60">Login</label>
+              <div className="relative">
+                <UserIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+                <input
+                  id="admin-login"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Loginni kiriting"
+                  className="input input-bordered w-full pl-10 bg-white/[0.03] border-white/10 focus:outline-none focus:border-[#facc15] transition-colors"
+                  autoComplete="username"
+                  required
+                />
               </div>
+            </div>
 
-              <div>
-                <label htmlFor="admin-password" className="label text-xs font-medium opacity-70">Parol</label>
-                <div className="relative">
-                  <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 opacity-40" />
-                  <input
-                    id="admin-password"
-                    type={showPass ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Parolni kiriting"
-                    className="input input-bordered w-full pl-10 pr-10 focus:outline-none focus:border-primary transition-colors"
-                    autoComplete="current-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPass((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs btn-circle"
-                  >
-                    {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
-                </div>
+            <div>
+              <label htmlFor="admin-password" className="label text-xs font-medium text-white/60">Parol</label>
+              <div className="relative">
+                <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
+                <input
+                  id="admin-password"
+                  type={showPass ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Parolni kiriting"
+                  className="input input-bordered w-full pl-10 pr-10 bg-white/[0.03] border-white/10 focus:outline-none focus:border-[#facc15] transition-colors"
+                  autoComplete="current-password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs btn-circle"
+                >
+                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
+            </div>
 
-              {error && (
-                <div className="alert alert-error text-sm py-2.5 animate-[fadeIn_0.3s_ease-out]">
-                  <span>{error}</span>
-                </div>
-              )}
+            {error && (
+              <div className="alert alert-error text-sm py-2.5 animate-[fadeIn_0.3s_ease-out]">
+                <span>{error}</span>
+              </div>
+            )}
 
-              <button type="submit" className="btn btn-primary w-full gap-2 btn-wave">
-                <Shield className="w-4 h-4" /> Kirish
-              </button>
-            </form>
+            <button type="submit" className="btn btn-primary w-full gap-2 btn-wave border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black hover:brightness-105">
+              <Shield className="w-4 h-4" /> Kirish
+            </button>
+          </form>
 
-            <a href="#/" className="btn btn-ghost btn-sm mt-4 gap-2 text-xs">
-              <ArrowLeft className="w-3.5 h-3.5" /> Saytga qaytish
-            </a>
-          </div>
+          <a href="#/" className="btn btn-ghost btn-sm mt-4 gap-2 text-xs text-white/60">
+            <ArrowLeft className="w-3.5 h-3.5" /> Saytga qaytish
+          </a>
         </div>
       </div>
     </div>
@@ -194,45 +194,43 @@ function AccountsTab({ config, onSave }) {
   return (
     <div className="space-y-4">
       {/* Add form */}
-      <div className="card bg-base-200/60 border border-base-300">
-        <div className="card-body p-4">
-          <h3 className="font-bold text-sm flex items-center gap-2 mb-2">
-            <UserPlus className="w-4 h-4 text-primary" /> Yangi hisob qo\u2018shish
-          </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            <input
-              value={newUser.username}
-              onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-              placeholder="Login"
-              className="input input-bordered input-sm"
-            />
-            <input
-              value={newUser.password}
-              onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-              placeholder="Parol"
-              className="input input-bordered input-sm"
-            />
-            <input
-              value={newUser.name}
-              onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-              placeholder="Ism"
-              className="input input-bordered input-sm"
-            />
-          </div>
-          <div className="flex items-center gap-3 mt-2">
-            <button onClick={addAccount} className="btn btn-primary btn-sm gap-1.5">
-              <UserPlus className="w-3.5 h-3.5" /> Qo\u2018shish
-            </button>
-            {msg && <span className="text-xs">{msg}</span>}
-          </div>
+      <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4">
+        <h3 className="font-bold text-sm flex items-center gap-2 mb-2 text-white">
+          <UserPlus className="w-4 h-4 text-[#facc15]" /> Yangi hisob qo\u2018shish
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <input
+            value={newUser.username}
+            onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+            placeholder="Login"
+            className="input input-bordered input-sm bg-white/[0.03] border-white/10"
+          />
+          <input
+            value={newUser.password}
+            onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+            placeholder="Parol"
+            className="input input-bordered input-sm bg-white/[0.03] border-white/10"
+          />
+          <input
+            value={newUser.name}
+            onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+            placeholder="Ism"
+            className="input input-bordered input-sm bg-white/[0.03] border-white/10"
+          />
+        </div>
+        <div className="flex items-center gap-3 mt-2">
+          <button onClick={addAccount} className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black">
+            <UserPlus className="w-3.5 h-3.5" /> Qo\u2018shish
+          </button>
+          {msg && <span className="text-xs text-white/70">{msg}</span>}
         </div>
       </div>
 
       {/* Accounts table */}
-      <div className="overflow-x-auto rounded-xl border border-base-300">
+      <div className="overflow-x-auto rounded-xl border border-white/10">
         <table className="table table-sm w-full">
           <thead>
-            <tr className="bg-base-200 text-xs">
+            <tr className="bg-white/[0.04] text-xs text-white/60">
               <th className="w-10">#</th>
               <th>Foydalanuvchi</th>
               <th>Ism</th>
@@ -242,15 +240,15 @@ function AccountsTab({ config, onSave }) {
           </thead>
           <tbody>
             {config.accounts.map((u, i) => (
-              <tr key={u.username} className="hover:bg-base-200/50 transition-colors">
-                <td className="text-xs opacity-50">{i + 1}</td>
-                <td className="font-mono text-xs font-bold">{u.username}</td>
-                <td className="text-xs">{u.name}</td>
+              <tr key={u.username} className="hover:bg-white/[0.03] transition-colors">
+                <td className="text-xs text-white/40">{i + 1}</td>
+                <td className="font-mono text-xs font-bold text-white">{u.username}</td>
+                <td className="text-xs text-white/70">{u.name}</td>
                 <td>
                   {u.role === 'owner' ? (
-                    <span className="badge badge-warning badge-sm gap-1"><Crown className="w-3 h-3" /> Egas</span>
+                    <span className="badge badge-warning badge-sm gap-1 border-0"><Crown className="w-3 h-3" /> Egas</span>
                   ) : (
-                    <span className="badge badge-ghost badge-sm">Admin</span>
+                    <span className="badge badge-ghost badge-sm bg-white/[0.06] border-white/10 text-white/70">Admin</span>
                   )}
                 </td>
                 <td className="text-right">
@@ -300,12 +298,12 @@ function PricesTab({ config, onSave }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-xs opacity-60">Har bir til uchun narxni kiriting (0 — bepul). Saqlangandan keyin saytda darhol qo\u2018llanadi.</p>
+        <p className="text-xs text-white/50">Har bir til uchun narxni kiriting (0 — bepul). Saqlangandan keyin saytda darhol qo\u2018llanadi.</p>
         <div className="flex gap-2">
-          <button onClick={reset} className="btn btn-ghost btn-xs gap-1.5">
+          <button onClick={reset} className="btn btn-ghost btn-xs gap-1.5 text-white/60">
             <RotateCcw className="w-3 h-3" /> Tiklash
           </button>
-          <button onClick={save} className="btn btn-primary btn-xs gap-1.5">
+          <button onClick={save} className="btn btn-primary btn-xs gap-1.5 border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black">
             <Save className="w-3.5 h-3.5" /> Saqlash
           </button>
         </div>
@@ -313,20 +311,20 @@ function PricesTab({ config, onSave }) {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
         {languages.map((l) => (
-          <div key={l.id} className="bg-base-200/60 border border-base-300 rounded-xl p-3 flex items-center gap-2">
+          <div key={l.id} className="rounded-xl bg-white/[0.02] border border-white/10 p-3 flex items-center gap-2">
             <span className="text-2xl">{l.flag}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold truncate">{l.name}</p>
+              <p className="text-xs font-bold truncate text-white">{l.name}</p>
               <input
                 type="number"
                 min="0"
                 step="1000"
                 value={prices[l.id] ?? 0}
                 onChange={(e) => setPrices({ ...prices, [l.id]: Math.max(0, Number(e.target.value) || 0) })}
-                className="input input-bordered input-xs w-full mt-1"
+                className="input input-bordered input-xs w-full mt-1 bg-white/[0.03] border-white/10"
               />
             </div>
-            <Coins className="w-3.5 h-3.5 text-warning shrink-0" />
+            <Coins className="w-3.5 h-3.5 text-[#facc15] shrink-0" />
           </div>
         ))}
       </div>
@@ -362,17 +360,17 @@ function TextsTab({ config, onSave }) {
     <div className="space-y-3 max-w-2xl">
       {fields.map((f) => (
         <div key={f.key}>
-          <label className="label text-xs font-medium opacity-70 py-1">{f.label}</label>
+          <label className="label text-xs font-medium text-white/60 py-1">{f.label}</label>
           <input
             value={texts[f.key] ?? ''}
             onChange={set(f.key)}
             placeholder={f.hint}
-            className="input input-bordered w-full focus:outline-none focus:border-primary transition-colors"
+            className="input input-bordered w-full bg-white/[0.03] border-white/10 focus:outline-none focus:border-[#facc15] transition-colors"
           />
         </div>
       ))}
       <div className="flex items-center gap-3 pt-1">
-        <button onClick={save} className="btn btn-primary btn-sm gap-1.5">
+        <button onClick={save} className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black">
           <Save className="w-3.5 h-3.5" /> Saqlash
         </button>
         {msg && <span className="text-xs text-success font-medium">{msg}</span>}
@@ -381,32 +379,406 @@ function TextsTab({ config, onSave }) {
   );
 }
 
+// ================= GOOGLE SEARCH CONSOLE =================
+// Search Console Performance export CSV ni parse qiladi.
+function parseGSC(text) {
+  const lines = text.trim().split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length < 2) throw new Error("Faylda ma'lumot yo'q");
+
+  const header = lines[0].split(',').map((h) => h.trim().replace(/^"|"$/g, '').toLowerCase());
+  const col = {
+    dimension: header.findIndex((h) => h.includes('query') || h.includes('page')),
+    date: header.findIndex((h) => h.includes('date')),
+    clicks: header.findIndex((h) => h === 'clicks'),
+    impressions: header.findIndex((h) => h === 'impressions'),
+    position: header.findIndex((h) => h.includes('position')),
+  };
+  if (col.dimension < 0 || col.clicks < 0 || col.impressions < 0) {
+    throw new Error('CSV formati tanilmadi. Search Console → Performance → Eksport fayli bo\u2018lishi kerak.');
+  }
+
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cells = lines[i].split(',').map((c) => c.trim().replace(/^"|"$/g, ''));
+    const dim = cells[col.dimension];
+    if (!dim || dim.toLowerCase() === 'total') continue;
+    const clicks = Number(cells[col.clicks]);
+    const impressions = Number(cells[col.impressions]);
+    if (!Number.isFinite(clicks) || !Number.isFinite(impressions)) continue;
+    rows.push({
+      dimension: dim,
+      date: col.date >= 0 ? cells[col.date] : null,
+      clicks: clicks || 0,
+      impressions: impressions || 0,
+      position: col.position >= 0 ? (parseFloat(cells[col.position]) || 0) : 0,
+    });
+  }
+  if (!rows.length) throw new Error("Ma'lumot qatorlari topilmadi");
+
+  // Har bir so'rov/sahifa bo'yicha yig'indilar
+  const byDim = new Map();
+  let totClicks = 0;
+  let totImpressions = 0;
+  let posImpSum = 0;
+  rows.forEach((r) => {
+    totClicks += r.clicks;
+    totImpressions += r.impressions;
+    posImpSum += r.position * r.impressions;
+    const cur = byDim.get(r.dimension) || { dimension: r.dimension, clicks: 0, impressions: 0, posImp: 0 };
+    cur.clicks += r.clicks;
+    cur.impressions += r.impressions;
+    cur.posImp += r.position * r.impressions;
+    byDim.set(r.dimension, cur);
+  });
+
+  const dimensions = [...byDim.values()]
+    .map((d) => ({
+      ...d,
+      ctr: d.impressions ? d.clicks / d.impressions : 0,
+      position: d.impressions ? d.posImp / d.impressions : 0,
+    }))
+    .sort((a, b) => b.clicks - a.clicks);
+
+  const dates = rows.map((r) => r.date).filter(Boolean);
+  dates.sort();
+  return {
+    totalClicks: totClicks,
+    totalImpressions: totImpressions,
+    avgCtr: totImpressions ? totClicks / totImpressions : 0,
+    avgPosition: totImpressions ? posImpSum / totImpressions : 0,
+    dimensions: dimensions.slice(0, 20),
+    dateFrom: dates[0] || null,
+    dateTo: dates[dates.length - 1] || null,
+  };
+}
+
+const GSC_WORKER_SNIPPET = `// Cloudflare Worker — Google Search Console proxy
+export default {
+  async fetch(request, env) {
+    const url = new URL(request.url);
+    const site = url.searchParams.get('site') || 'sc-domain:lingohub.uz';
+    const days = Number(url.searchParams.get('days') || 28);
+
+    const end = new Date();
+    const start = new Date();
+    start.setDate(end.getDate() - days);
+    const fmt = (d) => d.toISOString().slice(0, 10);
+
+    const res = await fetch(
+      'https://searchconsole.googleapis.com/webmasters/v3/sites/' +
+        encodeURIComponent(site) +
+        '/searchAnalytics/query?key=' + env.GSC_API_KEY,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          startDate: fmt(start),
+          endDate: fmt(end),
+          dimensions: ['query'],
+          rowLimit: 25,
+        }),
+      }
+    );
+    const json = await res.json();
+
+    return new Response(JSON.stringify(json), {
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  },
+};`;
+
+function ApiGuideModal({ onClose }) {
+  const steps = [
+    { title: 'Cloudflare Worker yarating', body: 'dash.cloudflare.com → Workers & Pages → Create → Create Worker. (Bepul loyiha kifoya.)' },
+    { title: 'Kodni joylang', body: 'Quyidagi kodni Worker ichidagi kod maydoniga to\u2018liq joylang va Deploy tugmasini bosing.' },
+    { title: 'API kalit qo\u2018shing', body: 'Google Cloud Console → APIs & Services → Search Console API → Credentials → API key yarating. Worker → Settings → Variables ga GSC_API_KEY nomi bilan joylang.' },
+    { title: 'Saytni ulang', body: 'Loyihada .env faylga VITE_GSC_WORKER_URL=https://sizning-worker.workers.dev qo\u2018shing. Panel keyingi ochilishda ma\u2019lumotlarni avtomatik tortadi.' },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div className="admin-card w-full max-w-2xl max-h-[88vh] overflow-y-auto shadow-2xl animate-[fadeInUp_0.3s_ease-out]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-white/5">
+          <h3 className="font-bold text-sm flex items-center gap-2 text-white">
+            <Link2 className="w-4 h-4 text-[#a78bfa]" /> API · avto-sinxron — qo\u2018llanma
+          </h3>
+          <button onClick={onClose} className="btn btn-ghost btn-xs btn-circle text-white/60">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <ol className="space-y-3">
+            {steps.map((s, i) => (
+              <li key={i} className="flex gap-3">
+                <span className="shrink-0 w-6 h-6 rounded-full bg-[#a78bfa]/15 border border-[#a78bfa]/30 text-[#a78bfa] text-xs font-bold flex items-center justify-center mt-0.5">
+                  {i + 1}
+                </span>
+                <div>
+                  <p className="text-xs font-semibold text-white">{s.title}</p>
+                  <p className="text-[11px] text-white/50 mt-0.5 leading-relaxed">{s.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+
+          <div className="rounded-xl bg-black/40 border border-white/10 overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-2 border-b border-white/10">
+              <span className="text-[10px] font-mono text-white/40">worker.js</span>
+              <CopyButton text={GSC_WORKER_SNIPPET} label="Kodni nusxalash" />
+            </div>
+            <pre className="p-4 text-[11px] leading-relaxed text-white/70 overflow-x-auto font-mono whitespace-pre-wrap">
+              {GSC_WORKER_SNIPPET}
+            </pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GSCResults({ data, onRemove }) {
+  const fmtNum = (n) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n));
+  const summary = [
+    { icon: MousePointerClick, label: 'Jami kliklar', value: fmtNum(data.totalClicks), color: '#facc15' },
+    { icon: BarChart3, label: 'Ko\u2018rsatuvlar', value: fmtNum(data.totalImpressions), color: '#4ade80' },
+    { icon: TrendingUp, label: 'O\u2018rtacha CTR', value: `${(data.avgCtr * 100).toFixed(1)}%`, color: '#60a5fa' },
+    { icon: Search, label: 'O\u2018rtacha pozitsiya', value: data.avgPosition.toFixed(1), color: '#c084fc' },
+  ];
+
+  return (
+    <div className="border-t border-white/5 px-5 md:px-6 py-5 space-y-5">
+      <div className="flex flex-wrap items-center gap-2">
+        <h4 className="text-sm font-bold text-white">Import natijasi</h4>
+        {data.dateFrom && (
+          <span className="text-[10px] text-white/40">
+            {data.dateFrom} — {data.dateTo}
+          </span>
+        )}
+        <button onClick={onRemove} className="ml-auto text-[11px] text-white/40 hover:text-error transition-colors inline-flex items-center gap-1">
+          <Trash2 className="w-3 h-3" /> O\u2018chirish
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {summary.map((s) => {
+          const Icon = s.icon;
+          return (
+            <div key={s.label} className="rounded-xl bg-white/[0.02] border border-white/10 p-3">
+              <Icon className="w-4 h-4 mb-2" style={{ color: s.color }} />
+              <p className="text-xl font-extrabold text-white tabular-nums">{s.value}</p>
+              <p className="text-[10px] text-white/40 mt-0.5">{s.label}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="overflow-x-auto rounded-xl border border-white/10">
+        <table className="table table-xs w-full">
+          <thead>
+            <tr className="bg-white/[0.04] text-[10px] uppercase tracking-wide text-white/50">
+              <th>So\u2018rov / Sahifa</th>
+              <th className="text-right">Kliklar</th>
+              <th className="text-right">Ko\u2018rsatuvlar</th>
+              <th className="text-right">CTR</th>
+              <th className="text-right">Pozitsiya</th>
+            </tr>
+          </thead>
+          <tbody>
+            {data.dimensions.map((d) => (
+              <tr key={d.dimension} className="hover:bg-white/[0.03] transition-colors">
+                <td className="max-w-[16rem] truncate text-white/80 text-xs">{d.dimension}</td>
+                <td className="text-right text-white tabular-nums text-xs">{d.clicks}</td>
+                <td className="text-right text-white/70 tabular-nums text-xs">{d.impressions}</td>
+                <td className="text-right text-white/70 tabular-nums text-xs">{(d.ctr * 100).toFixed(1)}%</td>
+                <td className="text-right text-white/70 tabular-nums text-xs">{d.position.toFixed(1)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function SearchConsoleSection() {
+  const fileRef = useRef(null);
+  const [data, setData] = useState(() => readJSON(GSC_KEY, null));
+  const [error, setError] = useState('');
+  const [apiOpen, setApiOpen] = useState(false);
+
+  const handleFile = (file) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = parseGSC(String(reader.result || ''));
+        setData(parsed);
+        writeJSON(GSC_KEY, parsed);
+        setError('');
+      } catch (e) {
+        setError(e.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const openPicker = () => fileRef.current?.click();
+
+  return (
+    <div className="admin-card overflow-hidden">
+      {/* Section header */}
+      <div className="px-5 md:px-6 py-4 border-b border-white/5 flex items-center gap-3">
+        <div className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0">
+          <Search className="w-4 h-4 text-[#facc15]" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="font-bold text-sm text-white">Google Search (Search Console)</h3>
+          <p className="text-[11px] text-white/40">Haqiqiy Google qidiruv statistikasi — kliklar, ko\u2018rsatuvlar, CTR, pozitsiya</p>
+        </div>
+        {data && (
+          <button
+            onClick={() => { setData(null); writeJSON(GSC_KEY, null); }}
+            className="ml-auto text-[11px] text-white/40 hover:text-error transition-colors inline-flex items-center gap-1 shrink-0"
+          >
+            <Trash2 className="w-3 h-3" /> O\u2018chirish
+          </button>
+        )}
+      </div>
+
+      <div className="p-6 md:p-8 text-center">
+        <button
+          onClick={openPicker}
+          className="admin-gsc-btn w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 hover:scale-105 active:scale-95 transition-transform"
+          title="CSV import qilish"
+        >
+          <Search className="w-7 h-7 text-[#facc15]" />
+        </button>
+
+        <h2 className="text-lg font-bold text-white">Google Search ma'lumotlarini ulang</h2>
+        <p className="text-xs text-white/50 max-w-2xl mx-auto mt-2 leading-relaxed">
+          Bu bo\u2018lim Search Console'dagi haqiqiy Google qidiruv statistikasini ko\u2018rsatadi — kliklar, ko\u2018rsatuvlar, CTR, pozitsiya, so\u2018rovlar va sahifalar. Ikkita usul bor:
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-4 mt-6 max-w-3xl mx-auto text-left">
+          {/* CSV import */}
+          <div className="admin-card-hover rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0">
+                <Upload className="w-4 h-4 text-white/70" />
+              </div>
+              <h4 className="font-bold text-sm text-white">CSV import</h4>
+            </div>
+            <p className="text-[11px] text-white/50 mt-3 leading-relaxed">
+              Search Console → Performance → Eksport tugmasini bosing va CSV'ni shu yerga joylang. Darhol ishlaydi, hech qanday sozlash kerak emas.
+            </p>
+            <button
+              onClick={openPicker}
+              className="mt-3 text-xs font-semibold text-[#facc15] inline-flex items-center gap-1 hover:gap-2 transition-all group"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5" /> Darhol ishlaydi
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+
+          {/* API auto-sync */}
+          <div className="admin-card-hover rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0">
+                <Link2 className="w-4 h-4 text-[#a78bfa]" />
+              </div>
+              <h4 className="font-bold text-sm text-white">API · avto-sinxron</h4>
+            </div>
+            <p className="text-[11px] text-white/50 mt-3 leading-relaxed">
+              Google Search Console API orqali ma\u2019lumotlar avtomatik yangilanadi. Cloudflare Worker proxy o\u2018rnatish kerak (qo\u2018llanma beriladi).
+            </p>
+            <button
+              onClick={() => setApiOpen(true)}
+              className="mt-3 text-xs font-semibold text-[#a78bfa] inline-flex items-center gap-1 hover:gap-2 transition-all group"
+            >
+              Avtomatik yangilanadi
+              <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
+        </div>
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".csv,text/csv"
+          className="hidden"
+          onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ''; }}
+        />
+      </div>
+
+      {error && (
+        <div className="px-6 pb-5">
+          <div className="alert alert-error text-xs py-2.5">
+            <span>{error}</span>
+          </div>
+        </div>
+      )}
+
+      {data && <GSCResults data={data} onRemove={() => { setData(null); writeJSON(GSC_KEY, null); }} />}
+
+      {apiOpen && <ApiGuideModal onClose={() => setApiOpen(false)} />}
+    </div>
+  );
+}
+
 // ================= DASHBOARD =================
+function StatValue({ value }) {
+  // key o'zgarganda span qayta mount bo'ladi va stat-pop animatsiyasi o'ynaydi
+  return (
+    <span key={value} className="text-3xl font-extrabold text-white tabular-nums stat-pop">
+      {value}
+    </span>
+  );
+}
+
 function Dashboard({ session, onLogout }) {
   const config = useSiteConfig();
   const [presence, setPresence] = useState({ total: 0, site: 0, admin: 0, mode: 'local' });
+  const [visits, setVisits] = useState({ total: 0, today: 0, last7d: 0, unique: 0, mode: 'local' });
+  const [refreshing, setRefreshing] = useState(false);
   const [log] = useState(() => readJSON(LOG_KEY, []));
   const [tab, setTab] = useState('hisoblar');
 
   useEffect(() => {
     startPresence('admin');
-    const unsub = subscribePresence((s) => setPresence(s));
+    const unsubP = subscribePresence((s) => setPresence(s));
+    const unsubV = subscribeVisits((v) => setVisits(v));
+    // "Live 30s" — statistikani har 30 soniyada qayta o'qish
+    const timer = setInterval(() => refreshVisits(), 30000);
     return () => {
-      unsub();
+      unsubP();
+      unsubV();
+      clearInterval(timer);
       setPresenceLocation('site');
     };
   }, []);
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshVisits();
+    } finally {
+      setTimeout(() => setRefreshing(false), 450);
+    }
+  };
+
   const isOwner = session.role === 'owner';
   const accounts = config.accounts || [];
-
-  const handleSaveConfig = (next) => saveConfig(next);
+  const liveMode = presence.mode === 'firebase' || visits.mode === 'firebase';
 
   const statCards = [
-    { label: 'Hozir onlayn', value: presence.total, icon: Radio, color: 'success', note: 'live — barcha qurilmalarda' },
-    { label: 'Saytda', value: presence.site, icon: Users, color: 'primary', note: 'sayt tashrifchilari' },
-    { label: 'Admin panelda', value: presence.admin, icon: Users, color: 'secondary', note: 'hozir boshqaruvda' },
-    { label: 'Hisoblar soni', value: accounts.length, icon: Users, color: 'warning', note: `${accounts.length} ta hisob` },
+    { label: 'Jami tashrif', value: visits.total, icon: Eye, note: 'barcha vaqt davomida', color: '#facc15' },
+    { label: 'Bugun', value: visits.today, icon: Activity, note: '00:00 dan hozirgacha', color: '#4ade80' },
+    { label: '7 kun ichida', value: visits.last7d, icon: Clock, note: 'oxirgi 7 kun', color: '#60a5fa' },
+    { label: 'Unikal tashrif', value: visits.unique, icon: Users, note: 'turli qurilmalar', color: '#c084fc' },
   ];
 
   const tabs = [
@@ -416,114 +788,128 @@ function Dashboard({ session, onLogout }) {
   ];
 
   return (
-    <div className="min-h-screen bg-base-200">
-      {/* Top bar */}
-      <nav className="navbar bg-base-100/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-base-200">
-        <div className="navbar-start">
-          <a href="#/" className="btn btn-ghost btn-sm gap-2">
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline text-xs">Saytga qaytish</span>
-          </a>
-        </div>
-        <div className="navbar-center">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <Shield className="w-4 h-4 text-white" />
+    <div data-theme="dark" className="admin-shell">
+      <div className="max-w-6xl mx-auto px-4 py-6 md:py-8 space-y-5">
+        {/* ===== HEADER ===== */}
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#facc15] to-[#f59e0b] flex items-center justify-center shadow-lg shadow-[#facc15]/25 shrink-0">
+              <Shield className="w-6 h-6 text-black" />
             </div>
-            <span className="font-bold text-sm bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Admin Panel</span>
-          </div>
-        </div>
-        <div className="navbar-end gap-2">
-          <div className="badge badge-ghost gap-1.5 p-3 hidden sm:flex">
-            {isOwner ? <Crown className="w-3.5 h-3.5 text-warning" /> : <UserIcon className="w-3.5 h-3.5 text-primary" />}
-            <span className="text-xs font-bold">{session.name}</span>
-            {isOwner && <span className="text-[10px] opacity-50">(egasi)</span>}
-          </div>
-          <button onClick={onLogout} className="btn btn-error btn-sm gap-2">
-            <LogOut className="w-4 h-4" />
-            <span className="hidden sm:inline text-xs">Chiqish</span>
-          </button>
-        </div>
-      </nav>
-
-      <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
-        {/* Hero — live number */}
-        <div className="card bg-base-100 border border-base-300 shadow-sm overflow-hidden">
-          <div className="card-body p-6 md:p-8">
-            <div className="flex flex-col md:flex-row md:items-center gap-6">
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-                  <span className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-success" />
-                  </span>
-                  <span className="text-xs font-medium opacity-70 uppercase tracking-wider">Hozir onlayn</span>
-                </div>
-                <div className="flex items-end justify-center md:justify-start gap-3">
-                  <span
-                    key={presence.total}
-                    className="text-6xl md:text-7xl font-extrabold text-success tabular-nums animate-[scaleIn_0.4s_ease-out] gradient-text-live"
-                    style={{ backgroundImage: 'linear-gradient(90deg, hsl(var(--su)), hsl(var(--p)), hsl(var(--a)))' }}
-                  >
-                    {presence.total}
-                  </span>
-                  <span className="text-xl opacity-50 pb-3">kishi</span>
-                </div>
-                <p className="text-xs opacity-60 mt-2">
-                  {presence.mode === 'firebase'
-                    ? 'Haqiqiy live son — barcha qurilmalarda birga ko\u2018rinadi'
-                    : 'Live son — hozir saytda qancha oyna ochiq'}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 w-full md:w-72">
-                <div className="bg-success/5 border border-success/20 rounded-xl p-3 text-center">
-                  <Users className="w-4 h-4 text-success mx-auto mb-1" />
-                  <p className="text-2xl font-bold text-success tabular-nums">{presence.site}</p>
-                  <p className="text-[10px] opacity-60">Saytda</p>
-                </div>
-                <div className="bg-secondary/5 border border-secondary/20 rounded-xl p-3 text-center">
-                  <Shield className="w-4 h-4 text-secondary mx-auto mb-1" />
-                  <p className="text-2xl font-bold text-secondary tabular-nums">{presence.admin}</p>
-                  <p className="text-[10px] opacity-60">Admin panelda</p>
-                </div>
-                <div className="col-span-2 bg-base-200 rounded-xl p-3 flex items-center justify-center gap-2 text-xs opacity-70">
-                  <Activity className="w-3.5 h-3.5" />
-                  Yangilanmoqda: har 20 soniyada
-                </div>
-              </div>
+            <div>
+              <h1 className="text-xl font-extrabold text-white tracking-tight">Admin Panel</h1>
+              <p className="text-[11px] text-white/45 flex items-center gap-1.5 mt-0.5">
+                <UserIcon className="w-3 h-3" />
+                {isOwner ? 'admin' : session.username} · {session.name || session.username}
+              </p>
             </div>
           </div>
-        </div>
 
-        {/* Stat cards */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Live badge */}
+            <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#16a34a]/15 border border-[#16a34a]/40 text-[#4ade80] text-xs font-semibold">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ade80] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4ade80]" />
+              </span>
+              Live 30s
+            </span>
+
+            {/* Yangilash */}
+            <button
+              onClick={handleRefresh}
+              disabled={refreshing}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-semibold text-white/80 hover:bg-white/[0.09] hover:border-white/20 transition-all disabled:opacity-60"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+              Yangilash
+            </button>
+
+            {/* Chiqish */}
+            <button
+              onClick={onLogout}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-semibold text-white/80 hover:bg-red-500/10 hover:border-red-400/40 hover:text-red-300 transition-all"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Chiqish
+            </button>
+
+            {/* Orqaga */}
+            <a
+              href="#/"
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-semibold text-white/80 hover:bg-white/[0.09] hover:border-white/20 transition-all"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              Orqaga
+            </a>
+          </div>
+        </header>
+
+        {/* ===== STAT CARDS ===== */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map((card, i) => {
             const Icon = card.icon;
             return (
-              <div key={card.label} className="card bg-base-100 border border-base-300 shadow-sm stat-card-hover animate-[fadeInUp_0.5s_ease-out]" style={{ animationDelay: `${i * 80}ms` }}>
-                <div className="card-body p-5">
-                  <div className="w-10 h-10 rounded-xl bg-base-200 flex items-center justify-center mb-3">
-                    <Icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <p className="text-2xl font-extrabold tabular-nums">{card.value}</p>
-                  <p className="text-xs font-medium opacity-70">{card.label}</p>
-                  <p className="text-[10px] opacity-40">{card.note}</p>
+              <div
+                key={card.label}
+                className="admin-card admin-card-hover p-5 animate-[fadeInUp_0.5s_ease-out]"
+                style={{ animationDelay: `${i * 70}ms` }}
+              >
+                <div
+                  className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center mb-4"
+                  style={{ boxShadow: `0 0 14px ${card.color}14` }}
+                >
+                  <Icon className="w-4 h-4" style={{ color: card.color }} />
                 </div>
+                <StatValue value={card.value} />
+                <p className="text-xs font-medium text-white/70 mt-1">{card.label}</p>
+                <p className="text-[10px] text-white/35 mt-0.5">{card.note}</p>
               </div>
             );
           })}
         </div>
 
-        {/* Tabs */}
+        {/* ===== LIVE STRIP (hozir onlayn) ===== */}
+        <div className="admin-card px-4 py-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+          <span className="flex items-center gap-2 font-semibold text-white">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ade80] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4ade80]" />
+            </span>
+            Hozir onlayn:
+            <b className="text-[#4ade80] tabular-nums">{presence.total}</b>
+          </span>
+          <span className="text-white/20">|</span>
+          <span className="text-white/50">
+            Saytda: <b className="text-white tabular-nums">{presence.site}</b>
+          </span>
+          <span className="text-white/20">|</span>
+          <span className="text-white/50">
+            Admin panelda: <b className="text-white tabular-nums">{presence.admin}</b>
+          </span>
+          <span className="ml-auto flex items-center gap-1.5 text-white/35 text-[10px]">
+            <Radio className="w-3 h-3" />
+            {liveMode ? 'Realtime — barcha qurilmalar (Firebase)' : 'Live — shu brauzer (demo rejim)'}
+          </span>
+        </div>
+
+        {/* ===== GOOGLE SEARCH SECTION ===== */}
+        <SearchConsoleSection />
+
+        {/* ===== TABS ===== */}
         <div className="flex flex-wrap items-center gap-2">
           {tabs.map((t) => {
             const Icon = t.icon;
+            const active = tab === t.id;
             return (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`btn btn-sm gap-1.5 transition-all ${tab === t.id ? 'btn-primary text-white' : 'btn-ghost'}`}
+                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
+                  active
+                    ? 'bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black shadow-lg shadow-[#facc15]/20'
+                    : 'bg-white/[0.04] border border-white/10 text-white/60 hover:bg-white/[0.08] hover:text-white'
+                }`}
               >
                 <Icon className="w-3.5 h-3.5" />
                 {t.label}
@@ -533,53 +919,43 @@ function Dashboard({ session, onLogout }) {
         </div>
 
         {/* Tab content */}
-        <div className="card bg-base-100 border border-base-300 shadow-sm">
-          <div className="card-body p-5 md:p-6">
-            {tab === 'hisoblar' && (
-              <AccountsTab config={config} onSave={handleSaveConfig} />
-            )}
-            {tab === 'tillar' && (
-              <PricesTab config={config} onSave={handleSaveConfig} />
-            )}
-            {tab === 'matnlar' && (
-              <TextsTab config={config} onSave={handleSaveConfig} />
-            )}
-          </div>
+        <div className="admin-card p-5 md:p-6">
+          {tab === 'hisoblar' && <AccountsTab config={config} onSave={saveConfig} />}
+          {tab === 'tillar' && <PricesTab config={config} onSave={saveConfig} />}
+          {tab === 'matnlar' && <TextsTab config={config} onSave={saveConfig} />}
         </div>
 
-        {/* Login log */}
-        <div className="card bg-base-100 border border-base-300 shadow-sm">
-          <div className="card-body p-5 md:p-6">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 rounded-lg bg-info/10 flex items-center justify-center">
-                <Clock className="w-4 h-4 text-info" />
-              </div>
-              <div>
-                <h3 className="font-bold text-sm">Kirish tarixi</h3>
-                <p className="text-[11px] opacity-50">So\u2018nggi urinishlar (oxirgi 100)</p>
-              </div>
+        {/* ===== LOGIN LOG ===== */}
+        <div className="admin-card p-5 md:p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 rounded-lg bg-[#38bdf8]/10 flex items-center justify-center">
+              <Clock className="w-4 h-4 text-[#38bdf8]" />
             </div>
-
-            {log.length === 0 ? (
-              <p className="text-sm opacity-40 text-center py-6">Hozircha urinishlar yo\u2018q</p>
-            ) : (
-              <div className="max-h-72 overflow-y-auto rounded-xl border border-base-300 divide-y divide-base-200">
-                {log.slice(0, 30).map((entry, i) => (
-                  <div key={i} className="flex items-center gap-3 px-4 py-2.5 text-xs">
-                    <span className={`badge badge-sm gap-1 ${entry.ok ? 'badge-success' : 'badge-error'}`}>
-                      {entry.ok ? '✓ Muvaffaqiyatli' : '✗ Xato'}
-                    </span>
-                    <span className="font-mono font-bold">{entry.username}</span>
-                    <span className="opacity-40 ml-auto tabular-nums">
-                      {new Date(entry.time).toLocaleString('uz-UZ', {
-                        day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-                      })}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div>
+              <h3 className="font-bold text-sm text-white">Kirish tarixi</h3>
+              <p className="text-[11px] text-white/40">So\u2018nggi urinishlar (oxirgi 100)</p>
+            </div>
           </div>
+
+          {log.length === 0 ? (
+            <p className="text-sm text-white/30 text-center py-6">Hozircha urinishlar yo\u2018q</p>
+          ) : (
+            <div className="max-h-72 overflow-y-auto rounded-xl border border-white/10 divide-y divide-white/5">
+              {log.slice(0, 30).map((entry, i) => (
+                <div key={i} className="flex items-center gap-3 px-4 py-2.5 text-xs">
+                  <span className={`badge badge-sm gap-1 ${entry.ok ? 'badge-success' : 'badge-error'}`}>
+                    {entry.ok ? '✓ Muvaffaqiyatli' : '✗ Xato'}
+                  </span>
+                  <span className="font-mono font-bold text-white">{entry.username}</span>
+                  <span className="text-white/30 ml-auto tabular-nums">
+                    {new Date(entry.time).toLocaleString('uz-UZ', {
+                      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+                    })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

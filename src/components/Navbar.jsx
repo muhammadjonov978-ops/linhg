@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
-import { Home, MessageCircle, Trophy, Coins, Award, LogIn, User, Shield } from 'lucide-react';
+import { Home, MessageCircle, Trophy, Coins, Award, LogIn, User, Shield, Briefcase } from 'lucide-react';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal, { USER_EVENT } from './GoogleAuthModal';
 import GiftEnvelope from './GiftEnvelope';
@@ -38,6 +38,9 @@ export default function Navbar({ onToggleTutor }) {
       <div className="navbar-start">
         <a href="/" onClick={(e) => {
           e.preventDefault();
+          if (window.location.hash.startsWith('#/portfolio')) {
+            window.location.hash = '#/';
+          }
           dispatch({ type: 'SELECT_LANGUAGE', payload: null });
         }} className="btn btn-ghost text-xl gap-2 px-2">
           <img
@@ -127,6 +130,16 @@ export default function Navbar({ onToggleTutor }) {
           <span className="hidden sm:inline text-xs">Admin</span>
         </a>
 
+        {/* Portfolio Button */}
+        <a
+          href="#/portfolio"
+          className="btn btn-ghost btn-sm gap-1.5 tooltip"
+          data-tip="Portfolio"
+        >
+          <Briefcase className="w-4 h-4 text-primary" />
+          <span className="hidden sm:inline text-xs">Portfolio</span>
+        </a>
+
         {/* Theme Picker (35 themes) */}
         <ThemePicker />
 
@@ -145,7 +158,12 @@ export default function Navbar({ onToggleTutor }) {
         
         {/* Home Button */}
         <button
-          onClick={() => dispatch({ type: 'SELECT_LANGUAGE', payload: null })}
+          onClick={() => {
+            if (window.location.hash.startsWith('#/portfolio')) {
+              window.location.hash = '#/';
+            }
+            dispatch({ type: 'SELECT_LANGUAGE', payload: null });
+          }}
           className="btn btn-ghost btn-sm btn-circle tooltip"
           data-tip="Bosh sahifa"
         >
