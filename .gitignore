@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Next.js build artifacts (nextjs/ sub-project)
+nextjs/.next/
+nextjs/node_modules/
+nextjs/out/
+nextjs/next-env.d.ts
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -24,3 +30,6 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Original portfolio photos (raw, unoptimized)
+src/assets/portfolio/raw/

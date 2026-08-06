@@ -1,7 +1,13 @@
+import { useState, useEffect, useRef } from 'react';
 import {
   ArrowLeft, Briefcase, Phone, Send, Code2, Palette,
   Globe, GraduationCap, Star, ExternalLink, MapPin, Rocket, Heart, Zap,
+  Camera, X, ChevronLeft, ChevronRight,
 } from 'lucide-react';
+import photo1 from '../assets/portfolio/photo1.webp';
+import photo2 from '../assets/portfolio/photo2.webp';
+import photo3 from '../assets/portfolio/photo3.webp';
+import photo4 from '../assets/portfolio/photo4.webp';
 
 // ====================================================================
 //  PORTFOLIO MA'LUMOTLARI — shu yerdan o'z ma'lumotlaringizni kiriting
@@ -18,11 +24,38 @@ const PORTFOLIO = {
     'Men Muhammadjonov Akbarshox. Men 12 yoshdaman va men 100 ga yaqin startap saytlarini qilganman.',
     'Men Dasturlash kursining 12-oyini o\u2018qiyapman.',
   ],
+  avatar: photo4,
   stats: [
     { icon: Rocket, value: '100+', label: 'Yaratilgan saytlar' },
     { icon: Briefcase, value: '27', label: 'Til platforma' },
     { icon: GraduationCap, value: '12', label: 'Yosh dasturchi' },
     { icon: Star, value: '100%', label: 'Ishtiyoq' },
+  ],
+  photos: [
+    {
+      src: photo1,
+      alt: 'Istanbulda — Ortaköy masjidi yonida, Bosfor bo\u2018yida',
+      caption: 'Istanbul safarim — Bosfor bo\u2018yida',
+      tag: 'Sayohat',
+    },
+    {
+      src: photo2,
+      alt: 'Rasmiy tadbirda podiumda nutq so\u2018zlab',
+      caption: 'Rasmiy tadbirda nutq so\u2018zlab',
+      tag: 'Tadbir',
+    },
+    {
+      src: photo3,
+      alt: 'Uyimiz hovlisida',
+      caption: 'O\u2018z hovlimizda',
+      tag: 'Hayotim',
+    },
+    {
+      src: photo4,
+      alt: 'Rasmiy portret',
+      caption: 'Rasmiy portretim',
+      tag: 'Portret',
+    },
   ],
   skills: [
     { icon: Code2, name: 'React / JavaScript', level: 90 },
@@ -54,6 +87,40 @@ const PORTFOLIO = {
 };
 
 export default function PortfolioPage() {
+  const [lightbox, setLightbox] = useState(null);
+  const closeBtnRef = useRef(null);
+
+  const openPhoto = (i) => setLightbox(i);
+  const closeLightbox = () => setLightbox(null);
+  const prevPhoto = (e) => {
+    e?.stopPropagation();
+    setLightbox((i) => (i === 0 ? PORTFOLIO.photos.length - 1 : i - 1));
+  };
+  const nextPhoto = (e) => {
+    e?.stopPropagation();
+    setLightbox((i) => (i === PORTFOLIO.photos.length - 1 ? 0 : i + 1));
+  };
+
+  // Lightbox ochiqligida keyboard boshqaruvi + body scroll lock
+  useEffect(() => {
+    if (lightbox === null) return;
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') closeLightbox();
+      else if (e.key === 'ArrowLeft') prevPhoto();
+      else if (e.key === 'ArrowRight') nextPhoto();
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', onKeyDown);
+    closeBtnRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [lightbox]);
+
   return (
     <div className="min-h-full pb-16">
       {/* HERO */}
@@ -79,11 +146,11 @@ export default function PortfolioPage() {
             <div className="relative mb-6">
               <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary to-secondary blur-lg opacity-40 scale-110" />
               <div className="relative w-28 h-28 rounded-full bg-gradient-to-tr from-primary to-secondary p-1 shadow-lg shadow-primary/20">
-                <div className="w-full h-full rounded-full bg-base-100 flex items-center justify-center text-3xl font-extrabold">
-                  <span className="bg-gradient-to-tr from-primary to-secondary bg-clip-text text-transparent">
-                    {PORTFOLIO.initials}
-                  </span>
-                </div>
+                <img
+                  src={PORTFOLIO.avatar}
+                  alt={PORTFOLIO.name}
+                  className="w-full h-full rounded-full object-cover object-top"
+                />
               </div>
               <div className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-base-100 border-2 border-base-200 flex items-center justify-center animate-[bounceIn_0.6s_ease-out]">
                 <Heart className="w-4 h-4 text-error" />
@@ -167,6 +234,91 @@ export default function PortfolioPage() {
           </div>
         </div>
       </div>
+
+      {/* GALLERY */}
+      <div className="max-w-5xl mx-auto px-4 pb-14">
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Camera className="w-5 h-5 text-primary" />
+          </div>
+          <h2 className="text-2xl font-extrabold">Fotogalereya</h2>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {PORTFOLIO.photos.map((p, i) => (
+            <button
+              key={p.src}
+              onClick={() => openPhoto(i)}
+              className="group relative rounded-2xl overflow-hidden aspect-[3/4] border border-base-300 hover:border-primary/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 animate-[fadeIn_0.5s_ease-out] cursor-zoom-in"
+              style={{ animationDelay: `${i * 80}ms` }}
+            >
+              <img
+                src={p.src}
+                alt={p.alt}
+                loading="lazy"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent opacity-0 group-hover:opacity-100 md:opacity-0 max-md:opacity-100 transition-opacity duration-300" />
+              <div className="absolute bottom-0 left-0 right-0 p-3 text-left translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 max-md:translate-y-0 max-md:opacity-100 transition-all duration-300">
+                <span className="badge badge-sm bg-primary/90 border-none text-primary-content mb-1.5">{p.tag}</span>
+                <p className="text-white text-xs font-semibold leading-snug drop-shadow">{p.caption}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* LIGHTBOX */}
+      {lightbox !== null && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={PORTFOLIO.photos[lightbox].caption}
+          className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 animate-[fadeIn_0.2s_ease-out]"
+          onClick={closeLightbox}
+        >
+          <button
+            ref={closeBtnRef}
+            onClick={closeLightbox}
+            className="absolute top-4 right-4 btn btn-circle btn-ghost text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Yopish (Esc)"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <button
+            onClick={prevPhoto}
+            className="absolute left-2 md:left-6 btn btn-circle btn-ghost text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Oldingi rasm"
+          >
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <figure
+            className="max-w-2xl w-full max-h-[85vh] flex flex-col items-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={PORTFOLIO.photos[lightbox].src}
+              alt={PORTFOLIO.photos[lightbox].alt}
+              className="max-w-full max-h-[75vh] rounded-xl object-contain shadow-2xl"
+            />
+            <figcaption className="mt-4 text-white/80 text-sm text-center flex items-center gap-2">
+              <span className="badge badge-sm bg-primary/90 border-none text-primary-content">
+                {PORTFOLIO.photos[lightbox].tag}
+              </span>
+              {PORTFOLIO.photos[lightbox].caption}
+              <span className="opacity-50 ml-2">
+                {lightbox + 1} / {PORTFOLIO.photos.length}
+              </span>
+            </figcaption>
+          </figure>
+          <button
+            onClick={nextPhoto}
+            className="absolute right-2 md:right-6 btn btn-circle btn-ghost text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+            aria-label="Keyingi rasm"
+          >
+            <ChevronRight className="w-6 h-6" />
+          </button>
+        </div>
+      )}
 
       {/* SKILLS */}
       <div className="bg-base-300/30 py-14">
