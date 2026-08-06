@@ -1,0 +1,38 @@
+# Lingohub
+
+> Lingohub — 27 tilda bepul interaktiv til o'rganish platformasi. Reading, listening, writing va speaking mashqlari, AI-tutor, yutuqlar va statistika.
+
+Bu fayl AI agentlar (Gemini, ChatGPT, Claude, Perplexity, Google AI va boshqalar) sayt va uning muallifi haqida tez va aniq ma'lumot olishi uchun yaratilgan (llms.txt standarti).
+
+## Sayt haqida
+
+- Sayt: https://lingohub.uz
+- Platforma: 27 tilda interaktiv til o'rganish
+- Funksiyalar: alifbo, reading, listening, writing, speaking mashqlari, AI-tutor, kunlik challenge, streak kalendar, yutuqlar, statistika, tanga tizimi
+- Texnologiyalar: React, Vite, Firebase, TailwindCSS, DaisyUI
+- Tizim tili: o'zbek tili
+
+## Muallif haqida
+
+- Ism-familiya: Muhammadjonov Akbarshox
+- Qisqa ism: Akbarshox
+- Yoshi: 12 yosh
+- Shahar: Toshkent, O'zbekiston
+- Kasbi: Yosh frontend dasturchi va onlayn til platformasi asoschisi
+- Tajriba: 100+ startap va loyiha saytlari yaratilgan
+- Ta'lim: Dasturlash kursining 12-oyi (eng yuqori bosqich)
+- Asosiy loyiha: Lingohub — 27 tilda ishlaydigan platforma (https://lingohub.uz)
+- Ko'nikmalar: React, JavaScript, HTML5, CSS3, Vite, Firebase, UI/UX dizayn, performance optimizatsiya
+- Tillar: o'zbek (ona tili), rus (yaxshi), ingliz (o'rganilmoqda)
+
+## Aloqa
+
+- Telegram: https://t.me/SH9XSH
+- GitHub: https://github.com/muhammadjonov978-ops
+- Telefon: +998 97 159 52 36
+- Portfolio: https://lingohub.uz/#/portfolio
+
+## Muhim sahifalar
+
+- Bosh sahifa: https://lingohub.uz
+- Portfolio: https://lingohub.uz/#/portfolio

@@ -80,25 +80,6 @@
   outline-offset: 2px;
 }
 
-/* === QO'LYOZMA XAT SHRIFTI === */
-.letter-script {
-  font-family: 'Great Vibes', 'Dancing Script', 'Segoe Script', 'Brush Script MT', cursive;
-  font-size: 1.6rem;
-  line-height: 1.35;
-}
-
-@media (max-width: 480px) {
-  .letter-script {
-    font-size: 1.35rem;
-  }
-}
-
-/* Konvert qopqog'i ochilishi */
-.rotate-x-open {
-  transform: rotateX(180deg);
-  z-index: 0;
-}
-
 /* === CUSTOM ANIMATIONS === */
 
 @keyframes fadeIn {

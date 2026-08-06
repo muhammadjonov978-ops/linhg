@@ -9,7 +9,6 @@ import {
 } from 'react-icons/fa';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal, { USER_EVENT } from './GoogleAuthModal';
-import GiftEnvelope from './GiftEnvelope';
 
 function loadSavedUser() {
   try {
@@ -131,9 +130,6 @@ export default function Navbar({ onToggleTutor }) {
       </div>
 
       <div className="navbar-end gap-1">
-        {/* Ochiladigan konvert — xat (mobilda ham) */}
-        <div className="hidden md:block"><GiftEnvelope /></div>
-
         {/* Google sign-in / profile (md+) */}
         {savedUser ? (
           <button
@@ -227,9 +223,6 @@ export default function Navbar({ onToggleTutor }) {
                 <span className="truncate">{item.label}</span>
               </button>
             ))}
-            <div className="col-span-2 flex justify-center">
-              <GiftEnvelope />
-            </div>
           </div>
         </div>
       )}

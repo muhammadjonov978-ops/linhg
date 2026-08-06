@@ -1,4 +1,37 @@
 User-agent: *
 Allow: /
 
+# AI crawlerlar (Gemini, ChatGPT, Claude, Perplexity, Google AI va boshqalar)
+User-agent: GPTBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
 Sitemap: https://lingohub.uz/sitemap.xml
+# AI agentlar uchun markdown formatidagi ma'lumot
+# LLMS: https://lingohub.uz/llms.txt
