@@ -4,7 +4,6 @@ import { use } from 'react';
 import { useState, useEffect } from 'react';
 import { useApp } from '../../../context/AppContext';
 import { languages, levels, getLanguageData } from '../../../data/languages';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import ReadingSection from '../../../components/ReadingSection';
 import ListeningSection from '../../../components/ListeningSection';
@@ -24,7 +23,6 @@ const skills = [
 export default function LevelPage({ params }: { params: Promise<{ langId: string; levelId: string }> }) {
   const { langId, levelId } = use(params);
   const { state, dispatch, getLevelProgress } = useApp();
-  const router = useRouter();
   const [activeSkill, setActiveSkill] = useState('reading');
 
   const currentLang = languages.find(l => l.id === langId);
@@ -37,7 +35,7 @@ export default function LevelPage({ params }: { params: Promise<{ langId: string
       dispatch({ type: 'SELECT_LANGUAGE', payload: langId });
     }
     dispatch({ type: 'SET_CURRENT_LEVEL', payload: levelId });
-  }, [langId, levelId]);
+  }, [langId, levelId, state.selectedLanguage, dispatch]);
 
   if (!currentLang || !currentLevel || !data) {
     return (

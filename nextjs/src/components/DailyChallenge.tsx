@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import type { DailyChallengeItem } from '../context/AppContext';
 import { Target, CheckCircle, RotateCcw, Zap, Gift, Sparkles } from 'lucide-react';
@@ -9,7 +9,9 @@ export default function DailyChallenge() {
   const { state, dispatch } = useApp();
   const [showReward, setShowReward] = useState<{ coinReward: number } | null>(null);
 
-  const generateDailyChallenges = () => {
+  // useCallback: check funksiyalari hozirgi progress/tutorMessages holatini
+  // closure orqali o'qiydi — identity faqat shular o'zgarganda yangilanadi.
+  const generateDailyChallenges = useCallback(() => {
     const today = new Date().toDateString();
     const seed = today.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
 
@@ -88,7 +90,7 @@ export default function DailyChallenge() {
       }
     }
     return picked;
-  };
+  }, [state.progress, state.tutorMessages]);
 
   const [dailyChallenges, setDailyChallenges] = useState<DailyChallengeItem[]>(() => {
     const saved = state.dailyChallenges;
@@ -147,11 +149,11 @@ export default function DailyChallenge() {
         type: 'UPDATE_DAILY_CHALLENGES',
         payload: {
           date: new Date().toDateString(),
-          challenges: updated.map(({ check, ...rest }) => rest),
+          challenges: updated.map(({ check: _check, ...rest }) => rest),
         },
       });
     }
-  }, [state.progress, state.tutorMessages]);
+  }, [state.progress, state.tutorMessages, dailyChallenges, completedChallenges, dispatch, generateDailyChallenges]);
 
   const handleRefresh = () => {
     const newChallenges = generateDailyChallenges();
@@ -162,7 +164,7 @@ export default function DailyChallenge() {
       payload: {
         date: new Date().toDateString(),
         // strip check functions — only serializable data is stored
-        challenges: newChallenges.map(({ check, ...rest }) => ({ ...rest, completed: false })),
+        challenges: newChallenges.map(({ check: _check, ...rest }) => ({ ...rest, completed: false })),
       },
     });
   };

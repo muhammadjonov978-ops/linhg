@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil, Send, CheckCircle, ArrowRight, RotateCcw, AlertTriangle, Lightbulb } from 'lucide-react';
+import { FaPencilAlt as Pencil, FaPaperPlane as Send, FaCheckCircle as CheckCircle, FaArrowRight as ArrowRight, FaUndo as RotateCcw, FaExclamationTriangle as AlertTriangle, FaLightbulb as Lightbulb } from 'react-icons/fa';
 
 const COMMON_MISTAKES = {
   'teh': { correction: 'the', explanation: '"the" to\'g\'ri yozilishi' },

@@ -1,9 +1,11 @@
 import { initializeApp } from 'firebase/app';
 import { getDatabase } from 'firebase/database';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut } from 'firebase/auth';
 
 // ==== FIREBASE REALTIME DATABASE (live visitor counter) ====
 // Fill these in a .env file (see .env.example) to enable REAL cross-device
-// live counting. Without them the app falls back to same-browser demo mode.
+// live counting + REAL Google sign-in. Without them the app falls back to
+// same-browser demo mode (name-based local login).
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
@@ -21,10 +23,39 @@ export const HAS_FIREBASE = Boolean(
 
 let app = null;
 let db = null;
+let auth = null;
+let googleProvider = null;
 
 if (HAS_FIREBASE) {
   app = initializeApp(firebaseConfig);
   db = getDatabase(app);
+  auth = getAuth(app);
+  googleProvider = new GoogleAuthProvider();
 }
 
-export { app, db };
+// Haqiqiy Google orqali kirish (Firebase Auth). Agar .env sozlanmagan
+// bo'lsa — null qaytadi va ilova oddiy (ismli) kirishga tushadi.
+export async function signInWithGoogle() {
+  if (!auth || !googleProvider) return null;
+  const result = await signInWithPopup(auth, googleProvider);
+  const u = result.user;
+  return {
+    sub: u.uid,
+    name: u.displayName || u.email || 'Google user',
+    givenName: (u.displayName || '').split(' ')[0] || u.email || 'Google user',
+    email: u.email || '',
+    picture: u.photoURL || '',
+    isGoogle: true,
+  };
+}
+
+export async function signOutGoogle() {
+  if (!auth) return;
+  try {
+    await signOut(auth);
+  } catch {
+    /* noop */
+  }
+}
+
+export { app, db, auth, googleProvider };

@@ -1,5 +1,5 @@
 import { useApp } from '../context/AppContext';
-import { Flame, CalendarDays, Clock, Coins } from 'lucide-react';
+import { FaFire as Flame, FaCalendarAlt as CalendarDays, FaClock as Clock, FaCoins as Coins } from 'react-icons/fa';
 
 export default function StreakCalendar() {
   const { state } = useApp();

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Crown, Star, Check, X, Sparkles, Shield, Zap, Infinity as InfinityIcon, CreditCard, Lock, Coins, Loader2 } from 'lucide-react';
+import { FaCrown as Crown, FaStar as Star, FaCheck as Check, FaTimes as X, FaMagic as Sparkles, FaShieldAlt as Shield, FaBolt as Zap, FaInfinity as InfinityIcon, FaCreditCard as CreditCard, FaLock as Lock, FaCoins as Coins, FaSpinner as Loader2 } from 'react-icons/fa';
 import { useSiteConfig, getLangPrice } from '../data/siteConfig';
 
 /**

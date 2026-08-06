@@ -13,7 +13,7 @@ interface WritingSectionProps {
   onComplete: (score: number) => void;
 }
 
-export default function WritingSection({ exercises, langId, levelId, onComplete }: WritingSectionProps) {
+export default function WritingSection({ exercises, langId: _langId, levelId: _levelId, onComplete }: WritingSectionProps) {
   const [currentEx, setCurrentEx] = useState(0);
   const [userText, setUserText] = useState('');
   const [foundErrors, setFoundErrors] = useState<number[]>([]);

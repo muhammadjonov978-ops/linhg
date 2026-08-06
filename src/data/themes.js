@@ -2,6 +2,7 @@
 // All 35 built-in daisyUI v5 themes with Uzbek display names.
 
 export const THEMES = [
+  { id: 'lingohub', name: 'Lingohub Oltin', category: 'dark' },
   { id: 'light', name: "Yorug'", category: 'light' },
   { id: 'dark', name: "Qorong'i", category: 'dark' },
   { id: 'cupcake', name: 'Kapkeyk', category: 'light' },
@@ -41,4 +42,4 @@ export const THEMES = [
 
 export const isThemeId = (id) => THEMES.some(t => t.id === id);
 
-export const DEFAULT_THEME = 'light';
+export const DEFAULT_THEME = 'lingohub';

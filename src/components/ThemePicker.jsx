@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { THEMES } from '../data/themes';
-import { Palette, Check, Shuffle, Search } from 'lucide-react';
+import { FaPalette as Palette, FaCheck as Check, FaRandom as Shuffle, FaSearch as Search } from 'react-icons/fa';
 
 export default function ThemePicker() {
   const { state, dispatch } = useApp();

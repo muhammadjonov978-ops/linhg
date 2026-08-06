@@ -113,7 +113,7 @@ export default function AITutor() {
         },
       });
     }
-  }, [selectedLangId, state.tutorMessages.length]);
+  }, [selectedLangId, state.tutorMessages.length, dispatch]);
 
   const handleSend = async () => {
     if (!input.trim()) return;

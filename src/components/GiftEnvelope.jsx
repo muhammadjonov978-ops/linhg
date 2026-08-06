@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Mail, X, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { FaEnvelope as Mail, FaTimes as X, FaMagic as Sparkles } from 'react-icons/fa';
 
 // Xat matni — konvert ichidan chiqadigan sovg'a taklifi
 // (5000 tanga yig'ib 2 ta pullik til ochish — CoinRewardBanner bilan bir xil)
@@ -28,6 +28,16 @@ export default function GiftEnvelope() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSealed, setIsSealed] = useState(true); // konvert muhrlangan holatdan ochiladi
   const [seen, setSeen] = useState(isLetterSeen());
+
+  // Escape tugmasi yoki backdrop — xatni yopadi
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') closeModal();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [isOpen]);
 
   const openEnvelope = () => {
     setIsSealed(false);
@@ -73,18 +83,19 @@ export default function GiftEnvelope() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={closeModal} />
 
-          <div className="relative bg-base-100 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-[scaleIn_0.35s_ease-out]">
+          <div className="relative bg-base-100 rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden animate-[scaleIn_0.35s_ease-out] border border-primary/25 gold-glow">
             {/* Sarlavha */}
-            <div className="bg-gradient-to-r from-warning via-amber-500 to-secondary p-4 flex items-center justify-between">
-              <h3 className="font-bold text-white flex items-center gap-2">
+            <div className="bg-gradient-to-r from-[#8a6a1f] via-[#d4af37] to-[#8a6a1f] p-4 flex items-center justify-between">
+              <h3 className="font-bold text-black flex items-center gap-2 font-display">
                 <Sparkles className="w-4 h-4" />
                 Sizga maxsus xat keldi!
               </h3>
               <button
                 onClick={closeModal}
-                className="btn btn-ghost btn-circle btn-sm text-white hover:bg-white/20"
+                className="btn btn-circle btn-sm bg-black/25 border-0 text-black hover:bg-black/40 transition-all modal-close-focus"
+                title="Yopish (Esc)"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 font-bold" />
               </button>
             </div>
 

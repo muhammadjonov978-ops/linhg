@@ -39,7 +39,6 @@ export default function MistakesReview() {
   const { state, dispatch } = useApp();
   const [mistakes, setMistakes] = useState<Mistake[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
   const [reviewedCount, setReviewedCount] = useState(0);
 
@@ -74,7 +73,6 @@ export default function MistakesReview() {
     setReviewedCount(prev => prev + 1);
     if (currentIndex < mistakes.length - 1) {
       setCurrentIndex(prev => prev + 1);
-      setShowAnswer(false);
       setIsFlipped(false);
     }
   };
@@ -82,7 +80,6 @@ export default function MistakesReview() {
   const handleNext = () => {
     if (currentIndex < mistakes.length - 1) {
       setCurrentIndex(prev => prev + 1);
-      setShowAnswer(false);
       setIsFlipped(false);
     }
   };
@@ -90,14 +87,12 @@ export default function MistakesReview() {
   const handlePrev = () => {
     if (currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
-      setShowAnswer(false);
       setIsFlipped(false);
     }
   };
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
-    setShowAnswer(true);
   };
 
   if (!hasMistakes) {

@@ -7,12 +7,16 @@ import {
 } from '../utils/presence';
 import { subscribeVisits, refreshVisits } from '../utils/visits';
 import {
-  Shield, KeyRound, User as UserIcon, Eye, EyeOff, LogOut, ArrowLeft,
-  Copy, Check, Activity, Users, Radio, Clock, Crown,
-  UserPlus, Trash2, Coins, Type, Save, RotateCcw, RefreshCw,
-  Search, Upload, Link2, X, ChevronRight, FileSpreadsheet,
-  TrendingUp, MousePointerClick, BarChart3,
-} from 'lucide-react';
+  FaShieldAlt as Shield, FaKey as KeyRound, FaUser as UserIcon, FaEye as Eye,
+  FaEyeSlash as EyeOff, FaSignOutAlt as LogOut, FaArrowLeft as ArrowLeft,
+  FaCopy as Copy, FaCheck as Check, FaHeartbeat as Activity, FaUsers as Users,
+  FaBroadcastTower as Radio, FaClock as Clock, FaCrown as Crown,
+  FaUserPlus as UserPlus, FaTrash as Trash2, FaCoins as Coins, FaFont as Type,
+  FaSave as Save, FaUndo as RotateCcw, FaSync as RefreshCw, FaSearch as Search,
+  FaUpload as Upload, FaLink as Link2, FaTimes as X, FaChevronRight as ChevronRight,
+  FaFileExcel as FileSpreadsheet, FaChartLine as TrendingUp,
+  FaMousePointer as MousePointerClick, FaChartBar as BarChart3,
+} from 'react-icons/fa';
 
 const SESSION_KEY = 'lingohub_admin_session';
 const LOG_KEY = 'lingohub_admin_log';
@@ -771,7 +775,6 @@ function Dashboard({ session, onLogout }) {
   };
 
   const isOwner = session.role === 'owner';
-  const accounts = config.accounts || [];
   const liveMode = presence.mode === 'firebase' || visits.mode === 'firebase';
 
   const statCards = [

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
 import { useSiteConfig, getLangPrice } from '../data/siteConfig';
-import { Coins, Sparkles, Check, X, Lock, CheckCircle } from 'lucide-react';
+import { FaCoins as Coins, FaMagic as Sparkles, FaCheck as Check, FaTimes as X, FaLock as Lock, FaCheckCircle as CheckCircle } from 'react-icons/fa';
 
 const COIN_REWARD = 5000;
 const MAX_FREE_LANGS = 2;

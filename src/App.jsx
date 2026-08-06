@@ -17,7 +17,10 @@ import PortfolioPage from './pages/PortfolioPage';
 import LiveVisitorsBadge from './components/LiveVisitorsBadge';
 import { startPresence, stopPresence } from './utils/presence';
 import { startVisitsTracking } from './utils/visits';
-import { MessageCircle, X, Sparkles, PanelRightOpen } from 'lucide-react';
+import {
+  FaCommentDots as MessageCircle, FaTimes as X, FaMagic as Sparkles,
+  FaColumns as PanelRightOpen, FaBars as MenuIcon,
+} from 'react-icons/fa';
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -69,7 +72,7 @@ function AppContent() {
   const showHome = !state.selectedLanguage;
 
   return (
-    <div className="h-screen w-full bg-base-200 transition-colors duration-300 flex flex-col">
+    <div className="h-dvh w-full bg-base-200 transition-colors duration-300 flex flex-col">
       <Navbar onToggleTutor={handleToggleTutor} />
 
       <div className="flex flex-1 overflow-hidden">
@@ -87,7 +90,13 @@ function AppContent() {
 
         {/* Sidebar with widgets (only on Home and Dashboard) */}
         {!showPortfolio && (showDashboard || showHome) && showSidebar && (
-          <aside className="fixed right-0 top-16 h-[calc(100vh-4rem)] w-80 bg-base-100 border-l border-base-300 overflow-y-auto z-30 shadow-lg animate-[slideIn_0.3s_ease-out]">
+          <>
+            {/* Mobil qurilmalarda orqa fon qoraytiriladi */}
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-30 lg:hidden"
+              onClick={() => setShowSidebar(false)}
+            />
+            <aside className="fixed right-0 top-16 h-[calc(100dvh-4rem)] w-80 max-w-[86vw] bg-base-100 border-l border-base-300 overflow-y-auto z-40 shadow-lg animate-[slideIn_0.3s_ease-out]">
             <div className="p-4 space-y-4">
               {/* Sidebar Header */}
               <div className="flex items-center justify-between mb-2">
@@ -123,7 +132,8 @@ function AppContent() {
                 </>
               )}
             </div>
-          </aside>
+            </aside>
+          </>
         )}
       </div>
 
@@ -134,7 +144,8 @@ function AppContent() {
           className="fixed right-4 top-20 z-30 btn btn-sm btn-ghost bg-base-100/80 backdrop-blur-sm shadow-sm border border-base-300 hover:bg-base-200 transition-all duration-300"
           title="Panelni ochish"
         >
-          <PanelRightOpen className="w-4 h-4" />
+          <PanelRightOpen className="w-4 h-4 hidden sm:block" />
+          <MenuIcon className="w-4 h-4 sm:hidden" />
           <span className="hidden sm:inline text-xs">Widgets</span>
         </button>
       )}

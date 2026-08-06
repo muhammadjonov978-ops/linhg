@@ -3,11 +3,13 @@ import { useApp } from '../context/AppContext';
 import { languages, getLessons, getLanguageStats } from '../data/languages';
 import { useSiteConfig, getLangPrice } from '../data/siteConfig';
 import {
-  Lock, ChevronRight, CheckCircle,
-  ArrowLeft, TrendingUp, Sparkles, Target,
-  BookOpen, Headphones, Pencil, Mic, ChevronLeft,
-  GraduationCap, Coins, Crown, CreditCard
-} from 'lucide-react';
+  FaLock as Lock, FaChevronRight as ChevronRight, FaCheckCircle as CheckCircle,
+  FaArrowLeft as ArrowLeft, FaChartLine as TrendingUp, FaMagic as Sparkles,
+  FaBullseye as Target, FaBookOpen as BookOpen, FaHeadphones as Headphones,
+  FaPencilAlt as Pencil, FaMicrophone as Mic, FaChevronLeft as ChevronLeft,
+  FaGraduationCap as GraduationCap, FaCoins as Coins, FaCrown as Crown,
+  FaCreditCard as CreditCard,
+} from 'react-icons/fa';
 import PaywallModal from '../components/PaywallModal';
 import DailyChallenge from '../components/DailyChallenge';
 import AchievementsPanel from '../components/AchievementsPanel';

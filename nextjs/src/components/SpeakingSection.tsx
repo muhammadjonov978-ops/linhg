@@ -24,7 +24,7 @@ interface SpeakingSectionProps {
   onComplete: (score: number) => void;
 }
 
-export default function SpeakingSection({ exercises, langId, levelId, onComplete }: SpeakingSectionProps) {
+export default function SpeakingSection({ exercises, langId, levelId: _levelId, onComplete }: SpeakingSectionProps) {
   const [currentEx, setCurrentEx] = useState(0);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [isListening, setIsListening] = useState(false);
@@ -37,12 +37,12 @@ export default function SpeakingSection({ exercises, langId, levelId, onComplete
   const [isProcessing, setIsProcessing] = useState(false);
 
   const exercise = exercises[currentEx];
-  if (!exercise) return null;
-
-  const isWordExercise = 'words' in exercise;
-  const items: string[] = isWordExercise
-    ? (exercise as SpeakingWordExercise).words
-    : (exercise as SpeakingSentenceExercise).sentences;
+  const isWordExercise = !!exercise && 'words' in exercise;
+  const items: string[] = exercise
+    ? isWordExercise
+      ? (exercise as SpeakingWordExercise).words
+      : (exercise as SpeakingSentenceExercise).sentences
+    : [];
   const currentItem = items?.[currentItemIndex];
 
   const speakText = useCallback((text: string, callback?: () => void) => {
@@ -199,6 +199,9 @@ export default function SpeakingSection({ exercises, langId, levelId, onComplete
     setResults({});
     setShowResults(false);
   };
+
+  // Hook'lar har doim chaqirilishi kerak — early return barcha hook'lardan keyin turadi.
+  if (!exercise) return null;
 
   const progress = completedExs.size;
   const total = exercises.length;

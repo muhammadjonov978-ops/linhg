@@ -3,10 +3,11 @@ import { useApp } from '../context/AppContext';
 import { languages, getLessons } from '../data/languages';
 import { speak, stopSpeaking } from '../utils/speech';
 import {
-  ArrowLeft, CheckCircle, Trophy, Lock,
-  ChevronLeft, ChevronRight, Volume2, RefreshCw,
-  BookOpen, GraduationCap, VolumeX, Coins
-} from 'lucide-react';
+  FaArrowLeft as ArrowLeft, FaCheckCircle as CheckCircle, FaTrophy as Trophy,
+  FaLock as Lock, FaChevronLeft as ChevronLeft, FaChevronRight as ChevronRight,
+  FaVolumeUp as Volume2, FaSync as RefreshCw, FaBookOpen as BookOpen,
+  FaGraduationCap as GraduationCap, FaVolumeMute as VolumeX, FaCoins as Coins,
+} from 'react-icons/fa';
 import CoinRewardBanner from '../components/CoinRewardBanner';
 
 export default function LevelPage({ onBack }) {

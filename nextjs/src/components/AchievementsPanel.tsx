@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { Award, Sparkles, X, Zap, ChevronDown, ChevronUp } from 'lucide-react';
 
@@ -13,27 +13,39 @@ export default function AchievementsPanel({ limit }: AchievementsPanelProps) {
   const [showAll, setShowAll] = useState(false);
   const [newAchievement, setNewAchievement] = useState<{ name: string; icon: string; coinReward: number } | null>(null);
 
-  const unlockedAchievements = state.achievements?.filter(a => a.unlocked) || [];
-  const newUnlocked = unlockedAchievements.filter(a => a.justUnlocked);
+  const unlockedAchievements = useMemo(
+    () => state.achievements?.filter(a => a.unlocked) || [],
+    [state.achievements]
+  );
+  const newUnlocked = useMemo(
+    () => unlockedAchievements.filter(a => a.justUnlocked),
+    [unlockedAchievements]
+  );
 
   // Show popup for new achievements
   useEffect(() => {
-    if (newUnlocked.length > 0) {
-      const latest = newUnlocked[newUnlocked.length - 1];
-      setNewAchievement(latest);
-      setTimeout(() => setNewAchievement(null), 5000);
+    if (newUnlocked.length === 0) return;
+    const latest = newUnlocked[newUnlocked.length - 1];
+    setNewAchievement(latest);
+    const hideTimer = setTimeout(() => setNewAchievement(null), 5000);
 
-      // Rewards are auto-collected in AppContext; just clear the flag after showing
-      setTimeout(() => {
-        dispatch({ type: 'REMOVE_ACHIEVEMENT', payload: latest.id });
-        // Re-add without justUnlocked
-        const updated = unlockedAchievements.map(a =>
-          a.id === latest.id ? { ...a, justUnlocked: false } : a
-        );
-        dispatch({ type: 'SET_ACHIEVEMENTS', payload: updated });
-      }, 3000);
-    }
-  }, [state.achievements?.length]);
+    // Rewards are auto-collected in AppContext; just clear the flag after showing.
+    // NOTE: popup shu yerda ham yopiladi — aks holda flag-tozalash dispatch'i
+    // effect'ni qayta ishga tushirib, 5s hideTimer'ni bekor qilib qo'yardi.
+    const clearFlagTimer = setTimeout(() => {
+      setNewAchievement(null);
+      dispatch({ type: 'REMOVE_ACHIEVEMENT', payload: latest.id });
+      // Re-add without justUnlocked
+      const updated = unlockedAchievements.map(a =>
+        a.id === latest.id ? { ...a, justUnlocked: false } : a
+      );
+      dispatch({ type: 'SET_ACHIEVEMENTS', payload: updated });
+    }, 3000);
+    return () => {
+      clearTimeout(hideTimer);
+      clearTimeout(clearFlagTimer);
+    };
+  }, [newUnlocked, unlockedAchievements, dispatch]);
 
   const displayAchievements = limit && !showAll
     ? unlockedAchievements.slice(0, limit)

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { SMS_API_KEY, SMS_BACKEND_URL } from '../config';
-import { Bell, Phone, X, Loader2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { FaBell as Bell, FaPhone as Phone, FaTimes as X, FaSpinner as Loader2, FaCheckCircle as CheckCircle, FaExclamationTriangle as AlertTriangle } from 'react-icons/fa';
 
 const SMS_REMINDER_KEY = 'lingohub_sms_reminder';
 const LAST_SENT_KEY = 'lingohub_sms_last_sent';

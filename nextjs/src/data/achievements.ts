@@ -50,7 +50,7 @@ export const achievements: Achievement[] = [
   {
     id: 'streak_3',
     name: 'Izchillik',
-    description: "3 kun ketma-ket o\'qing",
+    description: "3 kun ketma-ket o'qing",
     icon: '🔥',
     coinReward: 150,
     condition: (stats) => stats.streak >= 3,
@@ -58,7 +58,7 @@ export const achievements: Achievement[] = [
   {
     id: 'streak_7',
     name: 'Hafta Qahramoni',
-    description: "7 kun ketma-ket o\'qing",
+    description: "7 kun ketma-ket o'qing",
     icon: '⭐',
     coinReward: 300,
     condition: (stats) => stats.streak >= 7,
@@ -73,7 +73,7 @@ export const achievements: Achievement[] = [
   },
   {
     id: 'level_elementary',
-    name: "O\'rganuvchi",
+    name: "O'rganuvchi",
     description: 'Elementary darajasini tugating',
     icon: '📚',
     coinReward: 200,
@@ -97,7 +97,7 @@ export const achievements: Achievement[] = [
   },
   {
     id: 'skills_master',
-    name: "Ko\'nikma Ustasi",
+    name: "Ko'nikma Ustasi",
     description: 'Barcha 4 ko\'nikmadan 80%+ oling',
     icon: '🎭',
     coinReward: 250,

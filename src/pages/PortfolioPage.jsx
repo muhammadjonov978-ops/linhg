@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  ArrowLeft, Briefcase, Phone, Send, Code2, Palette,
-  Globe, GraduationCap, Star, ExternalLink, MapPin, Rocket, Heart, Zap,
-  Camera, X, ChevronLeft, ChevronRight,
-} from 'lucide-react';
+  FaArrowLeft as ArrowLeft, FaBriefcase as Briefcase, FaPhone as Phone,
+  FaPaperPlane as Send, FaCode as Code2, FaPalette as Palette, FaGlobe as Globe,
+  FaGraduationCap as GraduationCap, FaStar as Star, FaExternalLinkAlt as ExternalLink,
+  FaMapMarkerAlt as MapPin, FaRocket as Rocket, FaHeart as Heart, FaBolt as Zap,
+  FaCamera as Camera, FaTimes as X, FaChevronLeft as ChevronLeft,
+  FaChevronRight as ChevronRight,
+} from 'react-icons/fa';
 import photo1 from '../assets/portfolio/photo1.webp';
 import photo2 from '../assets/portfolio/photo2.webp';
 import photo3 from '../assets/portfolio/photo3.webp';

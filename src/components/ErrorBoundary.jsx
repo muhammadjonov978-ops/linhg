@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { AlertTriangle, RotateCcw, Trash2 } from 'lucide-react';
+import { FaExclamationTriangle as AlertTriangle, FaUndo as RotateCcw, FaTrash as Trash2 } from 'react-icons/fa';
 import { STORAGE_KEY } from '../context/AppContext';
 
 export default class ErrorBoundary extends Component {

@@ -235,6 +235,9 @@ function appReducer(state, action) {
       };
 
     case 'RESET_STREAK':
+      // Idempotent: streak allaqachon 0 bo'lsa, yangi state yaratilmaydi —
+      // aks holda 48 soatlik streak tekshiruvli effect cheksiz takrorlanardi.
+      if (state.streak === 0) return state;
       return { ...state, streak: 0 };
 
     default:
@@ -297,7 +300,9 @@ export function AppProvider({ children }) {
       ];
       dispatch({ type: 'SET_ACHIEVEMENTS', payload: updatedAchievements });
     }
-  }, [state.progress, state.coins, state.streak, state.dailyChallenges, state.mistakesReviewed]);
+    // Deps ataylab keng: checkNewAchievements allaqachon ochilgan yutuqlarni
+    // filtrlab tashlaydi (takrorlanmaydi), RESET_STREAK esa idempotent.
+  }, [state.progress, state.coins, state.streak, state.dailyChallenges, state.mistakesReviewed, state.achievements, state.lastActive, state]);
 
   // Apply theme
   useEffect(() => {

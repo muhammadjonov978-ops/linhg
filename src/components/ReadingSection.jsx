@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { getSpeechLang } from '../utils/speech';
-import { BookOpen, CheckCircle, XCircle, ArrowRight, RotateCcw, Volume2 } from 'lucide-react';
+import { FaBookOpen as BookOpen, FaCheckCircle as CheckCircle, FaTimesCircle as XCircle, FaArrowRight as ArrowRight, FaUndo as RotateCcw, FaVolumeUp as Volume2 } from 'react-icons/fa';
 
 export default function ReadingSection({ exercises, langId, levelId: _levelId, onComplete }) {
   const [currentEx, setCurrentEx] = useState(0);

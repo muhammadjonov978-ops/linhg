@@ -1,7 +1,83 @@
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Great+Vibes&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Great+Vibes&family=Playfair+Display:wght@600;700;800;900&display=swap');
 @import "tailwindcss";
 @plugin "daisyui" {
   themes: all;
+}
+
+/* ===== QORA + OLTIN — LINGOHUB MAXSUS MAVZU ===== */
+@plugin "daisyui/theme" {
+  name: "lingohub";
+  default: true;
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: oklch(0.15 0.01 285);
+  --color-base-200: oklch(0.19 0.012 285);
+  --color-base-300: oklch(0.24 0.014 285);
+  --color-base-content: oklch(0.95 0.008 85);
+  --color-primary: oklch(0.83 0.15 90);
+  --color-primary-content: oklch(0.2 0.03 90);
+  --color-secondary: oklch(0.73 0.13 55);
+  --color-secondary-content: oklch(0.16 0.02 55);
+  --color-accent: oklch(0.86 0.1 100);
+  --color-accent-content: oklch(0.22 0.02 100);
+  --color-neutral: oklch(0.22 0.01 285);
+  --color-neutral-content: oklch(0.93 0.01 85);
+  --color-info: oklch(0.72 0.1 230);
+  --color-info-content: oklch(0.15 0.02 230);
+  --color-success: oklch(0.74 0.14 150);
+  --color-success-content: oklch(0.15 0.02 150);
+  --color-warning: oklch(0.85 0.16 85);
+  --color-warning-content: oklch(0.2 0.03 85);
+  --color-error: oklch(0.66 0.19 25);
+  --color-error-content: oklch(0.95 0.02 25);
+  --radius-selector: 0.6rem;
+  --radius-field: 0.75rem;
+  --radius-box: 1.1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+/* Playfair Display — sarlavhalar uchun hashamatli shrift */
+@theme {
+  --font-display: "Playfair Display", "Georgia", serif;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Oltin gradient matn */
+.gold-text {
+  background: linear-gradient(100deg, #f5d27a 0%, #d4af37 35%, #fff3c4 55%, #b8860b 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gold-shine 4s linear infinite;
+}
+
+@keyframes gold-shine {
+  0% { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Oltin yorug'lik (glow) */
+.gold-glow {
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.25), 0 0 46px rgba(212, 175, 55, 0.08);
+}
+
+.gold-glow-strong {
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.35), 0 8px 32px rgba(212, 175, 55, 0.28);
+}
+
+/* Modal Escape tugmasi bilan yopilishi uchun focus chiroyli */
+.modal-close-focus:focus-visible {
+  outline: 2px solid #d4af37;
+  outline-offset: 2px;
 }
 
 /* === QO'LYOZMA XAT SHRIFTI === */

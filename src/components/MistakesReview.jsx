@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import {
-  RotateCcw, CheckCircle, XCircle, ChevronLeft, ChevronRight,
-  RefreshCw, Lightbulb
-} from 'lucide-react';
+  FaUndo as RotateCcw, FaCheckCircle as CheckCircle, FaTimesCircle as XCircle,
+  FaChevronLeft as ChevronLeft, FaChevronRight as ChevronRight,
+  FaSync as RefreshCw, FaLightbulb as Lightbulb,
+} from 'react-icons/fa';
 
 const MISTAKE_LANGUAGES = [
   { id: 'english', name: 'English', flag: '🇬🇧' },

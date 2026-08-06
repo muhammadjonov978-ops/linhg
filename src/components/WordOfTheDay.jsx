@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { getSpeechLang } from '../utils/speech';
-import { Volume2, Bookmark, BookmarkCheck, Sparkles } from 'lucide-react';
+import { FaVolumeUp as Volume2, FaRegBookmark as Bookmark, FaBookmark as BookmarkCheck, FaMagic as Sparkles } from 'react-icons/fa';
 
 const wordDatabase = {
   english: [

@@ -27,7 +27,7 @@ export default function LanguageDashboardPage({ params }: { params: Promise<{ la
     if (state.selectedLanguage !== langId) {
       dispatch({ type: 'SELECT_LANGUAGE', payload: langId });
     }
-  }, [langId]);
+  }, [langId, state.selectedLanguage, dispatch]);
 
   const currentLang = languages.find(l => l.id === langId);
   if (!currentLang) {

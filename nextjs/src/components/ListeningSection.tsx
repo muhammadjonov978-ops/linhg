@@ -24,7 +24,7 @@ interface ListeningSectionProps {
   onComplete: (score: number) => void;
 }
 
-export default function ListeningSection({ exercises, langId, levelId, onComplete }: ListeningSectionProps) {
+export default function ListeningSection({ exercises, langId, levelId: _levelId, onComplete }: ListeningSectionProps) {
   const [currentEx, setCurrentEx] = useState(0);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
@@ -35,12 +35,12 @@ export default function ListeningSection({ exercises, langId, levelId, onComplet
   const [completedExs, setCompletedExs] = useState(new Set<number>());
 
   const exercise = exercises[currentEx];
-  if (!exercise) return null;
-
-  const isWordExercise = 'words' in exercise;
-  const items: string[] = isWordExercise
-    ? (exercise as ListeningWordExercise).words
-    : (exercise as ListeningSentenceExercise).sentences;
+  const isWordExercise = !!exercise && 'words' in exercise;
+  const items: string[] = exercise
+    ? isWordExercise
+      ? (exercise as ListeningWordExercise).words
+      : (exercise as ListeningSentenceExercise).sentences
+    : [];
   const currentItem = items?.[currentWordIndex];
 
   const speakText = useCallback((text: string, callback?: () => void) => {
@@ -123,6 +123,9 @@ export default function ListeningSection({ exercises, langId, levelId, onComplet
       handleCheck();
     }
   };
+
+  // Hook'lar har doim chaqirilishi kerak — early return barcha hook'lardan keyin turadi.
+  if (!exercise) return null;
 
   const progress = completedExs.size;
   const total = exercises.length;

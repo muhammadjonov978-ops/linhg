@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getSpeechLang } from '../utils/speech';
-import { Mic, MicOff, Volume2, CheckCircle, XCircle, ArrowRight, RotateCcw } from 'lucide-react';
+import { FaMicrophone as Mic, FaMicrophoneSlash as MicOff, FaVolumeUp as Volume2, FaCheckCircle as CheckCircle, FaTimesCircle as XCircle, FaArrowRight as ArrowRight, FaUndo as RotateCcw } from 'react-icons/fa';
 
 export default function SpeakingSection({ exercises, langId, levelId: _levelId, onComplete }) {
   const [currentEx, setCurrentEx] = useState(0);

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="uz">
+<html lang="uz" data-theme="lingohub">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
@@ -16,7 +16,7 @@
     <meta name="keywords" content="til o'rganish, ingliz tili, koreys tili, yapon tili, xitoy tili, bepul til kursi, online til o'rganish, alifbo, Lingohub" />
     <meta name="author" content="Lingohub" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta name="theme-color" content="#6366f1" />
+    <meta name="theme-color" content="#0d0d10" />
     <link rel="canonical" href="https://lingohub.uz/" />
 
     <!-- Open Graph (Telegram / Facebook) -->
@@ -64,7 +64,7 @@
     <script>
       (function () {
         var VALID_THEMES = {
-          light: 1, dark: 1, cupcake: 1, bumblebee: 1, emerald: 1, corporate: 1,
+          lingohub: 1, light: 1, dark: 1, cupcake: 1, bumblebee: 1, emerald: 1, corporate: 1,
           synthwave: 1, retro: 1, cyberpunk: 1, valentine: 1, halloween: 1,
           garden: 1, forest: 1, aqua: 1, lofi: 1, pastel: 1, fantasy: 1,
           wireframe: 1, black: 1, luxury: 1, dracula: 1, cmyk: 1, autumn: 1,
@@ -73,12 +73,14 @@
         };
         try {
           var raw = localStorage.getItem('lingohub_data');
+          var theme = 'lingohub';
           if (raw) {
             var data = JSON.parse(raw);
             if (data && data.theme && VALID_THEMES[data.theme]) {
-              document.documentElement.setAttribute('data-theme', data.theme);
+              theme = data.theme;
             }
           }
+          document.documentElement.setAttribute('data-theme', theme);
         } catch (e) { /* ignore */ }
       })();
     </script>

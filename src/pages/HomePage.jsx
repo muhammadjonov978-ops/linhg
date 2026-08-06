@@ -3,10 +3,13 @@ import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
 import { useSiteConfig, getSiteText, getLangPrice } from '../data/siteConfig';
 import {
-  BookOpen, Headphones, Pencil, Mic, ArrowRight, TrendingUp,
-  Award, Star, Users, Sparkles, Coins, Shield, Trophy, Flame,
-  GraduationCap, Lock, CreditCard, CheckCircle
-} from 'lucide-react';
+  FaBookOpen as BookOpen, FaHeadphones as Headphones, FaPencilAlt as Pencil,
+  FaMicrophone as Mic, FaArrowRight as ArrowRight, FaChartLine as TrendingUp,
+  FaAward as Award, FaStar as Star, FaUsers as Users, FaMagic as Sparkles,
+  FaCoins as Coins, FaShieldAlt as Shield, FaTrophy as Trophy, FaFire as Flame,
+  FaGraduationCap as GraduationCap, FaLock as Lock, FaCreditCard as CreditCard,
+  FaCheckCircle as CheckCircle,
+} from 'react-icons/fa';
 import PaywallModal from '../components/PaywallModal';
 
 const features = [
@@ -55,8 +58,8 @@ export default function HomePage() {
                 {getSiteText(config, 'heroBadge', 'Interaktiv til o\u2018rganish')}
               </div>
             </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold mb-4">
-              <span className="bg-gradient-to-r from-primary via-purple-500 to-secondary bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-6xl font-extrabold mb-4 font-display">
+              <span className="gold-text">
                 {getSiteText(config, 'heroTitle', '27 Tilda Erkin Gaplashing')}
               </span>
             </h1>
@@ -67,15 +70,15 @@ export default function HomePage() {
             {/* Stats */}
             <div className="flex flex-wrap justify-center gap-6 mb-6">
               <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-primary" />
+                <Users className="w-5 h-5 text-[#d4af37]" />
                 <span className="font-bold">550K+ o'quvchilar</span>
               </div>
               <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-warning" />
+                <Star className="w-5 h-5 text-[#facc15]" />
                 <span className="font-bold">27 xil til</span>
               </div>
               <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-success" />
+                <Shield className="w-5 h-5 text-[#d4af37]" />
                 <span className="font-bold">100 ta dars</span>
               </div>
             </div>

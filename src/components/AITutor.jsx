@@ -3,8 +3,9 @@ import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
 import { getSpeechLang } from '../utils/speech';
 import {
-  Send, Bot, User, Mic, MicOff, Volume2, X, Loader2,
-} from 'lucide-react';
+  FaPaperPlane as Send, FaRobot as Bot, FaUser as User, FaMicrophone as Mic,
+  FaMicrophoneSlash as MicOff, FaVolumeUp as Volume2, FaTimes as X, FaSpinner as Loader2,
+} from 'react-icons/fa';
 
 const AI_RESPONSES = {
   greeting: {
@@ -110,7 +111,7 @@ export default function AITutor() {
         },
       });
     }
-  }, [selectedLangId, state.tutorMessages.length]);
+  }, [selectedLangId, state.tutorMessages.length, dispatch]);
 
   const handleSend = async () => {
     if (!input.trim()) return;

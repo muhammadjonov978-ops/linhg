@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages, getLessons } from '../data/languages';
 import {
-  BarChart3, BookOpen, Headphones, Pencil, Mic,
-  Clock, Flame, Star, Activity, GraduationCap
-} from 'lucide-react';
+  FaChartBar as BarChart3, FaBookOpen as BookOpen, FaHeadphones as Headphones,
+  FaPencilAlt as Pencil, FaMicrophone as Mic, FaClock as Clock, FaFire as Flame,
+  FaStar as Star, FaHeartbeat as Activity, FaGraduationCap as GraduationCap,
+} from 'react-icons/fa';
 
 export default function StatsDashboard() {
   const { state } = useApp();

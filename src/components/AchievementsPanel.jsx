@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Award, Zap, Trophy, Gift, CheckCircle } from 'lucide-react';
+import { FaAward as Award, FaBolt as Zap, FaTrophy as Trophy, FaGift as Gift, FaCheckCircle as CheckCircle } from 'react-icons/fa';
 
 export default function AchievementsPanel({ limit }) {
   const { state, dispatch } = useApp();
@@ -20,7 +20,7 @@ export default function AchievementsPanel({ limit }) {
       });
     }, 5000);
     return () => clearTimeout(t);
-  }, [state.achievements]);
+  }, [state.achievements, dispatch]);
 
   const achievements = state.achievements || [];
 

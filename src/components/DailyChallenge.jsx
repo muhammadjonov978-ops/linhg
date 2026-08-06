@@ -1,11 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
-import { Target, CheckCircle, Zap, Gift, Sparkles, RotateCcw } from 'lucide-react';
+import { FaBullseye as Target, FaCheckCircle as CheckCircle, FaBolt as Zap, FaGift as Gift, FaMagic as Sparkles, FaUndo as RotateCcw } from 'react-icons/fa';
 
 export default function DailyChallenge() {
   const { state, dispatch } = useApp();
 
-  const generateDailyChallenges = () => {
+  // useCallback: check funksiyalari hozirgi progress/tutorMessages holatini
+  // closure orqali o'qiydi — identity faqat shular o'zgarganda yangilanadi,
+  // shunda effect deps'lari to'g'ri bo'ladi va eski closure ishlatilmaydi.
+  const generateDailyChallenges = useCallback(() => {
     const today = new Date().toDateString();
     // Use date-based seed for consistent daily challenges
     const seed = today.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
@@ -79,7 +82,7 @@ export default function DailyChallenge() {
       }
     }
     return picked;
-  };
+  }, [state.progress, state.tutorMessages]);
 
   // IMPORTANT: always regenerate challenges fresh so that `check` functions exist.
   // Saved challenges from localStorage lose their functions (JSON cannot store functions),
@@ -152,7 +155,7 @@ export default function DailyChallenge() {
         },
       });
     }
-  }, [state.progress, state.tutorMessages]);
+  }, [state.progress, state.tutorMessages, dailyChallenges, completedChallenges, dispatch, generateDailyChallenges]);
 
   const handleClaim = (challenge) => {
     if (!challenge.completed || claimedIds.has(challenge.id)) return;

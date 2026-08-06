@@ -11,7 +11,7 @@ interface ReadingSectionProps {
   onComplete: (score: number) => void;
 }
 
-export default function ReadingSection({ exercises, langId, levelId, onComplete }: ReadingSectionProps) {
+export default function ReadingSection({ exercises, langId, levelId: _levelId, onComplete }: ReadingSectionProps) {
   const [currentEx, setCurrentEx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [showResults, setShowResults] = useState(false);

@@ -1,15 +1,18 @@
 // ==== LIVE VISIT STATISTICS ENGINE ====
 // Tracks cumulative visit ("tashrif") stats for the admin panel:
-//   total  — jami tashrif (barcha vaqt)
-//   today  — bugungi tashriflar
-//   last7d — oxirgi 7 kun ichidagi tashriflar
-//   unique — unikal tashrifchilar (turli qurilmalar)
+//   total  — jami tashrif kunlari (barcha vaqt) — device-day hisobida
+//   today  — bugungi tashriflar (turli qurilmalar)
+//   last7d — oxirgi 7 kun ichidagi faol kunlar
+//   unique — unikal qurilmalar
+//
+// IMPORTANT: har bir qurilma kuniga BIR MARTA hisoblanadi (idempotent).
+// Sahifani qayta yangilash tashrif sonini OSHIRMAYDI — "har yangilashda
+// son oshib ketyapti" degan bug shu bilan tuzatilgan.
 //
 // Dual-mode (same pattern as presence.js):
 //   FIREBASE mode — real cross-device aggregation via Realtime Database.
-//     Each visit atomically increments `visits/{deviceId}/count` and the
-//     per-day counter `visits/{deviceId}/days/{YYYYMMDD}`. The admin panel
-//     listens to the whole `visits` node and re-aggregates live.
+//     Har qurilma o'z `visits/{uid}` tuguniga kunlik bayroq yozadi.
+//     Admin panel butun `visits` tuguniga quloq solib, jonli agregatsiya qiladi.
 //   LOCAL mode (fallback) — same-browser demo using localStorage +
 //     BroadcastChannel (works across tabs of the same browser).
 //
@@ -18,24 +21,21 @@
 //   subscribeVisits(cb) -> unsub   — get live { total, today, last7d, unique, mode }
 //   refreshVisits()                — force re-aggregate (the "Yangilash" button)
 
-import { ref, runTransaction, onValue, get } from 'firebase/database';
+import { ref, runTransaction, onValue, get, serverTimestamp } from 'firebase/database';
 import { db, HAS_FIREBASE } from '../firebase';
 
 const LOCAL_KEY = 'lingohub_visits';
 const CHANNEL_NAME = 'lingohub-visits';
 const SESSION_KEY = 'lingohub_presence_session'; // reuse same device id as presence
-const DEBOUNCE_MS = 30000; // bitta qurilma 30 soniyada ko'pi bilan 1 tashrif
-const KEEP_DAYS = 30;      // localStorage'da shuncha kunlik tarix saqlanadi
-const MAX_EVENTS = 5000;   // localStorage'da maksimal hodisalar soni
+const KEEP_DAYS = 60;       // necha kunlik tarix saqlanadi
 const DAY_MS = 86400000;
 
 const listeners = new Set();
 let deviceId = null;
 let started = false;
-let lastRecordTs = 0;
-let unsubFirebase = null;
+let _unsubFirebase = null;
 let channel = null;
-let refreshTimer = null;
+let _refreshTimer = null;
 let lastState = { total: 0, today: 0, last7d: 0, unique: 0, mode: HAS_FIREBASE ? 'firebase' : 'local' };
 
 function getDeviceId() {
@@ -68,12 +68,6 @@ export function subscribeVisits(cb) {
   return () => listeners.delete(cb);
 }
 
-function startOfToday() {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-}
-
 // Local-timezone day key, e.g. "20260806"
 function dayKey(ts = Date.now()) {
   const d = new Date(ts);
@@ -82,16 +76,9 @@ function dayKey(ts = Date.now()) {
   return `${d.getFullYear()}${m}${day}`;
 }
 
-// ---------- FIREBASE MODE ----------
-
-function firebaseRecord() {
-  const uid = getDeviceId();
-  runTransaction(ref(db, `visits/${uid}/days/${dayKey()}`), (c) => (typeof c === 'number' ? c + 1 : 1));
-  runTransaction(ref(db, `visits/${uid}/count`), (c) => (typeof c === 'number' ? c + 1 : 1));
-}
-
-function firebaseAggregate(snapshot) {
-  const data = snapshot.val() || {};
+// Agregatsiya: { total, today, last7d, unique } — node ma'lumotidan hisoblaydi.
+// Node formati: { count, days: { YYYYMMDD: 1, ... } }
+function aggregateNodes(nodes) {
   const todayKey = dayKey();
   const dayKeys = new Set();
   for (let i = 0; i < 7; i++) {
@@ -101,53 +88,87 @@ function firebaseAggregate(snapshot) {
   let today = 0;
   let last7d = 0;
   let unique = 0;
-  Object.values(data).forEach((node) => {
+  Object.values(nodes).forEach((node) => {
     if (!node) return;
-    const count = typeof node.count === 'number' ? node.count : 0;
     const days = node.days || {};
-    if (count > 0 || Object.keys(days).length > 0) unique += 1;
-    total += count;
-    Object.entries(days).forEach(([k, v]) => {
-      if (typeof v !== 'number') return;
-      if (dayKeys.has(k)) last7d += v;
-      if (k === todayKey) today += v;
+    const dayList = Object.keys(days);
+    if (dayList.length > 0) unique += 1;
+    total += typeof node.count === 'number' ? node.count : dayList.length;
+    dayList.forEach((k) => {
+      if (dayKeys.has(k)) last7d += 1;
+      if (k === todayKey) today += 1;
     });
   });
-  lastState = { total, today, last7d, unique, mode: 'firebase' };
+  return { total, today, last7d, unique };
+}
+
+// ---------- FIREBASE MODE ----------
+
+function firebaseRecord() {
+  const uid = getDeviceId();
+  const today = dayKey();
+  const entryRef = ref(db, `visits/${uid}`);
+  runTransaction(entryRef, (node) => {
+    if (node === null) node = {};
+    const days = node.days || {};
+    // Bugun allaqachon hisoblangan bo'lsa — o'zgartirmaymiz (idempotent)
+    if (days[today]) return node;
+    days[today] = 1;
+    return {
+      ...node,
+      days,
+      count: Object.keys(days).length,
+      firstSeen: node.firstSeen || serverTimestamp(),
+      lastSeen: serverTimestamp(),
+    };
+  });
+}
+
+function firebaseAggregate(snapshot) {
+  const data = snapshot.val() || {};
+  lastState = { ...aggregateNodes(data), mode: 'firebase' };
   emit();
 }
 
 function startFirebase() {
-  unsubFirebase = onValue(ref(db, 'visits'), firebaseAggregate);
+  _unsubFirebase = onValue(ref(db, 'visits'), firebaseAggregate);
   firebaseRecord();
 }
 
 // ---------- LOCAL (fallback) MODE ----------
 
-function readLocalLog() {
+function readLocalMap() {
   try {
-    return JSON.parse(localStorage.getItem(LOCAL_KEY) || '{"events":[]}');
+    return JSON.parse(localStorage.getItem(LOCAL_KEY) || '{}');
   } catch {
-    return { events: [] };
+    return {};
   }
 }
 
-function writeLocalLog(log) {
+function writeLocalMap(map) {
   try {
-    localStorage.setItem(LOCAL_KEY, JSON.stringify(log));
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(map));
   } catch {
     /* storage full / private mode */
   }
 }
 
 function localRecord() {
-  const log = readLocalLog();
-  log.events = log.events || [];
-  log.events.push({ t: Date.now(), u: getDeviceId() });
-  // Prune: faqat so'nggi KEEP_DAYS kun va MAX_EVENTS ta hodisa saqlanadi
-  const cutoff = Date.now() - KEEP_DAYS * DAY_MS;
-  log.events = log.events.filter((e) => e && typeof e.t === 'number' && e.t >= cutoff).slice(-MAX_EVENTS);
-  writeLocalLog(log);
+  const map = readLocalMap();
+  const uid = getDeviceId();
+  const today = dayKey();
+  const entry = map[uid] || { days: {} };
+  if (entry.days[today]) return; // idempotent — yangilash sonni oshirmaydi
+
+  entry.days[today] = 1;
+  // Eski kunlarni tozalab, xotira o'sishini cheklaymiz
+  const cutoff = dayKey(Date.now() - KEEP_DAYS * DAY_MS);
+  entry.days = Object.fromEntries(
+    Object.entries(entry.days).filter(([k]) => k >= cutoff)
+  );
+  entry.count = Object.keys(entry.days).length;
+  map[uid] = entry;
+  writeLocalMap(map);
   try {
     channel?.postMessage({ type: 'visit' });
   } catch {
@@ -156,24 +177,8 @@ function localRecord() {
 }
 
 function localCount() {
-  const events = (readLocalLog().events || []).filter((e) => e && typeof e.t === 'number');
-  const todayStart = startOfToday();
-  const weekStart = todayStart - 6 * DAY_MS; // bugun + oldingi 6 kun
-  let today = 0;
-  let last7d = 0;
-  const seen = new Set();
-  events.forEach((e) => {
-    seen.add(e.u);
-    if (e.t >= todayStart) today += 1;
-    if (e.t >= weekStart) last7d += 1;
-  });
-  lastState = {
-    total: events.length,
-    today,
-    last7d,
-    unique: seen.size,
-    mode: 'local',
-  };
+  const map = readLocalMap();
+  lastState = { ...aggregateNodes(map), mode: 'local' };
   emit();
 }
 
@@ -189,7 +194,7 @@ function startLocal() {
   localRecord();
   localCount();
   window.addEventListener('storage', localCount);
-  refreshTimer = setInterval(localCount, 5000);
+  _refreshTimer = setInterval(localCount, 5000);
 }
 
 // ---------- PUBLIC API ----------
