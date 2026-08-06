@@ -8,4 +8,8 @@ export default defineConfig({
     port: 5173,
   },
   plugins: [react(), tailwindcss()],
+  build: {
+    // Yirik fayl (27 til ma'lumotlari + firebase) chunk ogohlantirishini oshiramiz
+    chunkSizeWarningLimit: 900,
+  },
 })

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useApp } from '../context/AppContext';
+import { getSpeechLang } from '../utils/speech';
 import { Mic, MicOff, Volume2, CheckCircle, XCircle, ArrowRight, RotateCcw } from 'lucide-react';
 
-export default function SpeakingSection({ exercises, langId, levelId, onComplete }) {
+export default function SpeakingSection({ exercises, langId, levelId: _levelId, onComplete }) {
   const [currentEx, setCurrentEx] = useState(0);
   const [currentItemIndex, setCurrentItemIndex] = useState(0);
   const [isListening, setIsListening] = useState(false);
@@ -16,12 +16,12 @@ export default function SpeakingSection({ exercises, langId, levelId, onComplete
   const [isProcessing, setIsProcessing] = useState(false);
 
   const exercise = exercises[currentEx];
-  if (!exercise) return null;
-
-  const isWordExercise = !!exercise.words;
-  const items = isWordExercise ? exercise.words : exercise.sentences;
+  const isWordExercise = !!exercise?.words;
+  const items = exercise ? (isWordExercise ? exercise.words : exercise.sentences) : [];
   const currentItem = items?.[currentItemIndex];
 
+  // Hook'lar har doim chaqirilishi kerak — `if (!exercise) return null`
+  // hammasidan keyin turadi (rules-of-hooks).
   // Initialize speech recognition
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -29,7 +29,7 @@ export default function SpeakingSection({ exercises, langId, levelId, onComplete
       const recog = new SpeechRecognition();
       recog.continuous = false;
       recog.interimResults = true;
-      recog.lang = langId === 'russian' ? 'ru-RU' : `${langId}-US`;
+      recog.lang = getSpeechLang(langId);
       recog.maxAlternatives = 3;
 
       recog.onresult = (event) => {
@@ -65,7 +65,7 @@ export default function SpeakingSection({ exercises, langId, levelId, onComplete
       setIsPlaying(true);
       window.speechSynthesis.cancel(); // Cancel any ongoing speech
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = langId === 'russian' ? 'ru-RU' : `${langId}-US`;
+      utterance.lang = getSpeechLang(langId);
       utterance.rate = 0.8;
       utterance.pitch = 1;
       utterance.onend = () => {
@@ -200,6 +200,8 @@ export default function SpeakingSection({ exercises, langId, levelId, onComplete
     setResults({});
     setShowResults(false);
   };
+
+  if (!exercise) return null;
 
   const progress = completedExs.size;
   const total = exercises.length;

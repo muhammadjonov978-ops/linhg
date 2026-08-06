@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
+import { getSpeechLang } from '../utils/speech';
 import {
-  Send, Bot, User, Mic, MicOff, Volume2, X, Loader2, Sparkles,
+  Send, Bot, User, Mic, MicOff, Volume2, X, Loader2,
 } from 'lucide-react';
 
 const AI_RESPONSES = {
@@ -147,7 +148,7 @@ export default function AITutor() {
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = false;
-      recognition.lang = currentLang?.id === 'russian' ? 'ru-RU' : `${currentLang?.id || 'en'}-US`;
+      recognition.lang = getSpeechLang(currentLang?.id);
 
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
@@ -186,7 +187,7 @@ export default function AITutor() {
     if ('speechSynthesis' in window) {
       setSpeakingId(messageId);
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = currentLang?.id === 'russian' ? 'ru-RU' : `${currentLang?.id || 'en'}-US`;
+      utterance.lang = getSpeechLang(currentLang?.id);
       utterance.rate = 0.9;
       utterance.pitch = 1;
       utterance.onend = () => setSpeakingId(null);

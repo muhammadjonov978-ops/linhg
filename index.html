@@ -60,6 +60,28 @@
       "logo": "https://lingohub.uz/favicon-180x180.png"
     }
     </script>
+    <!-- Sahifa yuklanishida tanlangan mavzuni darhol qo'llash (miltillashni oldini oladi) -->
+    <script>
+      (function () {
+        var VALID_THEMES = {
+          light: 1, dark: 1, cupcake: 1, bumblebee: 1, emerald: 1, corporate: 1,
+          synthwave: 1, retro: 1, cyberpunk: 1, valentine: 1, halloween: 1,
+          garden: 1, forest: 1, aqua: 1, lofi: 1, pastel: 1, fantasy: 1,
+          wireframe: 1, black: 1, luxury: 1, dracula: 1, cmyk: 1, autumn: 1,
+          business: 1, acid: 1, lemonade: 1, night: 1, coffee: 1, winter: 1,
+          dim: 1, nord: 1, sunset: 1, caramellatte: 1, abyss: 1, silk: 1
+        };
+        try {
+          var raw = localStorage.getItem('lingohub_data');
+          if (raw) {
+            var data = JSON.parse(raw);
+            if (data && data.theme && VALID_THEMES[data.theme]) {
+              document.documentElement.setAttribute('data-theme', data.theme);
+            }
+          }
+        } catch (e) { /* ignore */ }
+      })();
+    </script>
   </head>
   <body class="min-h-screen bg-base-200 overflow-x-hidden">
     <div id="root"></div>

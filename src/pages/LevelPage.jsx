@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { languages, getLessons } from '../data/languages';
 import { speak, stopSpeaking } from '../utils/speech';
 import {
-  ArrowLeft, CheckCircle, Trophy,
+  ArrowLeft, CheckCircle, Trophy, Lock,
   ChevronLeft, ChevronRight, Volume2, RefreshCw,
   BookOpen, GraduationCap, VolumeX, Coins
 } from 'lucide-react';
@@ -144,6 +144,18 @@ export default function LevelPage({ onBack }) {
   const isCompleted = progress.completed;
   const isAlphabet = lesson.type === 'alphabet';
 
+  // Savoldan so'zni ajratib olish: "\"hello\" so'zining ma'nosi nima?" -> "hello"
+  const questionWordMatch = lesson?.exercise?.question?.match(/"([^"]+)"/);
+  const questionWord = questionWordMatch ? questionWordMatch[1] : null;
+
+  // Dars ochiqligi: alifbo darslari (1-10) hamisha ochiq,
+  // qolganlari avvalgi dars tugallanishini talab qiladi
+  const isLessonLocked = (num) => {
+    if (num <= 1 || num <= 10) return false;
+    const key = `${state.selectedLanguage}-lesson-${num - 1}`;
+    return !state.progress[key]?.completed;
+  };
+
   const handleAnswer = (answerIndex) => {
     if (showResult) return;
     setSelectedAnswer(answerIndex);
@@ -190,7 +202,7 @@ export default function LevelPage({ onBack }) {
     resetAnswerState();
 
     const nextLesson = allLessons.find(l => l.number === lessonNumber + 1);
-    if (nextLesson) {
+    if (nextLesson && !isLessonLocked(nextLesson.number)) {
       dispatch({ type: 'SET_CURRENT_LEVEL', payload: `lesson-${lessonNumber + 1}` });
     }
   };
@@ -202,6 +214,12 @@ export default function LevelPage({ onBack }) {
     if (prevLesson) {
       dispatch({ type: 'SET_CURRENT_LEVEL', payload: `lesson-${lessonNumber - 1}` });
     }
+  };
+
+  const handleJumpToLesson = (num) => {
+    if (isLessonLocked(num)) return;
+    dispatch({ type: 'SET_CURRENT_LEVEL', payload: `lesson-${num}` });
+    resetAnswerState();
   };
 
   return (
@@ -222,7 +240,7 @@ export default function LevelPage({ onBack }) {
               <span className="text-sm font-medium opacity-60">
                 {lessonNumber} / {allLessons.length}
               </span>
-              {lessonNumber < allLessons.length && (
+              {lessonNumber < allLessons.length && !isLessonLocked(lessonNumber + 1) && (
                 <button onClick={handleNextLesson} className="btn btn-ghost btn-xs btn-circle">
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -385,9 +403,20 @@ export default function LevelPage({ onBack }) {
               Savol
             </h3>
 
-            <p className="text-lg font-medium mb-6 text-center">
-              {lesson.exercise.question}
-            </p>
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <p className="text-lg font-medium text-center">
+                {lesson.exercise.question}
+              </p>
+              {questionWord && (
+                <button
+                  onClick={() => speak(questionWord, state.selectedLanguage)}
+                  className="btn btn-ghost btn-xs btn-circle shrink-0"
+                  title="So'zni tinglash"
+                >
+                  <Volume2 className="w-4 h-4 text-primary" />
+                </button>
+              )}
+            </div>
 
             {/* Options */}
             <div className="space-y-2">
@@ -474,7 +503,7 @@ export default function LevelPage({ onBack }) {
                 {coinsEarned > 0 ? `Davom etish (+${coinsEarned} 🪙)` : 'Davom etish'}
               </button>
             )}
-            {isCompleted && lessonNumber < allLessons.length && (
+            {isCompleted && lessonNumber < allLessons.length && !isLessonLocked(lessonNumber + 1) && (
               <button onClick={handleNextLesson} className="btn btn-primary btn-sm gap-2">
                 Keyingi dars
                 <ChevronRight className="w-4 h-4" />
@@ -493,22 +522,24 @@ export default function LevelPage({ onBack }) {
           {allLessons.slice(Math.max(0, lessonNumber - 5), Math.min(allLessons.length, lessonNumber + 4)).map(l => {
             const key = `${state.selectedLanguage}-lesson-${l.number}`;
             const p = state.progress[key];
+            const locked = isLessonLocked(l.number);
             return (
               <button
                 key={l.number}
-                onClick={() => {
-                  dispatch({ type: 'SET_CURRENT_LEVEL', payload: `lesson-${l.number}` });
-                  resetAnswerState();
-                }}
+                onClick={() => handleJumpToLesson(l.number)}
+                disabled={locked}
+                title={locked ? 'Avval oldingi darsni tugating' : `Dars ${l.number}`}
                 className={`w-6 h-6 rounded-full text-[10px] font-bold transition-all ${
                   l.number === lessonNumber
                     ? 'bg-primary text-white scale-110'
                     : p?.completed
                       ? 'bg-success text-white'
-                      : 'bg-base-300 text-base-content/40'
+                      : locked
+                        ? 'bg-base-300 text-base-content/20 cursor-not-allowed'
+                        : 'bg-base-300 text-base-content/40 hover:bg-base-content/20'
                 }`}
               >
-                {l.number}
+                {locked ? <Lock className="w-3 h-3 mx-auto" /> : l.number}
               </button>
             );
           })}

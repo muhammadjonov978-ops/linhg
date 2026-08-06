@@ -6,14 +6,6 @@ import { Bell, Phone, X, Loader2, CheckCircle, AlertTriangle } from 'lucide-reac
 const SMS_REMINDER_KEY = 'lingohub_sms_reminder';
 const LAST_SENT_KEY = 'lingohub_sms_last_sent';
 
-function getLastSent() {
-  try {
-    return parseInt(localStorage.getItem(LAST_SENT_KEY) || '0', 10);
-  } catch {
-    return 0;
-  }
-}
-
 /**
  * SMSReminder — if the user hasn't studied for more than 24h (missed a day),
  * ask for their phone number and send a reminder SMS (via Eskiz API through a backend).

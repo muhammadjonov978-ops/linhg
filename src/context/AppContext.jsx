@@ -32,7 +32,7 @@ function loadLegacyData() {
     // Legacy data fully consumed — remove it to avoid confusion / future re-reads
     try {
       localStorage.removeItem(LEGACY_STORAGE_KEY);
-    } catch (e) {
+    } catch {
       /* ignore */
     }
     return data;
@@ -297,7 +297,7 @@ export function AppProvider({ children }) {
       ];
       dispatch({ type: 'SET_ACHIEVEMENTS', payload: updatedAchievements });
     }
-  }, [state.progress, state.coins, state.streak]);
+  }, [state.progress, state.coins, state.streak, state.dailyChallenges, state.mistakesReviewed]);
 
   // Apply theme
   useEffect(() => {

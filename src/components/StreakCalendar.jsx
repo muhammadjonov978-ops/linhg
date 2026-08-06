@@ -47,7 +47,6 @@ export default function StreakCalendar() {
   };
 
   const activityData = generateActivityData();
-  const dayLabels = ['', 'Mon', '', 'Wed', '', 'Fri', ''];
   const monthLabels = [];
   let lastMonth = -1;
 

@@ -19,8 +19,12 @@ import { MessageCircle, X, Sparkles, PanelRightOpen } from 'lucide-react';
 
 function AppContent() {
   const { state, dispatch } = useApp();
-  const [isTutorOpen, setIsTutorOpen] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
+
+  // AI Tutor ochiq-yopiq holati faqat context'da saqlanadi (state.isTutorOpen).
+  // Ilgari local state ham bor edi — AITutor ichidagi X tugmasi bosilganda
+  // local state o'zgarmas, context o'zgarardi va suzuvchi tugma qaytib chiqmasdi.
+  const isTutorOpen = state.isTutorOpen;
 
   // Minimal hash router: #/admin opens the admin panel
   const [hash, setHash] = useState(() => window.location.hash);
@@ -42,10 +46,7 @@ function AppContent() {
   }
 
   const handleToggleTutor = () => {
-    setIsTutorOpen(prev => {
-      dispatch({ type: 'TOGGLE_TUTOR' });
-      return !prev;
-    });
+    dispatch({ type: 'TOGGLE_TUTOR' });
   };
 
   const handleSelectLevel = (levelId) => {

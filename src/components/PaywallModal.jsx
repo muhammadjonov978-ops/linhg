@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Crown, Star, Check, X, Sparkles, Shield, Zap, Infinity, CreditCard, Lock, Coins, Loader2 } from 'lucide-react';
+import { Crown, Star, Check, X, Sparkles, Shield, Zap, Infinity as InfinityIcon, CreditCard, Lock, Coins, Loader2 } from 'lucide-react';
 import { useSiteConfig, getLangPrice } from '../data/siteConfig';
 
 /**
@@ -20,7 +20,7 @@ export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
   const isLanguageMode = !!lang;
   const price = isLanguageMode ? (getLangPrice(config, lang) || 20000) : 20000;
 
-  const handlePay = (plan) => {
+  const handlePay = (_plan) => {
     // Simulate payment processing (real gateway: Payme/Click/UzCard/HUMO)
     setProcessing(true);
     setTimeout(() => {
@@ -76,7 +76,7 @@ export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
         <div className="px-8 pt-6">
           <div className="grid grid-cols-2 gap-3 mb-6">
             {[
-              { icon: Infinity, text: isLanguageMode ? 'Cheksiz darslar' : 'Cheksiz mashqlar' },
+              { icon: InfinityIcon, text: isLanguageMode ? 'Cheksiz darslar' : 'Cheksiz mashqlar' },
               { icon: Zap, text: 'AI Tutor bilan suhbat' },
               { icon: Star, text: isLanguageMode ? `${lang.flag} ${lang.name} to'liq kurs` : 'Advanced daraja' },
               { icon: Shield, text: 'Sertifikat olish' },

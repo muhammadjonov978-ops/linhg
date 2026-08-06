@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Mail, X, Sparkles } from 'lucide-react';
 
 // Xat matni — konvert ichidan chiqadigan sovg'a taklifi
-const LETTER_TEXT = 'Salom, agar sen shu saytdan foydalanib 10000 koin yegsang, biz senga 3 ta pullik tilimizni sovg\'a qilamiz!';
+// (5000 tanga yig'ib 2 ta pullik til ochish — CoinRewardBanner bilan bir xil)
+const LETTER_TEXT = 'Salom, aziz o\'quvchi! Lingohub\'da 5000 tanga yig\'sang, biz senga 2 ta pullik tilimizni BEPUL sovg\'a qilamiz. Muvaffaqiyatlar tilaymiz!';
 
 // Xat bir marta o'qilgach, qizil nuqta yo'qoladi (localStorage'da saqlanadi)
 const SEEN_KEY = 'lingohub_letter_seen';

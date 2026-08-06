@@ -1,23 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
 import { Home, MessageCircle, Trophy, Coins, Award, LogIn, User, Shield } from 'lucide-react';
 import ThemePicker from './ThemePicker';
-import GoogleAuthModal from './GoogleAuthModal';
+import GoogleAuthModal, { USER_EVENT } from './GoogleAuthModal';
 import GiftEnvelope from './GiftEnvelope';
+
+function loadSavedUser() {
+  try {
+    const raw = localStorage.getItem('lingohub_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 export default function Navbar({ onToggleTutor }) {
   const { state, dispatch } = useApp();
   const [showAuth, setShowAuth] = useState(false);
+  const [savedUser, setSavedUser] = useState(loadSavedUser);
+
+  // GoogleAuthModal kirish/chiqish qilganda Navbar'ni ham yangilaydi
+  useEffect(() => {
+    const refresh = () => setSavedUser(loadSavedUser());
+    window.addEventListener(USER_EVENT, refresh);
+    window.addEventListener('storage', refresh);
+    return () => {
+      window.removeEventListener(USER_EVENT, refresh);
+      window.removeEventListener('storage', refresh);
+    };
+  }, []);
 
   const currentLang = languages.find(l => l.id === state.selectedLanguage);
-
-  // Load signed-in user (if any)
-  let savedUser = null;
-  try {
-    const raw = localStorage.getItem('lingohub_user');
-    if (raw) savedUser = JSON.parse(raw);
-  } catch { /* noop */ }
 
   return (
     <nav className="navbar bg-base-100/80 backdrop-blur-md sticky top-0 z-50 shadow-sm border-b border-base-200">

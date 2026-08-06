@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Award, Lock, Sparkles, Zap, Trophy, ChevronRight, Gift, CheckCircle } from 'lucide-react';
+import { Award, Zap, Trophy, Gift, CheckCircle } from 'lucide-react';
 
 export default function AchievementsPanel({ limit }) {
   const { state, dispatch } = useApp();
@@ -31,9 +31,7 @@ export default function AchievementsPanel({ limit }) {
     });
   };
   const unlocked = achievements.filter(a => a.unlocked);
-  const locked = limit ? [] : achievements.filter(a => !a.unlocked);
   const displayAchievements = limit ? unlocked.slice(0, limit) : achievements;
-  const showViewAll = limit && unlocked.length > limit;
 
   // Rewards are auto-collected in AppContext when achievements unlock.
   // No manual claim needed anymore.

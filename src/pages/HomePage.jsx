@@ -34,7 +34,6 @@ export default function HomePage() {
 
   // Calculate total stats
   const totalCompletedLessons = Object.values(state.progress).filter(p => p.completed).length;
-  const totalExercises = Object.values(state.progress).filter(p => p.completed).length;
   const achievementsUnlocked = state.achievements?.filter(a => a.unlocked)?.length || 0;
 
   return (
@@ -82,7 +81,7 @@ export default function HomePage() {
             </div>
 
             {/* User's personal stats if active */}
-            {(totalExercises > 0 || achievementsUnlocked > 0) && (
+            {(totalCompletedLessons > 0 || achievementsUnlocked > 0) && (
               <div className="flex flex-wrap justify-center gap-4 mb-4">
                 {totalExercises > 0 && (
                   <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-primary/10">

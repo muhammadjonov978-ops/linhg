@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useApp } from '../context/AppContext';
-import { Pencil, Send, CheckCircle, XCircle, ArrowRight, RotateCcw, AlertTriangle, Lightbulb, Sparkles } from 'lucide-react';
+import { Pencil, Send, CheckCircle, ArrowRight, RotateCcw, AlertTriangle, Lightbulb } from 'lucide-react';
 
 const COMMON_MISTAKES = {
   'teh': { correction: 'the', explanation: '"the" to\'g\'ri yozilishi' },
@@ -75,14 +74,13 @@ function countSentences(text) {
   return text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
 }
 
-export default function WritingSection({ exercises, langId, levelId, onComplete }) {
+export default function WritingSection({ exercises, langId: _langId, levelId: _levelId, onComplete }) {
   const [currentEx, setCurrentEx] = useState(0);
   const [text, setText] = useState('');
   const [showCheck, setShowCheck] = useState(false);
   const [errors, setErrors] = useState([]);
   const [score, setScore] = useState(0);
   const [completedExs, setCompletedExs] = useState(new Set());
-  const [selectedExercise, setSelectedExercise] = useState('essay');
 
   const exercise = exercises[currentEx];
   if (!exercise) return null;

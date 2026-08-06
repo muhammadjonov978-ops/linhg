@@ -1142,48 +1142,6 @@ const commonLessonTitles = [
 ];
 
 // Lesson descriptions (English translations)
-const lessonDescriptions = {
-  english: [
-    // Alphabet (1-10)
-    "Learn letters A through D", "Learn letters E through H",
-    "Learn letters I through L", "Learn letters M through P",
-    "Learn letters Q through T", "Learn letters U through X",
-    "Learn letters Y and Z", "Review alphabet part 1",
-    "Review alphabet part 2", "Alphabet test",
-    // 11-100
-    "Learn to greet people", "Learn how to say goodbye",
-    "Introduce yourself", "Say please and thank you", "Say yes and no",
-    "Apologize", "Ask basic questions", "Formal vs informal speech",
-    "Conversation etiquette", "General review",
-    "Numbers 1 to 10", "Numbers 11 to 100", "Basic colors",
-    "Sentences with colors", "Clock and telling time", "Days of the week",
-    "Months of the year", "Dates and years", "Talking about age",
-    "Time-related expressions", "Family members", "Fathers and mothers",
-    "Brothers and sisters", "Grandparents", "Friends and acquaintances",
-    "Describing people", "Professions and jobs", "Body parts",
-    "Feelings and emotions", "Personal characteristics",
-    "Food and meals", "Breakfast vocabulary", "Lunch and dinner",
-    "Fruits and vegetables", "Drinks and beverages", "Ordering at a restaurant",
-    "Delicious foods", "Cooking vocabulary", "Reading a menu",
-    "Grocery shopping", "Waking up and morning routine", "Daily routine",
-    "Household chores", "Things around the house", "Clothing and fashion",
-    "Shopping at a store", "Money and prices", "Transportation",
-    "Asking for directions", "Daily plans", "City and countryside",
-    "At a hotel", "At the airport", "Train and bus",
-    "Tourist attractions", "Reading a map", "Talking about weather",
-    "Holidays and relaxation", "Travel stories", "Tourist phrases",
-    "Types of weather", "Rain and snow", "Four seasons",
-    "Animals vocabulary", "Plants and flowers", "Natural phenomena",
-    "Environment", "Ecology", "Forests and mountains", "Sea and ocean",
-    "Workplace and careers", "Work day", "Talking about work",
-    "Favorite hobbies", "Sports and games", "Music and art",
-    "Books and movies", "Internet and technology", "Phone and communication",
-    "Social media", "Review lessons 1-10", "Review lessons 11-20",
-    "Review lessons 21-30", "Review lessons 31-40", "Review lessons 41-50",
-    "Review lessons 51-60", "Review lessons 61-70", "Review lessons 71-80",
-    "Review lessons 81-90", "Final exam",
-  ],
-};
 
 // ===================== SAMPLE WORDS FOR EXERCISES =====================
 
@@ -1520,18 +1478,6 @@ const sampleWords = {
 
 const TOTAL_LESSONS = 100;
 
-const lessonTopics = [
-  { range: [1, 10], type: 'alphabet', icon: '🔤', category: 'Alifbo' },
-  { range: [11, 20], type: 'vocabulary', icon: '👋', category: 'Asosiy so\'zlar' },
-  { range: [21, 30], type: 'vocabulary', icon: '🔢', category: 'Raqam va ranglar' },
-  { range: [31, 40], type: 'reading', icon: '👨‍👩‍👧‍👦', category: 'Oila va odamlar' },
-  { range: [41, 50], type: 'vocabulary', icon: '🍽️', category: 'Taom va ichimliklar' },
-  { range: [51, 60], type: 'listening', icon: '🏠', category: 'Kundalik hayot' },
-  { range: [61, 70], type: 'speaking', icon: '✈️', category: 'Sayohat va joylar' },
-  { range: [71, 80], type: 'reading', icon: '🌤️', category: 'Ob-havo va tabiat' },
-  { range: [81, 90], type: 'writing', icon: '💼', category: 'Ish va qiziqishlar' },
-  { range: [91, 100], type: 'grammar', icon: '🎯', category: 'Takrorlash va madaniyat' },
-];
 
 const categoryColors = {
   'alphabet': '#3B82F6',
@@ -1547,16 +1493,6 @@ function getLessonColor(type) {
   return categoryColors[type] || '#6B7280';
 }
 
-// Generate descriptions for any language
-function generateDescriptions(langId) {
-  return lessonDescriptions.english.map((desc, i) => {
-    if (i < 10) {
-      const titles = alphabetLessonTitles[langId] || alphabetLessonTitles.english;
-      return titles[i] ? `${titles[i]}` : desc;
-    }
-    return desc;
-  });
-}
 
 // Get letters for an alphabet lesson
 function getAlphabetLetters(langId, lessonNum) {
@@ -1594,7 +1530,7 @@ function generateAlphabetExercise(langId, lessonNum, letters) {
 
   return {
     type: 'alphabet',
-    question: `\"${letter.letter}\" harfini toping`,
+    question: `"${letter.letter}" harfini toping`,
     letter: letter,
     options: options.map(o => o.letter),
     correctAnswer: correctIdx,
@@ -1612,7 +1548,7 @@ function generateRegularExercise(langId, lessonNum) {
 
   return {
     type: type,
-    question: `\"${word.q}\" so'zining ma'nosi nima?`,
+    question: `"${word.q}" so'zining ma'nosi nima?`,
     options: word.o,
     correctAnswer: word.o.indexOf(word.c),
   };

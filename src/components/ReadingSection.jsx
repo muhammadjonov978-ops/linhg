@@ -1,9 +1,8 @@
 import { useState } from 'react';
-import { useApp } from '../context/AppContext';
+import { getSpeechLang } from '../utils/speech';
 import { BookOpen, CheckCircle, XCircle, ArrowRight, RotateCcw, Volume2 } from 'lucide-react';
 
-export default function ReadingSection({ exercises, langId, levelId, onComplete }) {
-  const { state } = useApp();
+export default function ReadingSection({ exercises, langId, levelId: _levelId, onComplete }) {
   const [currentEx, setCurrentEx] = useState(0);
   const [answers, setAnswers] = useState({});
   const [showResults, setShowResults] = useState(false);
@@ -54,7 +53,7 @@ export default function ReadingSection({ exercises, langId, levelId, onComplete 
   const speakText = (text) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = langId === 'russian' ? 'ru-RU' : `${langId}-US`;
+      utterance.lang = getSpeechLang(langId);
       utterance.rate = 0.8;
       window.speechSynthesis.speak(utterance);
     }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Volume2, Bookmark, BookmarkCheck, ChevronRight, Sparkles } from 'lucide-react';
+import { getSpeechLang } from '../utils/speech';
+import { Volume2, Bookmark, BookmarkCheck, Sparkles } from 'lucide-react';
 
 const wordDatabase = {
   english: [
@@ -75,7 +76,7 @@ export default function WordOfTheDay() {
   const speakWord = (text) => {
     if ('speechSynthesis' in window) {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = langId === 'russian' ? 'ru-RU' : `${langId}-US`;
+      utterance.lang = getSpeechLang(langId);
       utterance.rate = 0.8;
       window.speechSynthesis.speak(utterance);
     }

@@ -41,7 +41,7 @@ export function loadConfig() {
         texts: { ...DEFAULT_CONFIG.texts, ...(parsed.texts || {}) },
       };
     }
-  } catch (e) {
+  } catch {
     /* ignore */
   }
   return DEFAULT_CONFIG;

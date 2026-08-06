@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
-import { useApp } from '../context/AppContext';
-import { Headphones, Volume2, Mic, CheckCircle, XCircle, ArrowRight, RotateCcw, Pencil } from 'lucide-react';
+import { getSpeechLang } from '../utils/speech';
+import { Headphones, Volume2, CheckCircle, XCircle, ArrowRight, RotateCcw } from 'lucide-react';
 
-export default function ListeningSection({ exercises, langId, levelId, onComplete }) {
+export default function ListeningSection({ exercises, langId, levelId: _levelId, onComplete }) {
   const [currentEx, setCurrentEx] = useState(0);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
@@ -13,17 +13,17 @@ export default function ListeningSection({ exercises, langId, levelId, onComplet
   const [completedExs, setCompletedExs] = useState(new Set());
 
   const exercise = exercises[currentEx];
-  if (!exercise) return null;
-
-  const isWordExercise = !!exercise.words;
-  const items = isWordExercise ? exercise.words : exercise.sentences;
+  const isWordExercise = !!exercise?.words;
+  const items = exercise ? (isWordExercise ? exercise.words : exercise.sentences) : [];
   const currentItem = items?.[currentWordIndex];
 
+  // Hook'lar har doim chaqirilishi kerak — `if (!exercise) return null`
+  // hammasidan keyin turadi (rules-of-hooks).
   const speakText = useCallback((text, callback) => {
     if ('speechSynthesis' in window) {
       setIsPlaying(true);
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = langId === 'russian' ? 'ru-RU' : `${langId}-US`;
+      utterance.lang = getSpeechLang(langId);
       utterance.rate = isWordExercise ? 0.7 : 0.8;
       utterance.pitch = 1;
       utterance.onend = () => {
@@ -103,6 +103,8 @@ export default function ListeningSection({ exercises, langId, levelId, onComplet
       handleCheck();
     }
   };
+
+  if (!exercise) return null;
 
   const progress = completedExs.size;
   const total = exercises.length;

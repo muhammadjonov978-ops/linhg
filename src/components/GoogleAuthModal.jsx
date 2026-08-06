@@ -3,6 +3,14 @@ import { X, LogOut, User, LogIn, CheckCircle, Sparkles } from 'lucide-react';
 
 const USER_STORAGE_KEY = 'lingohub_user';
 
+// Navbar kabi boshqa komponentlar ham foydalanuvchi o'zgarishini bilishi uchun
+export const USER_EVENT = 'lingohub-user-changed';
+function notifyUserChanged() {
+  try {
+    window.dispatchEvent(new Event(USER_EVENT));
+  } catch { /* noop */ }
+}
+
 function loadSavedUser() {
   try {
     const raw = localStorage.getItem(USER_STORAGE_KEY);
@@ -15,6 +23,7 @@ function loadSavedUser() {
 function saveUser(u) {
   try {
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(u));
+    notifyUserChanged();
   } catch (e) {
     console.warn('Failed to save user:', e);
   }
@@ -34,6 +43,7 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
     setUser(null);
     try {
       localStorage.removeItem(USER_STORAGE_KEY);
+      notifyUserChanged();
     } catch (e) {
       console.warn('Failed to clear user:', e);
     }

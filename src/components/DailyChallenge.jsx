@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { Target, CheckCircle, Clock, Zap, Gift, Sparkles, RotateCcw } from 'lucide-react';
+import { Target, CheckCircle, Zap, Gift, Sparkles, RotateCcw } from 'lucide-react';
 
 export default function DailyChallenge() {
   const { state, dispatch } = useApp();
@@ -148,7 +148,7 @@ export default function DailyChallenge() {
         type: 'UPDATE_DAILY_CHALLENGES',
         payload: {
           date: new Date().toDateString(),
-          challenges: updated.map(({ check, ...rest }) => rest),
+          challenges: updated.map(({ check: _check, ...rest }) => rest),
         },
       });
     }
@@ -164,7 +164,7 @@ export default function DailyChallenge() {
       type: 'UPDATE_DAILY_CHALLENGES',
       payload: {
         date: new Date().toDateString(),
-        challenges: next.map(({ check, ...rest }) => rest),
+        challenges: next.map(({ check: _check, ...rest }) => rest),
       },
     });
   };
@@ -179,7 +179,7 @@ export default function DailyChallenge() {
       payload: {
         date: new Date().toDateString(),
         // strip check functions — only serializable data is stored
-        challenges: newChallenges.map(({ check, ...rest }) => ({ ...rest, completed: false })),
+        challenges: newChallenges.map(({ check: _check, ...rest }) => ({ ...rest, completed: false })),
       },
     });
   };
@@ -216,7 +216,7 @@ export default function DailyChallenge() {
 
         {/* Challenge list */}
         <div className="space-y-2">
-          {dailyChallenges.map((challenge, i) => {
+          {dailyChallenges.map((challenge, _i) => {
             const isCompleted = completedChallenges.has(challenge.id);
             return (
               <div

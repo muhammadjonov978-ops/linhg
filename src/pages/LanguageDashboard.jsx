@@ -3,10 +3,10 @@ import { useApp } from '../context/AppContext';
 import { languages, getLessons, getLanguageStats } from '../data/languages';
 import { useSiteConfig, getLangPrice } from '../data/siteConfig';
 import {
-  Lock, ChevronRight, Trophy, CheckCircle,
-  ArrowLeft, TrendingUp, Sparkles, Award, Target,
-  BookOpen, Headphones, Pencil, Mic, Search, ChevronLeft,
-  GraduationCap, Star, Coins, Crown, CreditCard
+  Lock, ChevronRight, CheckCircle,
+  ArrowLeft, TrendingUp, Sparkles, Target,
+  BookOpen, Headphones, Pencil, Mic, ChevronLeft,
+  GraduationCap, Coins, Crown, CreditCard
 } from 'lucide-react';
 import PaywallModal from '../components/PaywallModal';
 import DailyChallenge from '../components/DailyChallenge';
@@ -36,12 +36,9 @@ export default function LanguageDashboard({ onSelectLevel }) {
   const [showCompleted, setShowCompleted] = useState(true);
 
   const currentLang = languages.find(l => l.id === state.selectedLanguage);
-  if (!currentLang) return null;
 
-  // Paid language gate: if this language costs money and isn't unlocked, show a lock screen
-  const isLangPaid = getLangPrice(config, currentLang) > 0;
-  const isLangUnlocked = !isLangPaid || (state.unlockedLanguages || {})[currentLang.id];
-
+  // Hook'lar har doim bir xil tartibda chaqirilishi kerak — shuning uchun
+  // useMemo'lar `if (!currentLang) return null` dan OLDIN turadi.
   const allLessons = useMemo(() => getLessons(state.selectedLanguage), [state.selectedLanguage]);
   const stats = useMemo(() => getLanguageStats(state.selectedLanguage, state.progress), [state.selectedLanguage, state.progress]);
 
@@ -61,6 +58,12 @@ export default function LanguageDashboard({ onSelectLevel }) {
     return lessons;
   }, [allLessons, activeFilter, showCompleted, state.selectedLanguage, state.progress]);
 
+  if (!currentLang) return null;
+
+  // Paid language gate: if this language costs money and isn't unlocked, show a lock screen
+  const isLangPaid = getLangPrice(config, currentLang) > 0;
+  const isLangUnlocked = !isLangPaid || (state.unlockedLanguages || {})[currentLang.id];
+
   // Pagination
   const totalPages = Math.ceil(filteredLessons.length / LESSONS_PER_PAGE);
   const paginatedLessons = filteredLessons.slice(
@@ -71,6 +74,15 @@ export default function LanguageDashboard({ onSelectLevel }) {
   const handleLessonClick = (lessonNumber) => {
     onSelectLevel(`lesson-${lessonNumber}`);
     dispatch({ type: 'SET_CURRENT_LEVEL', payload: `lesson-${lessonNumber}` });
+  };
+
+  // Dars ochiqligini tekshirish: ketma-ket darslar bitta-bitta ochiladi.
+  // Alifbo darslari (1-10) hamisha ochiq — ulardan keyingi darslar esa
+  // avvalgi dars tugallanishini talab qiladi.
+  const isLessonLocked = (lessonNumber) => {
+    if (lessonNumber <= 1 || lessonNumber <= 10) return false;
+    const key = `${state.selectedLanguage}-lesson-${lessonNumber - 1}`;
+    return !state.progress[key]?.completed;
   };
 
   const achievementsUnlocked = state.achievements?.filter(a => a.unlocked)?.length || 0;
@@ -219,18 +231,22 @@ export default function LanguageDashboard({ onSelectLevel }) {
                   const key = `${state.selectedLanguage}-lesson-${lesson.number}`;
                   const prog = state.progress[key] || {};
                   const isCompleted = prog.completed;
-                  const isFirstAlphabet = lesson.type === 'alphabet';
-                  const isLocked = lesson.number > 1 && !state.progress[`${state.selectedLanguage}-lesson-${lesson.number - 1}`]?.completed && !isFirstAlphabet;
+                  const isLocked = isLessonLocked(lesson.number);
 
                   return (
                     <button
                       key={lesson.id}
-                      onClick={() => handleLessonClick(lesson.number)}
-                      disabled={false}
+                      onClick={() => {
+                        if (isLocked) return;
+                        handleLessonClick(lesson.number);
+                      }}
+                      disabled={isLocked}
                       className={`card bg-base-100 border transition-all duration-300 group text-left
                         ${isCompleted
                           ? 'border-success/30 bg-success/3 hover:border-success/60'
-                          : 'border-base-300 hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5'
+                          : isLocked
+                            ? 'border-base-300 opacity-50 cursor-not-allowed'
+                            : 'border-base-300 hover:border-primary/50 hover:shadow-md hover:-translate-y-0.5'
                         }
                         ${state.currentLevel === `lesson-${lesson.number}` ? 'border-primary shadow-md ring-1 ring-primary/30' : ''}
                       `}
@@ -241,13 +257,17 @@ export default function LanguageDashboard({ onSelectLevel }) {
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-base flex-shrink-0
                             ${isCompleted
                               ? 'bg-success/20'
-                              : lesson.type === 'alphabet'
-                                ? 'bg-blue-100 dark:bg-blue-900/30'
-                                : 'bg-base-200'
+                              : isLocked
+                                ? 'bg-base-200'
+                                : lesson.type === 'alphabet'
+                                  ? 'bg-blue-100 dark:bg-blue-900/30'
+                                  : 'bg-base-200'
                             }
                           `}>
                             {isCompleted ? (
                               <CheckCircle className="w-5 h-5 text-success" />
+                            ) : isLocked ? (
+                              <Lock className="w-4 h-4 opacity-50" />
                             ) : (
                               <span className="font-bold text-xs opacity-60">{lesson.number}</span>
                             )}

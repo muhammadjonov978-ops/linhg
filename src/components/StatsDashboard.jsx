@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { languages } from '../data/languages';
+import { languages, getLessons } from '../data/languages';
 import {
   BarChart3, BookOpen, Headphones, Pencil, Mic,
-  Clock, Flame, Star, Activity, Coins
+  Clock, Flame, Star, Activity, GraduationCap
 } from 'lucide-react';
 
 export default function StatsDashboard() {
@@ -18,7 +18,6 @@ export default function StatsDashboard() {
     let totalScore = 0;
     let scoreCount = 0;
     let completedLessons = 0;
-    let typeScores = { alphabet: [], vocabulary: [], reading: [], listening: [], speaking: [], writing: [], grammar: [] };
 
     Object.entries(state.progress).forEach(([key, prog]) => {
       if (!currentLang || !key.startsWith(`${currentLang.id}-lesson-`)) return;
@@ -32,7 +31,7 @@ export default function StatsDashboard() {
 
     const avgScore = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0;
 
-    // Weekly activity (mock - based on timestamps)
+    // Weekly activity (based on real timestamps)
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     const weeklyActivity = weekDays.map((day, i) => {
       const dayProgress = Object.values(state.progress).filter(p =>
@@ -45,11 +44,31 @@ export default function StatsDashboard() {
       };
     });
 
+    // Real skill scores: completed lessons per type / total lessons of that type
+    const lessonTypes = ['alphabet', 'vocabulary', 'reading', 'listening', 'speaking', 'writing', 'grammar'];
+    const skillScores = {};
+    if (currentLang) {
+      const lessons = getLessons(currentLang.id);
+      lessonTypes.forEach(type => {
+        const typeLessons = lessons.filter(l => l.type === type);
+        const typeCompleted = typeLessons.filter(l => {
+          const key = `${currentLang.id}-lesson-${l.number}`;
+          return state.progress[key]?.completed;
+        }).length;
+        skillScores[type] = {
+          completed: typeCompleted,
+          total: typeLessons.length,
+          percent: typeLessons.length > 0 ? Math.round((typeCompleted / typeLessons.length) * 100) : 0,
+        };
+      });
+    }
+
     return {
       totalLessons,
       completedLessons,
       avgScore,
       weeklyActivity,
+      skillScores,
     };
   };
 
@@ -59,14 +78,6 @@ export default function StatsDashboard() {
     { id: 'overview', label: 'Umumiy', icon: BarChart3 },
     { id: 'skills', label: 'Ko\'nikmalar', icon: Activity },
     { id: 'weekly', label: 'Haftalik', icon: Clock },
-  ];
-
-  const skillCards = [
-    { skill: 'Alifbo', icon: BookOpen, color: 'info' },
-    { skill: 'O\'qish', icon: BookOpen, color: 'secondary' },
-    { skill: 'Tinglash', icon: Headphones, color: 'warning' },
-    { skill: 'Yozish', icon: Pencil, color: 'accent' },
-    { skill: 'Gapirish', icon: Mic, color: 'error' },
   ];
 
   return (
@@ -129,12 +140,12 @@ export default function StatsDashboard() {
           <div className="space-y-4 animate-[fadeIn_0.3s_ease-out]">
             <div className="grid grid-cols-2 gap-4">
               {[
-                { skill: 'Alifbo', icon: BookOpen, color: 'info' },
-                { skill: 'So\'zlar', icon: BookOpen, color: 'success' },
-                { skill: 'O\'qish', icon: BookOpen, color: 'secondary' },
-                { skill: 'Tinglash', icon: Headphones, color: 'warning' },
-                { skill: 'Gapirish', icon: Mic, color: 'error' },
-                { skill: 'Yozish', icon: Pencil, color: 'accent' },
+                { skill: 'Alifbo', type: 'alphabet', icon: GraduationCap, color: 'info' },
+                { skill: 'So\'zlar', type: 'vocabulary', icon: BookOpen, color: 'success' },
+                { skill: 'O\'qish', type: 'reading', icon: BookOpen, color: 'secondary' },
+                { skill: 'Tinglash', type: 'listening', icon: Headphones, color: 'warning' },
+                { skill: 'Gapirish', type: 'speaking', icon: Mic, color: 'error' },
+                { skill: 'Yozish', type: 'writing', icon: Pencil, color: 'accent' },
               ].map(item => {
                 const Icon = item.icon;
                 const colorVarMap = {
@@ -146,7 +157,8 @@ export default function StatsDashboard() {
                   accent: 'var(--a)',
                 };
                 const themeColor = colorVarMap[item.color] || 'var(--p)';
-                const mockScore = Math.min(100, Math.round((Math.random() * 50 + 50)));
+                const skillStat = stats.skillScores?.[item.type] || { percent: 0, completed: 0, total: 0 };
+                const skillScore = skillStat.percent;
                 return (
                   <div key={item.skill} className="bg-base-200 rounded-xl p-4 text-center">
                     <div className="flex items-center justify-center gap-2 mb-2">
@@ -159,15 +171,16 @@ export default function StatsDashboard() {
                         <circle
                           cx="36" cy="36" r="32" fill="none"
                           stroke="currentColor"
-                          style={{ color: `hsl(${themeColor})`, strokeDasharray: `${2 * Math.PI * 32}`, strokeDashoffset: `${2 * Math.PI * 32 * (1 - mockScore / 100)}` }}
+                          style={{ color: `hsl(${themeColor})`, strokeDasharray: `${2 * Math.PI * 32}`, strokeDashoffset: `${2 * Math.PI * 32 * (1 - skillScore / 100)}` }}
                           strokeWidth="4"
                           strokeLinecap="round"
                         />
                       </svg>
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <span className="text-lg font-bold" style={{ color: `hsl(${themeColor})` }}>{mockScore}%</span>
+                        <span className="text-lg font-bold" style={{ color: `hsl(${themeColor})` }}>{skillScore}%</span>
                       </div>
                     </div>
+                    <p className="text-[10px] opacity-50">{skillStat.completed}/{skillStat.total} dars</p>
                   </div>
                 );
               })}
