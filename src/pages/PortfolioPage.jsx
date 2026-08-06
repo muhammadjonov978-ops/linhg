@@ -1,5 +1,5 @@
 import {
-  ArrowLeft, Briefcase, Mail, Send, Code2, Palette,
+  ArrowLeft, Briefcase, Phone, Send, Code2, Palette,
   Globe, GraduationCap, Star, ExternalLink, MapPin, Rocket, Heart, Zap,
 } from 'lucide-react';
 
@@ -9,20 +9,19 @@ import {
 const PORTFOLIO = {
   name: 'Akbarshox',
   initials: 'AK',
-  role: 'Frontend Dasturchi',
+  role: 'Yosh Frontend Dasturchi',
   location: 'Toshkent, O\u2018zbekiston',
-  email: 'akbarshox@gmail.com',
-  telegram: 'https://t.me/akbarshox',
-  github: 'https://github.com/akbarshox',
+  phone: '+998 97 159 52 36',
+  telegram: 'https://t.me/SH9XSH',
+  github: 'https://github.com/muhammadjonov978-ops',
   about: [
-    "Salom! Men Akbarshox — frontend dasturchi. Asosan React, JavaScript va zamonaviy veb-texnologiyalar bilan ishlayman.",
-    "Lingohub loyihasining muallifi sifatida interaktiv ta'lim platformalari, foydalanuvchi tajribasi va chiroyli interfeyslar yaratishga qiziqaman.",
-    "Maqsadim — oddiy va qulay, lekin kuchli va jozibali veb-ilovalar yaratish.",
+    'Men Muhammadjonov Akbarshox. Men 12 yoshdaman va men 100 ga yaqin startap saytlarini qilganman.',
+    'Men Dasturlash kursining 12-oyini o\u2018qiyapman.',
   ],
   stats: [
-    { icon: Rocket, value: '3+', label: 'Yil tajriba' },
-    { icon: Briefcase, value: '10+', label: 'Loyihalar' },
-    { icon: GraduationCap, value: '27', label: 'Til platforma' },
+    { icon: Rocket, value: '100+', label: 'Yaratilgan saytlar' },
+    { icon: Briefcase, value: '27', label: 'Til platforma' },
+    { icon: GraduationCap, value: '12', label: 'Yosh dasturchi' },
     { icon: Star, value: '100%', label: 'Ishtiyoq' },
   ],
   skills: [
@@ -109,10 +108,10 @@ export default function PortfolioPage() {
             {/* CTA buttons */}
             <div className="flex flex-wrap justify-center gap-3">
               <a
-                href={`mailto:${PORTFOLIO.email}`}
+                href={`tel:${PORTFOLIO.phone.replace(/\s/g, '')}`}
                 className="btn btn-primary gap-2 btn-wave"
               >
-                <Mail className="w-4 h-4" /> Bog\u2018lanish
+                <Phone className="w-4 h-4" /> Bog\u2018lanish
               </a>
               <a
                 href={PORTFOLIO.telegram}
@@ -261,8 +260,8 @@ export default function PortfolioPage() {
               Hamkorlik, savol yoki takliflaringiz bo\u2018lsa — bemalol yozing, albatta javob beraman!
             </p>
             <div className="flex flex-wrap justify-center gap-3">
-              <a href={`mailto:${PORTFOLIO.email}`} className="btn btn-base-100 gap-2">
-                <Mail className="w-4 h-4" /> {PORTFOLIO.email}
+              <a href={`tel:${PORTFOLIO.phone.replace(/\s/g, '')}`} className="btn btn-base-100 gap-2">
+                <Phone className="w-4 h-4" /> {PORTFOLIO.phone}
               </a>
               <a
                 href={PORTFOLIO.telegram}
