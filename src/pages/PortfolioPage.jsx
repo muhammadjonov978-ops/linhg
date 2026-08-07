@@ -43,7 +43,7 @@ const PORTFOLIO = {
     "UI/UX dizayn va performance optimizatsiya",
     "Firebase va backend integratsiyalari bilan tajriba",
   ],
-  avatar: photo4,
+  avatar: photo1,
   stats: [
     { icon: Rocket, value: '100+', label: 'Yaratilgan saytlar' },
     { icon: Briefcase, value: '27', label: 'Til platforma' },
@@ -86,27 +86,27 @@ const PORTFOLIO = {
   photos: [
     {
       src: photo1,
-      alt: 'Istanbulda — Ortaköy masjidi yonida, Bosfor bo‘yida',
-      caption: 'Istanbul safarim — Bosfor bo‘yida',
-      tag: 'Sayohat',
+      alt: 'Ochiq osmon ostida ko‘chada — yorqin kayfiyatdagi surat',
+      caption: 'Yorqin kun — ko‘chada',
+      tag: 'Hayotim',
     },
     {
       src: photo2,
-      alt: 'Rasmiy tadbirda podiumda nutq so‘zlab',
-      caption: 'Rasmiy tadbirda nutq so‘zlab',
-      tag: 'Tadbir',
+      alt: 'Tog‘li manzara fonida suratga tushganman',
+      caption: 'Tog‘lar bag‘rida',
+      tag: 'Sayohat',
     },
     {
       src: photo3,
-      alt: 'Uyimiz hovlisida',
-      caption: 'O‘z hovlimizda',
+      alt: 'Hovlida divanda o‘tirib, telefonda suratga qarayapman',
+      caption: 'Hovlida — dam olish daqiqalari',
       tag: 'Hayotim',
     },
     {
       src: photo4,
-      alt: 'Rasmiy portret',
-      caption: 'Rasmiy portretim',
-      tag: 'Portret',
+      alt: 'Kechqurun shahar ko‘chasida surat',
+      caption: 'Shahar kechasi',
+      tag: 'Kecha',
     },
   ],
   skills: [
