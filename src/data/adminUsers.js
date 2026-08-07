@@ -1,30 +1,60 @@
-// ==== ADMIN PANEL LOGIN ====
-// Hamma uchun BIRTA umumiy login:  shox / shox1010
-// Admin panelda qo'shilgan qo'shimcha hisoblar ham (login + parol bilan) kira oladi.
+// ==== ADMIN PANEL LOGIN (server-side) ====
+// Parol endi BRAUZER KODIDA SAQLANMAYDI. Login/parol serverda tekshiriladi:
+//   POST /api/admin/login   — kirish (token qaytaradi)
+//   GET  /api/admin/verify  — saqlangan sessiyani tasdiqlash
 //
-// NOTE: bu himoya mijoz (brauzer) tomonida — statik sayt uchun demo. Haqiqiy
-// xavfsizlik uchun backend + server tomonida autentifikatsiya kerak bo'ladi.
+// Vercel sozlamalarida (Environment Variables) o'rnatilishi kerak:
+//   ADMIN_USERNAME  (ixtiyoriy, default: shox)
+//   ADMIN_PASSWORD  (majburiy — egasi paroli, maxfiy!)
+//   ADMIN_NAME      (ixtiyoriy, default: Shox)
+//   ADMIN_EXTRA_ACCOUNTS (ixtiyoriy: login:parol:Ism,login2:parol2:Ism2)
+//
+// Agar ADMIN_PASSWORD o'rnatilmagan bo'lsa — login ishlamaydi va panel
+// tushunarli xato ko'rsatadi (README'ga qarang).
 
-import { loadConfig } from './siteConfig';
-
-// Umumiy kirish — hamma shu login/parol bilan panelga kira oladi
+// Egasi logini — panel'dagi ro'yxatlar (masalan CoinsTab) uchun
 export const UNIVERSAL_USERNAME = 'shox';
-export const UNIVERSAL_PASSWORD = 'shox1010';
 
-export const getAdminAccounts = () => loadConfig().accounts || [];
-
-export const findAdminUser = (username, password) => {
-  const u = String(username || '').trim().toLowerCase();
-  const p = String(password || '');
-
-  // Bitta umumiy login/parol — hamma uchun
-  if (u === UNIVERSAL_USERNAME && p === UNIVERSAL_PASSWORD) {
-    return { username: UNIVERSAL_USERNAME, password: UNIVERSAL_PASSWORD, name: 'Shox', role: 'owner' };
+// Serverga kirish so'rovi. Natija:
+//   { ok: true, token, user: { username, name, role } }
+//   { ok: false, code: 'not_configured'|'invalid'|'server_error'|'network', error }
+export async function adminLogin(username, password) {
+  try {
+    const res = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      return {
+        ok: false,
+        code: data?.code || 'server_error',
+        error: data?.error || 'Server xatosi. Qayta urinib ko\u2018ring.',
+      };
+    }
+    return { ok: true, token: data.token, user: data.user };
+  } catch {
+    return { ok: false, code: 'network', error: 'Serverga ulanishmadi. Internetni tekshiring va qayta urinib ko\u2018ring.' };
   }
+}
 
-  // Admin panelda qo'shilgan boshqa hisoblar (egasi emas)
-  const account = getAdminAccounts().find(
-    (a) => a.role !== 'owner' && String(a.username || '').toLowerCase() === u && a.password === p
-  );
-  return account ? { ...account } : null;
-};
+// Saqlangan sessiyani server'da tasdiqlaydi — soxtalashtirilgan sessiyalar
+// bu yerda rad etiladi va foydalanuvchi chiqarib yuboriladi.
+export async function verifyAdminSession(token) {
+  if (!token) return { ok: false, code: 'invalid', error: 'Sessiya yo\u2018q' };
+  try {
+    const res = await fetch(`/api/admin/verify?token=${encodeURIComponent(token)}`);
+    const data = await res.json().catch(() => null);
+    if (!res.ok || !data?.ok) {
+      return {
+        ok: false,
+        code: data?.code || 'invalid',
+        error: data?.error || 'Sessiya yaroqsiz',
+      };
+    }
+    return { ok: true, user: data.user };
+  } catch {
+    return { ok: false, code: 'network', error: 'Serverga ulanishmadi' };
+  }
+}

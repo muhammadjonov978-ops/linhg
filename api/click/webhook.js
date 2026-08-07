@@ -41,6 +41,18 @@ export default async function handler(req, res) {
   const body = { ...(req.body || {}), ...(req.query || {}) };
   const action = Number(body.action);
 
+  // XAVFSIZLIK: CLICK_SECRET_KEY o'rnatilmagan bo'lsa imzo bo'sh kalit bilan
+  // hisoblanib, har kim o'zi hisoblab yuborishi mumkin edi — shuning uchun
+  // sozlash to'liq bo'lmaguncha barcha so'rovlarni rad etamiz (fail-closed).
+  if (!SERVICE_ID || !SECRET_KEY) {
+    return respond(res, {
+      click_trans_id: body.click_trans_id,
+      merchant_trans_id: body.merchant_trans_id,
+      error: -1,
+      error_note: 'SERVICE NOT CONFIGURED',
+    });
+  }
+
   // ---- Sign tekshirish ----
   const expectedSign = calcSign(body);
   if (body.sign_string !== expectedSign) {

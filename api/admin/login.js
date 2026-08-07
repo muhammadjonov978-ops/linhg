@@ -1,0 +1,46 @@
+// POST /api/admin/login — admin login (server-side tekshiruv)
+// Body: { username, password }
+// Javob: { ok: true, token, user: { username, name, role } }
+//        yoki { ok: false, code: 'not_configured'|'invalid'|'server_error', error }
+import { authenticate, isAuthConfigured, signToken, checkRateLimit, registerFailure, resetFailures } from '../_lib/adminAuth.js';
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ ok: false, code: 'server_error', error: 'Method not allowed' });
+  }
+
+  // Serverda ADMIN_PASSWORD o'rnatilmagan — login butunlay yopiq
+  if (!isAuthConfigured()) {
+    return res.status(200).json({
+      ok: false,
+      code: 'not_configured',
+      error: "Admin panel server'da sozlanmagan. Vercel sozlamalariga ADMIN_PASSWORD ni qo'shing (README'ga qarang).",
+    });
+  }
+
+  // Oddiy brute-force himoyasi: IP'ga 5 xato urinishdan keyin 5 daqiqa blok
+  const ip = String(req.headers?.['x-forwarded-for'] || '').split(',')[0].trim()
+    || req.socket?.remoteAddress || 'unknown';
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({
+      ok: false,
+      code: 'rate_limited',
+      error: 'Juda ko\u2018p xato urinish. 5 daqiqadan keyin qayta urinib ko\u2018ring.',
+    });
+  }
+
+  const { username, password } = req.body || {};
+  const user = authenticate(username, password);
+  if (!user) {
+    registerFailure(ip);
+    return res.status(200).json({
+      ok: false,
+      code: 'invalid',
+      error: "Login yoki parol noto'g'ri!",
+    });
+  }
+
+  resetFailures(ip);
+  const token = signToken(user);
+  return res.status(200).json({ ok: true, token, user });
+}

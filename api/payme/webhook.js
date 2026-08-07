@@ -19,7 +19,16 @@ function jsonrpcResult(id, result) {
 }
 
 // Basic auth tekshirish: "Basic base64(merchant_id:key)"
+// XAVFSIZLIK: agar PAYME_KEY (yoki merchant ID) serverda o'rnatilmagan bo'lsa,
+// auth tekshiruvini YOPIQ qilamiz (fail-closed). Aks holda har kim
+// `Basic Og==` (bo'sh login:parol) bilan kirib, to'lovlarni "paid" qilib
+// belgilashi mumkin edi — to'lov qabul qilinmasdan pul yo'qotish xavfi.
+function authConfigured() {
+  return Boolean(MERCHANT_ID && KEY);
+}
+
 function checkAuth(req) {
+  if (!authConfigured()) return false;
   const header = req.headers.authorization || '';
   const expected = 'Basic ' + Buffer.from(`${MERCHANT_ID}:${KEY}`).toString('base64');
   return header === expected;
@@ -37,6 +46,11 @@ export default async function handler(req, res) {
   const { id, method, params } = body;
 
   try {
+    // Redis sozlanmagan bo'lsa — buyurtma saqlash/tekshirish imkonsiz.
+    // "Order topilmadi" kabi chalg'ituvchi xato o'rniga aniq xabar beramiz.
+    if (!redis) {
+      return res.json(jsonrpcError(id, -32000, 'KV sozlanmagan: server sozlanmagan'));
+    }
     switch (method) {
       case 'CheckPerformTransaction':
         return res.json(await checkPerform(id, params));

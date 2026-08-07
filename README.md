@@ -48,6 +48,11 @@ Vercel → Project → Settings → Environment Variables (barcha environment'la
 | `VITE_CLICK_MERCHANT_ID` | (ixtiyoriy) Click ham qo'shmoqchi bo'lsangiz | Ochiq |
 | `VITE_CLICK_SERVICE_ID` | (ixtiyoriy) Click ham qo'shmoqchi bo'lsangiz | Ochiq |
 | `CLICK_SECRET_KEY` | (ixtiyoriy) Click secret key | **MAXFIY** |
+| `ADMIN_PASSWORD` | Admin panel egasi paroli (server-side login) | **MAXFIY** |
+| `ADMIN_USERNAME` | (ixtiyoriy) Admin login, default `shox` | MAXFIY |
+| `ADMIN_NAME` | (ixtiyoriy) Egasining ismi, default `Shox` | MAXFIY |
+| `ADMIN_TOKEN_SECRET` | (ixtiyoriy) Sessiya token imzosi — bo'sh bo'lsa `ADMIN_PASSWORD` ishlatiladi | MAXFIY |
+| `ADMIN_EXTRA_ACCOUNTS` | (ixtiyoriy) Qo'shimcha adminlar: `login:parol:Ism,login2:parol2:Ism2` | **MAXFIY** |
 
 > ⚠️ `VITE_` prefiksli o'zgaruvchilar brauzerga ko'rinadi — ular maxfiy emas.
 > `PAYME_KEY`, `CLICK_SECRET_KEY`, `UPSTASH_*` lar `VITE_` PREFIKSISIZ yoziladi
@@ -127,4 +132,32 @@ saytda sinab ko'rishingiz mumkin.
 
 Payme kabinetida **"Test"** tugmasi orqali webhook'ni bevosita sinab ko'rish mumkin
 (CheckPerform/Create/Perform ketma-ketligi), Click'da esa test rejimda kichik summa bilan sinab ko'ring.
+
+## Admin panel xavfsizligi (server-side login)
+
+Ilgari admin paroli brauzer kodida ochiq saqlanardi (`shox1010`) — buni har kim ko'rib,
+`#/admin` orqali panelga kirishi mumkin edi. Endi login **server'da** tekshiriladi:
+
+1. Vercel → Project → Settings → Environment Variables ga qo'shing:
+
+   | O'zgaruvchi | Qiymat |
+   |---|---|
+   | `ADMIN_PASSWORD` | O'zingiz tanlagan kuchli parol (majburiy) |
+   | `ADMIN_USERNAME` | (ixtiyoriy) Login — default `shox` |
+   | `ADMIN_NAME` | (ixtiyoriy) Ism — default `Shox` |
+   | `ADMIN_TOKEN_SECRET` | (ixtiyoriy) Uzoq tasodifiy satr — sessiya token imzosi |
+   | `ADMIN_EXTRA_ACCOUNTS` | (ixtiyoriy) `login:parol:Ism,login2:parol2:Ism2` |
+
+2. Deploy qiling. Endi `#/admin` da faqat ushbu login/parol bilan kiriladi.
+3. `ADMIN_PASSWORD` o'rnatilmagan bo'lsa — panel "Admin panel server'da sozlanmagan"
+   degan xato ko'rsatadi va kirishni butunlay yopib qo'yadi (xavfsiz default).
+
+Qo'shimcha xavfsizlik choralari (tavsiya):
+
+- **Payme/Click**: `PAYME_KEY`, `CLICK_SECRET_KEY`, `UPSTASH_*` lar o'rnatilmagan bo'lsa,
+  webhook'lar va to'lov API'si ishlamaydi (fail-closed) — bu ataylab qilingan,
+  bo'sh kalit bilan to'lovlarni "paid" qilib bo'lmaydi.
+- **Firebase Realtime Database**: `adminCoins` va foydalanuvchi ma'lumotlari yoziladigan
+  yo'llarga (path) Realtime Database Rules'da faqat autentifikatsiya qilingan
+  foydalanuvchilarga yozish ruxsatini cheklang.
 

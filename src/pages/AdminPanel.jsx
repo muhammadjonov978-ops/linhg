@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { findAdminUser } from '../data/adminUsers';
+import { adminLogin, verifyAdminSession, UNIVERSAL_USERNAME } from '../data/adminUsers';
 import { useSiteConfig, saveConfig, getLangPrice } from '../data/siteConfig';
 import { languages } from '../data/languages';
+import { subscribeAdminCoins, giveAdminCoins, MAX_LOG } from '../lib/adminCoins';
 import {
   startPresence, setPresenceLocation, subscribePresence,
 } from '../utils/presence';
@@ -16,6 +17,8 @@ import {
   FaUpload as Upload, FaLink as Link2, FaTimes as X, FaChevronRight as ChevronRight,
   FaFileExcel as FileSpreadsheet, FaChartLine as TrendingUp,
   FaMousePointer as MousePointerClick, FaChartBar as BarChart3,
+  FaGift as Gift, FaSpinner as Loader2, FaInfinity as InfinityIcon,
+  FaExclamationTriangle as AlertIcon,
 } from 'react-icons/fa';
 
 const SESSION_KEY = 'lingohub_admin_session';
@@ -68,20 +71,29 @@ function LoginScreen({ onSuccess }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  // Login endi SERVER'da tekshiriladi (api/admin/login) — parol brauzer kodida yo'q.
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const user = findAdminUser(username, password);
-    if (user) {
-      const session = { username: user.username, name: user.name, role: user.role, loginAt: Date.now() };
+    setBusy(true);
+    setError('');
+    const res = await adminLogin(username, password);
+    setBusy(false);
+    if (res.ok) {
+      const session = { ...res.user, token: res.token, loginAt: Date.now() };
       writeJSON(SESSION_KEY, session);
       const log = readJSON(LOG_KEY, []);
-      log.unshift({ time: Date.now(), username: user.username, ok: true });
+      log.unshift({ time: Date.now(), username: res.user.username, ok: true });
       writeJSON(LOG_KEY, log.slice(0, 100));
       onSuccess(session);
     } else {
-      setError('Login yoki parol noto\u2018g\u2018ri!');
+      setError(
+        res.code === 'not_configured'
+          ? "Admin panel server'da sozlanmagan. Vercel sozlamalariga ADMIN_PASSWORD ni qo'shing (README'ga qarang)."
+          : (res.error || 'Login yoki parol noto\u2018g\u2018ri!')
+      );
       const log = readJSON(LOG_KEY, []);
       log.unshift({ time: Date.now(), username: username || '(bo\u2018sh)', ok: false });
       writeJSON(LOG_KEY, log.slice(0, 100));
@@ -149,8 +161,9 @@ function LoginScreen({ onSuccess }) {
               </div>
             )}
 
-            <button type="submit" className="btn btn-primary w-full gap-2 btn-wave border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black hover:brightness-105">
-              <Shield className="w-4 h-4" /> Kirish
+            <button type="submit" disabled={busy} className="btn btn-primary w-full gap-2 btn-wave border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black hover:brightness-105 disabled:opacity-60">
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
+              {busy ? 'Tekshirilmoqda...' : 'Kirish'}
             </button>
           </form>
 
@@ -286,6 +299,15 @@ function PricesTab({ config, onSave }) {
     return map;
   });
   const [msg, setMsg] = useState('');
+  // Server'dagi QAT'IY narxlar (api/_lib/prices.js) — farq bo'lsa ogohlantiramiz
+  const [serverPrices, setServerPrices] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/prices')
+      .then((r) => r.json())
+      .then((d) => { if (d?.ok) setServerPrices(d.prices); })
+      .catch(() => { /* server narxlari olinmasa ogohlantirish ko'rsatilmaydi */ });
+  }, []);
 
   const save = () => {
     onSave({ ...config, prices });
@@ -299,10 +321,18 @@ function PricesTab({ config, onSave }) {
     setPrices(map);
   };
 
+  // Panel narxi bilan server narxi farq qiladigan tillar
+  const mismatches = serverPrices
+    ? languages.filter((l) => {
+        const sp = serverPrices[l.id];
+        return typeof sp === 'number' && sp !== (prices[l.id] ?? 0);
+      })
+    : [];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-white/50">Har bir til uchun narxni kiriting (0 — bepul). Saqlangandan keyin saytda darhol qo\u2018llanadi.</p>
+        <p className="text-xs text-white/50">Har bir til uchun narxni kiriting (0 — bepul). Diqqat: to\u2018lov miqdori server\u2019dagi qat\u2019iy narxlar bilan tekshiriladi — bu yerda o\u2018zgargan narx faqat saytda ko\u2018rinadi.</p>
         <div className="flex gap-2">
           <button onClick={reset} className="btn btn-ghost btn-xs gap-1.5 text-white/60">
             <RotateCcw className="w-3 h-3" /> Tiklash
@@ -313,9 +343,23 @@ function PricesTab({ config, onSave }) {
         </div>
       </div>
 
+      {mismatches.length > 0 && (
+        <div className="rounded-xl px-4 py-3 text-xs bg-amber-500/10 border border-amber-500/40 text-[#fbbf24] flex items-start gap-2.5">
+          <AlertIcon className="w-4 h-4 shrink-0 mt-0.5" />
+          <span>
+            <b>Diqqat:</b> {mismatches.length} ta til narxi server bilan mos emas. To\u2018lov server\u2019dagi qat\u2019iy narxlar
+            (api/_lib/prices.js) bo\u2018yicha tekshiriladi — serverda ham yangilanmasa, shu tillar uchun to\u2018lov
+            “Til narxi noto\u2018g\u2018ri” deb rad etiladi.
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-        {languages.map((l) => (
-          <div key={l.id} className="rounded-xl bg-white/[0.02] border border-white/10 p-3 flex items-center gap-2">
+        {languages.map((l) => {
+          const sp = serverPrices?.[l.id];
+          const differs = typeof sp === 'number' && sp !== (prices[l.id] ?? 0);
+          return (
+          <div key={l.id} className={`relative rounded-xl border p-3 flex items-center gap-2 ${differs ? 'border-amber-500/50 bg-amber-500/[0.06]' : 'bg-white/[0.02] border-white/10'}`}>
             <span className="text-2xl">{l.flag}</span>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold truncate text-white">{l.name}</p>
@@ -329,8 +373,14 @@ function PricesTab({ config, onSave }) {
               />
             </div>
             <Coins className="w-3.5 h-3.5 text-[#facc15] shrink-0" />
+            {differs && (
+              <span className="absolute -top-2 -right-2 badge badge-warning badge-xs border-0 font-bold shadow-lg">
+                Server: {sp.toLocaleString('uz-UZ')}
+              </span>
+            )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {msg && <div className="text-xs font-medium text-success">{msg}</div>}
@@ -378,6 +428,208 @@ function TextsTab({ config, onSave }) {
           <Save className="w-3.5 h-3.5" /> Saqlash
         </button>
         {msg && <span className="text-xs text-success font-medium">{msg}</span>}
+      </div>
+    </div>
+  );
+}
+
+// ================= COINS TAB (adminlar bir-biriga cheksiz coin beradi) =================
+function CoinsTab({ config, session }) {
+  const [data, setData] = useState({ balances: {}, log: [], mode: 'local' });
+  const [target, setTarget] = useState('');
+  const [amount, setAmount] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => subscribeAdminCoins((d) => setData(d)), []);
+
+  // Adminlar ro'yxati — universal egasi + config'da qo'shilgan hisoblar
+  const admins = [
+    { username: UNIVERSAL_USERNAME, name: 'Shox', role: 'owner' },
+    ...(config.accounts || []).filter((a) => a.username !== UNIVERSAL_USERNAME),
+  ].map((a) => ({ ...a, balance: data.balances?.[a.username] ?? 0 }));
+
+  const totalCoins = admins.reduce((s, a) => s + a.balance, 0);
+  const isFirebase = data.mode === 'firebase';
+
+  const handleGive = async (username) => {
+    const amt = Math.floor(Number(amount));
+    if (!Number.isFinite(amt) || amt <= 0) {
+      setMsg('❌ Miqdor noto\u2018g\u2018ri — musbat butun son kiriting');
+      return;
+    }
+    setBusy(true);
+    setMsg('');
+    const res = await giveAdminCoins(session.username || 'admin', username, amt);
+    setBusy(false);
+    if (res.ok) {
+      setMsg(`✅ ${username} ga +${amt.toLocaleString('uz-UZ')} tanga berildi`);
+      setAmount('');
+    } else {
+      setMsg(`❌ ${res.error}`);
+    }
+    setTimeout(() => setMsg(''), 3000);
+  };
+
+  const fmtTime = (t) => new Date(t).toLocaleString('uz-UZ', {
+    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+  });
+
+  return (
+    <div className="space-y-4">
+      {/* Rejim ko'rsatkichi */}
+      <div className={`rounded-xl px-4 py-3 text-xs flex flex-wrap items-center gap-2 border ${isFirebase ? 'bg-[#16a34a]/10 border-[#16a34a]/40 text-[#4ade80]' : 'bg-[#f59e0b]/10 border-[#f59e0b]/40 text-[#fbbf24]'}`}>
+        {isFirebase ? (
+          <>
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ade80] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4ade80]" />
+            </span>
+            <b>Realtime — Firebase</b>
+            <span className="opacity-70">Coin balanslari barcha qurilmalarda saqlanadi va jonli yangilanadi</span>
+          </>
+        ) : (
+          <>
+            <span className="w-2 h-2 rounded-full bg-[#fbbf24]" />
+            <b>Demo rejim — shu brauzer</b>
+            <span className="opacity-70">Firebase sozlanmagan. Coinlar faqat shu brauzerda saqlanadi. To\u2018liq ishlash uchun .env faylga VITE_FIREBASE_* kalitlarini kiriting.</span>
+          </>
+        )}
+      </div>
+
+      {/* Jami balans */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="rounded-xl bg-[#facc15]/10 border border-[#facc15]/25 p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#facc15]/15 flex items-center justify-center shrink-0">
+            <Gift className="w-5 h-5 text-[#facc15]" />
+          </div>
+          <div>
+            <p className="text-xl font-extrabold text-white tabular-nums">{totalCoins.toLocaleString('uz-UZ')}</p>
+            <p className="text-[10px] text-white/40">Barcha adminlar jami tangasi</p>
+          </div>
+        </div>
+        <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center shrink-0">
+            <InfinityIcon className="w-5 h-5 text-[#fbbf24]" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white">Cheksiz berish</p>
+            <p className="text-[10px] text-white/40">Hech qanday limit yo\u2018q — tekinga, istalgan miqdorda</p>
+          </div>
+        </div>
+        <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center shrink-0">
+            <Users className="w-5 h-5 text-[#60a5fa]" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-white">{admins.length} ta admin</p>
+            <p className="text-[10px] text-white/40">Faqat adminlar o\u2018rtasida</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Adminlar balansi + berish formasi */}
+      <div className="overflow-x-auto rounded-xl border border-white/10">
+        <table className="table table-sm w-full">
+          <thead>
+            <tr className="bg-white/[0.04] text-xs text-white/60">
+              <th>Admin</th>
+              <th>Rol</th>
+              <th className="text-right">Balans (tanga)</th>
+              <th className="text-right">Cheksiz berish</th>
+            </tr>
+          </thead>
+          <tbody>
+            {admins.map((a) => (
+              <tr key={a.username} className="hover:bg-white/[0.03] transition-colors">
+                <td>
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-sm font-bold text-[#facc15]">
+                      {(a.name || a.username).charAt(0).toUpperCase()}
+                    </span>
+                    <div className="min-w-0">
+                      <p className="font-mono text-xs font-bold text-white">{a.username}</p>
+                      <p className="text-[10px] text-white/40 truncate">{a.name}</p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  {a.role === 'owner' ? (
+                    <span className="badge badge-warning badge-sm gap-1 border-0"><Crown className="w-3 h-3" /> Egas</span>
+                  ) : (
+                    <span className="badge badge-ghost badge-sm bg-white/[0.06] border-white/10 text-white/70">Admin</span>
+                  )}
+                </td>
+                <td className="text-right">
+                  <span className="font-extrabold text-[#facc15] tabular-nums">
+                    {a.balance.toLocaleString('uz-UZ')}
+                  </span>
+                  <span className="text-[10px] text-white/30 ml-1">🪙</span>
+                </td>
+                <td className="text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => { setTarget(a.username); setAmount(''); }}
+                      className="btn btn-ghost btn-xs text-[10px] text-white/50 hover:text-[#facc15]"
+                    >
+                      Tanlash
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      placeholder="Miqdor"
+                      value={target === a.username ? amount : ''}
+                      onChange={(e) => { setTarget(a.username); setAmount(e.target.value); }}
+                      className="input input-bordered input-xs w-28 bg-white/[0.03] border-white/10 text-white placeholder:text-white/30"
+                    />
+                    <button
+                      onClick={() => handleGive(a.username)}
+                      disabled={busy || target !== a.username}
+                      className="btn btn-primary btn-xs gap-1.5 border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black disabled:opacity-40"
+                    >
+                      {busy && target === a.username ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Gift className="w-3 h-3" />
+                      )}
+                      Berish
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {msg && <div className="text-xs font-medium text-success animate-[fadeIn_0.3s_ease-out]">{msg}</div>}
+
+      {/* Berish tarixi */}
+      <div className="rounded-xl border border-white/10 overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2">
+          <Clock className="w-3.5 h-3.5 text-[#38bdf8]" />
+          <h4 className="text-xs font-bold text-white">So\u2018nggi berishlar</h4>
+          <span className="text-[10px] text-white/35 ml-auto">oxirgi {MAX_LOG} ta</span>
+        </div>
+        {data.log.length === 0 ? (
+          <p className="text-sm text-white/30 text-center py-6">Hozircha coin berilmagan</p>
+        ) : (
+          <div className="max-h-56 overflow-y-auto divide-y divide-white/5 chat-scroll">
+            {data.log.slice(0, 20).map((entry, i) => (
+              <div key={i} className="flex items-center gap-3 px-4 py-2.5 text-xs">
+                <span className="w-7 h-7 rounded-lg bg-[#facc15]/10 border border-[#facc15]/20 flex items-center justify-center shrink-0">
+                  <Gift className="w-3 h-3 text-[#facc15]" />
+                </span>
+                <span className="font-mono font-bold text-white">{entry.from}</span>
+                <span className="text-white/30">→</span>
+                <span className="font-mono font-bold text-white">{entry.to}</span>
+                <span className="font-extrabold text-[#facc15] tabular-nums">+{Number(entry.amount || 0).toLocaleString('uz-UZ')} 🪙</span>
+                <span className="text-white/30 ml-auto tabular-nums">{fmtTime(entry.time)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -733,6 +985,56 @@ function SearchConsoleSection() {
   );
 }
 
+// ================= TIZIM HOLATI (backend sozlamalari) =================
+// /api/health orqali Redis, Payme, Click va admin login holatini ko'rsatadi.
+function ServiceStatus() {
+  const [health, setHealth] = useState(null);
+
+  const load = () => {
+    fetch('/api/health')
+      .then((r) => r.json())
+      .then((d) => { if (d?.ok) setHealth(d.services); })
+      .catch(() => { /* api mahalliy rejimda yo'q — indikator ko'rsatilmaydi */ });
+  };
+
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  if (!health) return null;
+
+  const items = [
+    { key: 'redis', label: "To'lov bazasi (Redis)", ok: health.redis, hint: 'UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN' },
+    { key: 'payme', label: 'Payme', ok: health.payme, hint: 'PAYME_MERCHANT_ID + PAYME_KEY' },
+    { key: 'click', label: 'Click', ok: health.click, hint: 'CLICK_MERCHANT_ID + CLICK_SERVICE_ID + CLICK_SECRET_KEY' },
+    { key: 'adminAuth', label: 'Admin login', ok: health.adminAuth, hint: 'ADMIN_PASSWORD' },
+  ];
+
+  return (
+    <div className="admin-card px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
+      <span className="font-semibold text-white inline-flex items-center gap-1.5">
+        <Activity className="w-3.5 h-3.5 text-[#facc15]" /> Tizim holati:
+      </span>
+      {items.map((s) => (
+        <span
+          key={s.key}
+          title={s.hint}
+          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 border cursor-help transition-colors ${
+            s.ok
+              ? 'bg-[#16a34a]/10 border-[#16a34a]/40 text-[#4ade80]'
+              : 'bg-red-500/10 border-red-500/40 text-red-300'
+          }`}
+        >
+          <span className={`w-1.5 h-1.5 rounded-full ${s.ok ? 'bg-[#4ade80]' : 'bg-red-400'}`} />
+          {s.label}: {s.ok ? '✅' : '❌'}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 // ================= DASHBOARD =================
 function StatValue({ value }) {
   // key o'zgarganda span qayta mount bo'ladi va stat-pop animatsiyasi o'ynaydi
@@ -787,6 +1089,7 @@ function Dashboard({ session, onLogout }) {
   const tabs = [
     { id: 'hisoblar', label: 'Hisoblar', icon: Users },
     { id: 'tillar', label: 'Til narxlari', icon: Coins },
+    { id: 'tanga', label: 'Tanga berish', icon: Gift },
     { id: 'matnlar', label: 'Sayt matnlari', icon: Type },
   ];
 
@@ -847,6 +1150,9 @@ function Dashboard({ session, onLogout }) {
             </a>
           </div>
         </header>
+
+        {/* ===== TIZIM HOLATI ===== */}
+        <ServiceStatus />
 
         {/* ===== STAT CARDS ===== */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -925,6 +1231,7 @@ function Dashboard({ session, onLogout }) {
         <div className="admin-card p-5 md:p-6">
           {tab === 'hisoblar' && <AccountsTab config={config} onSave={saveConfig} />}
           {tab === 'tillar' && <PricesTab config={config} onSave={saveConfig} />}
+          {tab === 'tanga' && <CoinsTab config={config} session={session} />}
           {tab === 'matnlar' && <TextsTab config={config} onSave={saveConfig} />}
         </div>
 
@@ -968,11 +1275,51 @@ function Dashboard({ session, onLogout }) {
 // ================= MAIN =================
 export default function AdminPanel() {
   const [session, setSession] = useState(() => readJSON(SESSION_KEY, null));
+  // Saqlangan sessiya mavjud bo'lsa — server'da tasdiqlash kerak.
+  // Token'siz (eski/soxta) sessiyalar ham tekshiriladi va rad etiladi.
+  const [checking, setChecking] = useState(() => Boolean(readJSON(SESSION_KEY, null)));
+  const initialToken = useRef(session?.token || null);
+
+  // Sessiyani server'da tekshiramiz — localStorage'ni soxtalashtirgan
+  // foydalanuvchi bu yerda rad etiladi va chiqarib yuboriladi.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await verifyAdminSession(initialToken.current);
+      if (cancelled) return;
+      if (res.ok) {
+        // Token'dan olingan eng so'nggi ma'lumotlar (ism/rol) bilan yangilaymiz
+        setSession((prev) => ({ ...(prev || {}), ...res.user }));
+      } else if (res.code !== 'network') {
+        // Yaroqsiz yoki token'siz sessiya — o'chirib tashlaymiz va login ekranini ko'rsatamiz
+        try { localStorage.removeItem(SESSION_KEY); } catch { /* noop */ }
+        setSession(null);
+      }
+      setChecking(false);
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const handleLogout = () => {
     try { localStorage.removeItem(SESSION_KEY); } catch { /* noop */ }
     setSession(null);
   };
+
+  if (checking) {
+    return (
+      <div data-theme="dark" className="admin-shell min-h-screen flex items-center justify-center p-4">
+        <div className="text-center space-y-4 animate-[fadeIn_0.3s_ease-out]">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-[#facc15] to-[#f59e0b] flex items-center justify-center shadow-lg shadow-[#facc15]/25">
+            <Shield className="w-7 h-7 text-black" />
+          </div>
+          <p className="text-sm font-semibold text-white/80 inline-flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-[#facc15]" />
+            Sessiya tekshirilmoqda...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return session ? (
     <Dashboard session={session} onLogout={handleLogout} />

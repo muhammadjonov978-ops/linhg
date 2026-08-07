@@ -85,7 +85,13 @@ export default function PaywallModal({ isOpen, onClose, lang }) {
       window.location.href = checkoutUrl;
     } catch (e) {
       setProcessing(false);
-      setError(e.message || 'To\'lovni boshlab bo\'lmadi. Qayta urinib ko\'ring.');
+      const msg = String(e.message || '');
+      // Server to'lov bazasiga ulanmagan (UPSTASH_REDIS_* sozlanmagan) — tushunarli xabar
+      setError(
+        msg.includes('KV sozlanmagan')
+          ? "To'lov serveri hozircha sozlanmagan (Redis ulanmagan). Iltimos, birozdan keyin urinib ko'ring yoki sayt egasi bilan bog'laning."
+          : (msg || "To'lovni boshlab bo'lmadi. Qayta urinib ko'ring.")
+      );
     }
   };
 
