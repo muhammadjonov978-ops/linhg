@@ -9,31 +9,59 @@ npm install
 npm run dev
 ```
 
-## To'lov tizimi (Payme + Click)
+## To'lov tizimi (Payme)
 
-Saytda haqiqiy to'lov qabul qilish uchun quyidagilar kerak:
+Saytda **haqiqiy** to'lov qabul qilish uchun (demo emas!) Payme Business
+merchant hisobi kerak. Kod to'liq tayyor — quyidagi bosqichlarni bajarish kifoya.
+
+### 0. Payme Business hisob ochish (bir marta, 1–2 kun)
+
+1. **https://business.payme.uz** saytiga kiring (yoki payme.uz → "Бизнесу").
+2. **Ro'yxatdan o'ting** — Payme faqat yuridik shaxslar bilan ishlaydi:
+   - ИП (yakka tartibdagi tadbirkor) yoki MCHJ/OOO
+   - INN (STIR), direktor pasporti, bank rekvizitlari
+   > ИП bo'lmasangiz — eng tez yo'l: soliq idorasida yoki `my.gov.uz` orqali
+   > ИП ochish (bir kunda), keyin Payme'ga murojaat qilish.
+3. **Kassa turini tanlang:** saytga to'lov uchun **"Касса для приёма платежей с биллингом"**
+   (billing'li kassa) kerak.
+4. Arizani yuboring — Payme odatda **1–2 ish kuni** ichida tasdiqlaydi.
+5. Tasdiqlangach, kabinetga kiring:
+   - **merchant_id** — Kassa sozlamalarida ko'rinadi (masalan `5e6c9d0a...`)
+   - **KEY** — "Xizmat kaliti" (service key) bo'limida **generatsiya qiling** (maxfiy!)
+
+Keyingi bosqichlarga o'ting:
 
 ### 1. Vercel'da maxfiy o'zgaruvchilar (Environment Variables)
 
-Vercel → Project → Settings → Environment Variables:
+Vercel → Project → Settings → Environment Variables (barcha environment'larga qo'shing):
 
 | O'zgaruvchi | Manba | Maxfiylik |
 |---|---|---|
-| `VITE_PAYME_MERCHANT_ID` | Payme kabineti → Kassa | Ochiq |
-| `VITE_CLICK_MERCHANT_ID` | Click kabineti | Ochiq |
-| `VITE_CLICK_SERVICE_ID` | Click kabineti → Service | Ochiq |
-| `VITE_SITE_URL` | Sayt manzili (masalan `https://lingohub.uz`) | Ochiq |
-| `PAYME_KEY` | Payme kabineti → Xizmat kaliti | **MAXFIY** |
-| `PAYME_ACCOUNT_FIELD` | Odatiy: `order_id` | MAXFIY |
-| `CLICK_SECRET_KEY` | Click kabineti → Secret key | **MAXFIY** |
-| `UPSTASH_REDIS_REST_URL` | [console.upstash.com](https://console.upstash.com) → REST API | MAXFIY |
+| `VITE_PAYME_MERCHANT_ID` | Payme kabineti → Kassa (0-bosqich) | Ochiq |
+| `PAYME_KEY` | Payme kabineti → Xizmat kaliti (0-bosqich) | **MAXFIY** |
+| `PAYME_ACCOUNT_FIELD` | Odatiy: `order_id` — o'zgartirmang | MAXFIY |
+| `VITE_SITE_URL` | `https://lingohub.uz` | Ochiq |
+| `UPSTASH_REDIS_REST_URL` | [console.upstash.com](https://console.upstash.com) → Database → REST API (bepul) | MAXFIY |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash → REST API | **MAXFIY** |
 | `PREMIUM_MONTHLY_PRICE` | Pro obuna oylik narxi (so'm). Default `49000` — `src/config.js` bilan bir xil bo'lishi shart | MAXFIY |
 | `PREMIUM_YEARLY_PRICE` | Pro obuna yillik narxi (so'm). Default `490000` | MAXFIY |
+| `VITE_CLICK_MERCHANT_ID` | (ixtiyoriy) Click ham qo'shmoqchi bo'lsangiz | Ochiq |
+| `VITE_CLICK_SERVICE_ID` | (ixtiyoriy) Click ham qo'shmoqchi bo'lsangiz | Ochiq |
+| `CLICK_SECRET_KEY` | (ixtiyoriy) Click secret key | **MAXFIY** |
 
 > ⚠️ `VITE_` prefiksli o'zgaruvchilar brauzerga ko'rinadi — ular maxfiy emas.
 > `PAYME_KEY`, `CLICK_SECRET_KEY`, `UPSTASH_*` lar `VITE_` PREFIKSISIZ yoziladi
 > va faqat server (api/) funksiyalarida ishlatiladi.
+>
+> 📄 Mahalliy ishlash uchun `.env.example` ni `.env` deb nusxalab, xuddi shu
+> qiymatlarni to'ldiring (`.env` git'ga qo'shilmaydi).
+
+> 💰 **Narxlar server'da qat'iy tekshiriladi!** To'lov summasi `api/_lib/prices.js`
+> dagi ro'yxat bo'yicha tekshiriladi — foydalanuvchi arzonroq summa yuborib
+> til/premium ochib ola olmaydi. **Narx o'zgartirganda** `api/_lib/prices.js` va
+> `src/data/siteConfig.js` (DEFAULT_CONFIG.prices) ni birga yangilab, deploy qiling.
+> Admin paneldagi narx o'zgarishi faqat ko'rinish uchun — to'lov miqdori server
+> ro'yxatidan olinadi.
 
 ### 1.1. Deploy qilishdan oldin (MUHIM!)
 
@@ -45,18 +73,19 @@ Vercel → Project → Settings → Environment Variables:
 - Deploy'dan so'ng tekshiring: `https://lingohub.uz/api/payment/status?orderId=test123`
   so'roviga `{ "ok": false, ... }` qaytsa ham API ishlayapti (order yo'q degani).
 
-### 2. Webhook URL'larni kabinetlarda sozlash
+### 2. Payme kabinetida webhook'ni sozlash
 
-**Payme** kabinetida → Kassa → sozlamalar → **Merchant API URL**:
+Payme kabinetida → Kassa → sozlamalar → **Merchant API URL**:
 ```
 https://lingohub.uz/api/payme/webhook
 ```
-Basic auth: login = `PAYME_MERCHANT_ID`, parol = `PAYME_KEY`.
+Basic auth (kabinetda ko'rsatiladi): login = `PAYME_MERCHANT_ID`, parol = `PAYME_KEY`.
 
-**Click** kabinetida → Xizmat → sozlamalar → **Prepare URL** va **Complete URL**:
-```
-https://lingohub.uz/api/click/webhook
-```
+> Kod Payme'ning 5 metodini to'liq qo'llab-quvvatlaydi: CheckPerformTransaction,
+> CreateTransaction, PerformTransaction, CheckTransaction, CancelTransaction.
+
+*(Ixtiyoriy) Click qo'shsangiz: Click kabinetida → Xizmat → sozlamalar →
+Prepare URL va Complete URL → `https://lingohub.uz/api/click/webhook`)*
 
 ### 3. To'lov jarayoni qanday ishlaydi
 
@@ -72,6 +101,19 @@ https://lingohub.uz/api/click/webhook
 vercel dev
 ```
 `vercel dev` serverless funksiyalarni (`api/`) ham ishga tushiradi.
+
+To'lov oqimini to'liq sinash uchun (haqiqiy Payme kabi so'rovlar yuboradi):
+
+```bash
+node scripts/test-payme-webhook.mjs
+```
+
+Bu skript `CheckPerformTransaction → CreateTransaction → PerformTransaction`
+ketma-ketligini yuborib, order `paid` bo'lganini tekshiradi — bu **demo to'lov
+emas**, tizim to'g'ri sozlanganini isbotlovchi test.
+
+Payme kabinetidagi **"Test"** tugmasi orqali ham xuddi shu oqimni jonli
+saytda sinab ko'rishingiz mumkin.
 
 ### Xatolarni tekshirish
 

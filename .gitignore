@@ -33,3 +33,7 @@ nextjs/next-env.d.ts
 
 # Original portfolio photos (raw, unoptimized)
 src/assets/portfolio/raw/
+
+.vercel
+.env*
+!.env.example

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { FaCrown as Crown, FaStar as Star, FaCheck as Check, FaTimes as X, FaMagic as Sparkles, FaShieldAlt as Shield, FaBolt as Zap, FaInfinity as InfinityIcon, FaLock as Lock, FaCoins as Coins, FaSpinner as Loader2, FaExternalLinkAlt as ExternalLink } from 'react-icons/fa';
 import { useSiteConfig, getLangPrice } from '../data/siteConfig';
-import { HAS_PAYMENT, PAYME_MERCHANT_ID, CLICK_MERCHANT_ID, CLICK_SERVICE_ID, PREMIUM_MONTHLY_PRICE, PREMIUM_YEARLY_PRICE } from '../config';
+import { HAS_PAYMENT, HAS_PAYME, HAS_CLICK, PAYME_MERCHANT_ID, CLICK_MERCHANT_ID, CLICK_SERVICE_ID, PREMIUM_MONTHLY_PRICE, PREMIUM_YEARLY_PRICE } from '../config';
 import { generateOrderId, createPaymentOrder, getCheckoutUrl, buildReturnUrl } from '../lib/payments';
 
 const PENDING_KEY = 'lingohub_pending_payment';
@@ -18,9 +18,16 @@ const PENDING_KEY = 'lingohub_pending_payment';
 export default function PaywallModal({ isOpen, onClose, lang }) {
   const config = useSiteConfig();
   const [processing, setProcessing] = useState(false);
-  const [method, setMethod] = useState('payme');
+  // Default usul — Payme sozlangan bo'lsa, aks holda Click
+  const [method, setMethod] = useState(HAS_PAYME ? 'payme' : HAS_CLICK ? 'click' : 'payme');
   const [error, setError] = useState('');
   const [payPlan, setPayPlan] = useState(null); // premium rejimda tanlangan plan
+
+  // Faqat sozlangan (konfiguratsiya qilingan) to'lov usullari ko'rsatiladi
+  const paymentMethods = [
+    HAS_PAYME && { id: 'payme', label: 'Payme' },
+    HAS_CLICK && { id: 'click', label: 'Click' },
+  ].filter(Boolean);
 
   if (!isOpen) return null;
 
@@ -33,7 +40,7 @@ export default function PaywallModal({ isOpen, onClose, lang }) {
 
   const startPayment = async (plan = 'language') => {
     if (!HAS_PAYMENT) {
-      setError('To\'lov tizimi hali sozlanmagan. Admin Vercel sozlamalarida VITE_PAYME_MERCHANT_ID yoki VITE_CLICK_MERCHANT_ID ni kiriting.');
+      setError('To\'lov tizimi hali sozlanmagan. Vercel sozlamalarida VITE_PAYME_MERCHANT_ID ni kiriting (README\'ga qarang).');
       return;
     }
     if (method === 'payme' && !PAYME_MERCHANT_ID) {
@@ -223,12 +230,9 @@ export default function PaywallModal({ isOpen, onClose, lang }) {
                 To'lov usulini tanlang
               </h4>
 
-              {/* Method tabs */}
+              {/* Method tabs — faqat sozlangan usullar */}
               <div className="flex gap-2 mb-4">
-                {[
-                  { id: 'payme', label: 'Payme' },
-                  { id: 'click', label: 'Click' },
-                ].map(m => (
+                {paymentMethods.length > 1 ? paymentMethods.map(m => (
                   <button
                     key={m.id}
                     onClick={() => { setMethod(m.id); setError(''); }}
@@ -236,7 +240,11 @@ export default function PaywallModal({ isOpen, onClose, lang }) {
                   >
                     {m.label}
                   </button>
-                ))}
+                )) : (
+                  <div className="badge badge-primary badge-lg gap-1">
+                    {method === 'payme' ? 'Payme' : 'Click'}
+                  </div>
+                )}
               </div>
 
               <div className="text-center py-2 text-sm opacity-70">
@@ -271,15 +279,19 @@ export default function PaywallModal({ isOpen, onClose, lang }) {
         <div className="px-8 pb-6 text-center">
           <p className="text-xs opacity-60 mb-3">Qabul qilinadigan to'lov usullari:</p>
           <div className="flex justify-center gap-3">
-            <div className="btn btn-sm btn-ghost bg-base-200">Payme</div>
-            <div className="btn btn-sm btn-ghost bg-base-200">Click</div>
-            <div className="btn btn-sm btn-ghost bg-base-200">UzCard</div>
-            <div className="btn btn-sm btn-ghost bg-base-200">HUMO</div>
-            <div className="btn btn-sm btn-ghost bg-base-200">Visa/MC</div>
+            {HAS_PAYME && <div className="btn btn-sm btn-ghost bg-base-200">Payme</div>}
+            {HAS_CLICK && <div className="btn btn-sm btn-ghost bg-base-200">Click</div>}
+            {HAS_PAYMENT && (
+              <>
+                <div className="btn btn-sm btn-ghost bg-base-200">UzCard</div>
+                <div className="btn btn-sm btn-ghost bg-base-200">HUMO</div>
+                <div className="btn btn-sm btn-ghost bg-base-200">Visa/MC</div>
+              </>
+            )}
           </div>
           {!HAS_PAYMENT && (
             <p className="text-xs opacity-40 mt-3">
-              * Haqiqiy to'lov ulash uchun Vercel sozlamalarida VITE_PAYME_MERCHANT_ID va VITE_CLICK_MERCHANT_ID/SERVICE_ID kiriting
+              * Haqiqiy to'lov ulash uchun Vercel sozlamalarida VITE_PAYME_MERCHANT_ID va PAYME_KEY kiriting
             </p>
           )}
         </div>

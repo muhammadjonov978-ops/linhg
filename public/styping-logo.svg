@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="STyping.uz">
+  <defs>
+    <!-- Metallic rim gradient -->
+    <linearGradient id="rimGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f2f2f2"/>
+      <stop offset="22%" stop-color="#8f8f8f"/>
+      <stop offset="46%" stop-color="#e8e8e8"/>
+      <stop offset="68%" stop-color="#6e6e6e"/>
+      <stop offset="100%" stop-color="#c9c9c9"/>
+    </linearGradient>
+    <!-- Glossy black badge -->
+    <radialGradient id="badgeGrad" cx="38%" cy="30%" r="85%">
+      <stop offset="0%" stop-color="#2e2e2e"/>
+      <stop offset="45%" stop-color="#111111"/>
+      <stop offset="100%" stop-color="#000000"/>
+    </radialGradient>
+    <!-- Top-left reflective sheen -->
+    <linearGradient id="sheenGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.45)"/>
+      <stop offset="55%" stop-color="rgba(255,255,255,0.06)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <!-- Key face gradient -->
+    <linearGradient id="keyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="45%" stop-color="#d9d9d9"/>
+      <stop offset="100%" stop-color="#9c9c9c"/>
+    </linearGradient>
+    <!-- Metallic text gradient -->
+    <linearGradient id="textGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="55%" stop-color="#d8d8d8"/>
+      <stop offset="100%" stop-color="#8f8f8f"/>
+    </linearGradient>
+    <filter id="textShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2.5" stdDeviation="1.6" flood-color="#000000" flood-opacity="0.85"/>
+    </filter>
+  </defs>
+
+  <!-- Metallic outer rim -->
+  <circle cx="100" cy="100" r="97" fill="url(#rimGrad)"/>
+  <!-- Dark inner edge -->
+  <circle cx="100" cy="100" r="92" fill="#0a0a0a"/>
+  <!-- Glossy black badge -->
+  <circle cx="100" cy="100" r="90" fill="url(#badgeGrad)"/>
+
+  <!-- Top-left reflective sheen (elliptical highlight) -->
+  <ellipse cx="62" cy="46" rx="54" ry="30" fill="url(#sheenGrad)" transform="rotate(-28 62 46)"/>
+
+  <!-- Four-pointed starburst flare on upper-left edge -->
+  <g transform="translate(30 26)" fill="rgba(255,255,255,0.9)">
+    <path d="M12 0 L14.5 9.5 L24 12 L14.5 14.5 L12 24 L9.5 14.5 L0 12 L9.5 9.5 Z"/>
+  </g>
+  <g transform="translate(38 14)" fill="rgba(255,255,255,0.55)">
+    <path d="M7 0 L8.6 5.4 L14 7 L8.6 8.6 L7 14 L5.4 8.6 L0 7 L5.4 5.4 Z"/>
+  </g>
+
+  <!-- Keyboard: metallic, tilted back in perspective -->
+  <g transform="translate(100 72) scale(1 0.78) rotate(-7)">
+    <!-- Keyboard body -->
+    <rect x="-52" y="-28" width="104" height="58" rx="9" fill="#141414" stroke="#3c3c3c" stroke-width="1.4"/>
+    <!-- Top deck highlight -->
+    <rect x="-52" y="-28" width="104" height="16" rx="9" fill="rgba(255,255,255,0.07)"/>
+    <!-- Keys: 4 columns x 3 rows -->
+    <!-- Row 1 -->
+    <rect x="-44" y="-19" width="20" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <rect x="-21" y="-19" width="20" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <rect x="2"    y="-19" width="20" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <rect x="25"   y="-19" width="20" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <!-- Row 2 -->
+    <rect x="-44" y="-4"  width="20" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <rect x="-21" y="-4"  width="20" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <rect x="2"    y="-4"  width="20" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <rect x="25"   y="-4"  width="20" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <!-- Row 3 -->
+    <rect x="-44" y="11"  width="20" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <rect x="-21" y="11"  width="20" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <rect x="2"    y="11"  width="20" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <rect x="25"   y="11"  width="20" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <!-- Row 4 (space-ish keys) -->
+    <rect x="-44" y="26"  width="14" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <rect x="-27" y="26"  width="54" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+    <rect x="30"  y="26"  width="14" height="12" rx="2.2" fill="url(#keyGrad)" stroke="#8a8a8a" stroke-width="0.6"/>
+  </g>
+
+  <!-- STUz metallic text: big S + small TUz, embossed -->
+  <text
+    x="100" y="156" text-anchor="middle"
+    font-family="Arial, 'Segoe UI', sans-serif" font-weight="900"
+    font-size="46" letter-spacing="1"
+    fill="url(#textGrad)" filter="url(#textShadow)"
+  >
+    <tspan font-size="56" dy="-6">S</tspan><tspan font-size="34">TUz</tspan>
+  </text>
+</svg>

@@ -1,12 +1,7 @@
 // POST /api/payment/create — yangi to'lov buyurtmasi yaratadi
 // Body: { orderId, langId, amount (so'm), provider: 'payme'|'click', plan?: 'language'|'premium' }
 import { createOrder } from '../_lib/orders.js';
-
-// Premium narxlari — server-side tasdiqlash uchun.
-// Default qiymatlar src/config.js dagi narxlar bilan bir xil; Vercel'da
-// PREMIUM_MONTHLY_PRICE / PREMIUM_YEARLY_PRICE orqali o'zgartirish mumkin.
-const PREMIUM_MONTHLY_PRICE = Number(process.env.PREMIUM_MONTHLY_PRICE) || 49000;
-const PREMIUM_YEARLY_PRICE = Number(process.env.PREMIUM_YEARLY_PRICE) || 490000;
+import { LANGUAGE_PRICES, PREMIUM_MONTHLY_PRICE, PREMIUM_YEARLY_PRICE } from '../_lib/prices.js';
 
 // Premium plan uchun ruxsat etilgan narxlar ro'yxati
 const PREMIUM_PRICES = new Set([PREMIUM_MONTHLY_PRICE, PREMIUM_YEARLY_PRICE]);
@@ -25,9 +20,8 @@ export default async function handler(req, res) {
   if (!Number.isFinite(amt) || amt <= 0) {
     return res.status(400).json({ ok: false, error: 'amount noto\'g\'ri' });
   }
-  // Minimal to'lov — 1 so'm yoki juda kichik summalarni oldini olish.
-  // Haqiqiy narxlar server'da tekshirilmaydi (admin narxlari client'da),
-  // lekin eng kamida realistik summa talab qilinadi.
+  // Minimal to'lov — juda kichik/noto'g'ri summalarni oldindan rad etish.
+  // Aniq narx tekshiruvi quyida (api/_lib/prices.js bo'yicha) amalga oshiriladi.
   if (amt < 1000) {
     return res.status(400).json({ ok: false, error: 'Minimal to\'lov summasi 1000 so\'m' });
   }
@@ -35,12 +29,25 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, error: 'provider noto\'g\'ri' });
   }
 
-  // Premium (obuna) narxini server'da qat'iy tekshiramiz — kimdir arzon
-  // summa yuborib premium ochib olishining oldini olish uchun.
+  // Narxni server'da QAT'IY tekshiramiz — kimdir arzon summa yuborib
+  // til/premium ochib olishining oldini olish uchun.
   // DIQQAT: frontend premium buyurtmalarda langId='premium' va plan='monthly'/'yearly'
   // yuboradi — shuning uchun ikkalasini ham tekshiramiz.
-  if ((plan === 'premium' || langId === 'premium') && !PREMIUM_PRICES.has(amt)) {
-    return res.status(400).json({ ok: false, error: 'Premium narxi noto\'g\'ri' });
+  const isPremium = plan === 'premium' || langId === 'premium';
+  if (isPremium) {
+    if (!PREMIUM_PRICES.has(amt)) {
+      return res.status(400).json({ ok: false, error: 'Premium narxi noto\'g\'ri' });
+    }
+  } else {
+    // Til (language) buyurtmasi: langId pullik tillar ro'yxatida bo'lishi va
+    // summa aynan shu til narxiga teng bo'lishi shart (api/_lib/prices.js).
+    const expectedPrice = LANGUAGE_PRICES[langId];
+    if (!expectedPrice) {
+      return res.status(400).json({ ok: false, error: 'Bunday til aniqlanmadi' });
+    }
+    if (amt !== expectedPrice) {
+      return res.status(400).json({ ok: false, error: 'Til narxi noto\'g\'ri' });
+    }
   }
 
   try {

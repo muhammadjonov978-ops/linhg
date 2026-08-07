@@ -20,6 +20,9 @@ export const SITE_URL = import.meta.env.VITE_SITE_URL || (typeof window !== 'und
 
 // To'lov tizimi sozlanganmi?
 export const HAS_PAYMENT = !!(PAYME_MERCHANT_ID || (CLICK_MERCHANT_ID && CLICK_SERVICE_ID));
+// Har bir provayder alohida sozlanganmi (UI'da faqat sozlangan usullar ko'rinadi)
+export const HAS_PAYME = !!PAYME_MERCHANT_ID;
+export const HAS_CLICK = !!(CLICK_MERCHANT_ID && CLICK_SERVICE_ID);
 
 // Pro (premium) narxlari — so'mda (Payme/Click UZS qabul qiladi)
 // Narxlarni o'zgartirmoqchi bo'lsangiz shu yerdan o'zgartiring

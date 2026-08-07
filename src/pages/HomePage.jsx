@@ -11,6 +11,7 @@ import {
   FaCheckCircle as CheckCircle,
 } from 'react-icons/fa';
 import PaywallModal from '../components/PaywallModal';
+import StypingAdBanner from '../components/StypingAdBanner';
 
 const features = [
   { icon: GraduationCap, title: 'Alifbo', desc: "Harflarni o'rganish" },
@@ -190,6 +191,11 @@ export default function HomePage() {
                 </button>
               );
             })}
+          </div>
+
+          {/* STyping.uz reklama paneli */}
+          <div className="mt-8">
+            <StypingAdBanner />
           </div>
         </div>
       </div>
