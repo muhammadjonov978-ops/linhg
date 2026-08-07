@@ -14,6 +14,7 @@ import LevelPage from './pages/LevelPage';
 import SMSReminder from './components/SMSReminder';
 import AdminPanel from './pages/AdminPanel';
 import PortfolioPage from './pages/PortfolioPage';
+import ShopPage from './pages/ShopPage';
 import LiveVisitorsBadge from './components/LiveVisitorsBadge';
 import { startPresence, stopPresence } from './utils/presence';
 import { startVisitsTracking } from './utils/visits';
@@ -54,6 +55,9 @@ function AppContent() {
   // Portfolio route (shown inside the app shell with the navbar)
   const showPortfolio = hash.startsWith('#/portfolio');
 
+  // Magazin route (shop — qahramon kiyimlari, tanga bilan xarid)
+  const showShop = hash.startsWith('#/shop');
+
   const handleToggleTutor = () => {
     dispatch({ type: 'TOGGLE_TUTOR' });
   };
@@ -77,19 +81,20 @@ function AppContent() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Main content */}
-        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${!showPortfolio && showSidebar && (showDashboard || showHome) ? 'lg:mr-80' : ''}`}>
+        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${!showPortfolio && !showShop && showSidebar && (showDashboard || showHome) ? 'lg:mr-80' : ''}`}>
+          {showShop && <ShopPage />}
           {showPortfolio && <PortfolioPage />}
-          {!showPortfolio && showHome && <HomePage />}
-          {!showPortfolio && showDashboard && (
+          {!showPortfolio && !showShop && showHome && <HomePage />}
+          {!showPortfolio && !showShop && showDashboard && (
             <LanguageDashboard onSelectLevel={handleSelectLevel} />
           )}
-          {!showPortfolio && showLevel && (
+          {!showPortfolio && !showShop && showLevel && (
             <LevelPage onBack={handleBackToDashboard} />
           )}
         </main>
 
         {/* Sidebar with widgets (only on Home and Dashboard) */}
-        {!showPortfolio && (showDashboard || showHome) && showSidebar && (
+        {!showPortfolio && !showShop && (showDashboard || showHome) && showSidebar && (
           <>
             {/* Mobil qurilmalarda orqa fon qoraytiriladi */}
             <div
@@ -138,7 +143,7 @@ function AppContent() {
       </div>
 
       {/* Sidebar toggle button (on Home and Dashboard) */}
-      {!showPortfolio && (showDashboard || showHome) && !showSidebar && (
+      {!showPortfolio && !showShop && (showDashboard || showHome) && !showSidebar && (
         <button
           onClick={() => setShowSidebar(true)}
           className="fixed right-4 top-20 z-30 btn btn-sm btn-ghost bg-base-100/80 backdrop-blur-sm shadow-sm border border-base-300 hover:bg-base-200 transition-all duration-300"
@@ -157,7 +162,7 @@ function AppContent() {
       <LiveVisitorsBadge />
 
       {/* AI Tutor Floating Button */}
-      {!showPortfolio && state.selectedLanguage && (
+      {!showPortfolio && !showShop && state.selectedLanguage && (
         <>
           {!isTutorOpen && (
             <button

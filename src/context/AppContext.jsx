@@ -1,6 +1,7 @@
 import { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { checkNewAchievements, calculateStats } from '../data/achievements';
 import { isThemeId, DEFAULT_THEME } from '../data/themes';
+import { getShopItem, DEFAULT_OWNED, DEFAULT_EQUIPPED } from '../data/shop';
 
 const AppContext = createContext();
 
@@ -42,8 +43,30 @@ function loadLegacyData() {
   }
 }
 
+// Shop xaridlari: eski foydalanuvchilarda bo'lmasa bepul boshlang'ich to'plam beriladi
+function migrateShop(parsed) {
+  // Bepul boshlang'ich to'plam har doim qo'shiladi — bo'sh/buzilgan saqlangan
+  // inventarda ham qahramon hech bo'lmaganda asosiy kiyimlarga ega bo'ladi.
+  const owned = Array.from(new Set([
+    ...DEFAULT_OWNED,
+    ...(Array.isArray(parsed.inventory) ? parsed.inventory : []),
+  ]));
+  const equipped = parsed.equipped && typeof parsed.equipped === 'object'
+    ? { ...DEFAULT_EQUIPPED, ...parsed.equipped }
+    : DEFAULT_EQUIPPED;
+  // Faqat mavjud itemlar saqlanadi — sotib olinmagan narsa kiyib bo'lmaydi
+  const validEquipped = {};
+  ['hat', 'outfit', 'accessory', 'pet'].forEach(cat => {
+    const id = equipped[cat];
+    const item = getShopItem(id);
+    validEquipped[cat] = item && item.category === cat && owned.includes(id) ? id : DEFAULT_EQUIPPED[cat];
+  });
+  return { inventory: owned, equipped: validEquipped };
+}
+
 // Migrate old XP-based saved data to coins
 function migrateSaved(parsed) {
+  const shop = migrateShop(parsed);
   return {
     selectedLanguage: null,
     currentLevel: null,
@@ -65,6 +88,8 @@ function migrateSaved(parsed) {
     mistakesReviewed: parsed.mistakesReviewed || 0,
     perfectWeeks: parsed.perfectWeeks || 0,
     courseRewards: parsed.courseRewards || {},
+    inventory: shop.inventory,
+    equipped: shop.equipped,
   };
 }
 
@@ -81,6 +106,7 @@ function loadInitialState() {
   // No new-key data: try migrating safe fields from the legacy key
   const legacy = loadLegacyData();
   if (legacy) {
+    const shop = migrateShop(legacy);
     return {
       selectedLanguage: null,
       currentLevel: null,
@@ -98,6 +124,8 @@ function loadInitialState() {
       mistakesReviewed: 0,
       perfectWeeks: 0,
       courseRewards: {},
+      inventory: shop.inventory,
+      equipped: shop.equipped,
     };
   }
 
@@ -118,6 +146,8 @@ function loadInitialState() {
     mistakesReviewed: 0,
     perfectWeeks: 0,
     courseRewards: {},
+    inventory: DEFAULT_OWNED,
+    equipped: DEFAULT_EQUIPPED,
   };
 }
 
@@ -191,6 +221,26 @@ function appReducer(state, action) {
     case 'ADD_COINS':
       return { ...state, coins: state.coins + action.payload };
 
+    case 'BUY_SHOP_ITEM': {
+      const item = getShopItem(action.payload);
+      if (!item || item.price <= 0) return state;
+      if (state.coins < item.price) return state; // yetarli tanga yo'q
+      if (state.inventory.includes(item.id)) return state; // allaqachon xarid qilingan
+      return {
+        ...state,
+        coins: state.coins - item.price,
+        inventory: [...state.inventory, item.id],
+      };
+    }
+
+    case 'EQUIP_SHOP_ITEM': {
+      const item = getShopItem(action.payload);
+      if (!item || !state.inventory.includes(item.id)) return state;
+      return {
+        ...state,
+        equipped: { ...state.equipped, [item.category]: item.id },
+      };
+    }
     case 'UPDATE_DAILY_CHALLENGES':
       return { ...state, dailyChallenges: action.payload };
 
@@ -232,6 +282,8 @@ function appReducer(state, action) {
         dailyChallenges: null,
         mistakesReviewed: 0,
         perfectWeeks: 0,
+        inventory: DEFAULT_OWNED,
+        equipped: DEFAULT_EQUIPPED,
       };
 
     case 'RESET_STREAK':
@@ -266,6 +318,8 @@ export function AppProvider({ children }) {
         mistakesReviewed: state.mistakesReviewed,
         perfectWeeks: state.perfectWeeks,
         courseRewards: state.courseRewards || {},
+        inventory: state.inventory,
+        equipped: state.equipped,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     } catch (e) {
@@ -276,6 +330,7 @@ export function AppProvider({ children }) {
     state.isPremium, state.unlockedLanguages, state.coins, state.streak, state.lastActive,
     state.achievements, state.dailyChallenges, state.theme,
     state.mistakesReviewed, state.perfectWeeks, state.courseRewards,
+    state.inventory, state.equipped,
   ]);
 
   // Check streak and update achievements

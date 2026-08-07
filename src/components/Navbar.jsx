@@ -4,8 +4,8 @@ import { languages } from '../data/languages';
 import {
   FaHome as Home, FaCommentDots as MessageCircle, FaTrophy as Trophy,
   FaCoins as Coins, FaAward as Award, FaSignInAlt as LogIn, FaUser as User,
-  FaShieldAlt as Shield, FaBriefcase as Briefcase, FaBars as MenuIcon,
-  FaTimes as X,
+  FaShieldAlt as Shield, FaBriefcase as Briefcase, FaStore as Store,
+  FaBars as MenuIcon, FaTimes as X,
 } from 'react-icons/fa';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal, { USER_EVENT } from './GoogleAuthModal';
@@ -40,7 +40,7 @@ export default function Navbar({ onToggleTutor }) {
 
   const goHome = (e) => {
     e.preventDefault();
-    if (window.location.hash.startsWith('#/portfolio')) {
+    if (window.location.hash.startsWith('#/portfolio') || window.location.hash.startsWith('#/shop')) {
       window.location.hash = '#/';
     }
     dispatch({ type: 'SELECT_LANGUAGE', payload: null });
@@ -65,6 +65,12 @@ export default function Navbar({ onToggleTutor }) {
       label: 'Portfolio',
       href: '#/portfolio',
       icon: <Briefcase className="w-4 h-4 text-primary" />,
+    },
+    {
+      key: 'shop',
+      label: 'Magazin',
+      href: '#/shop',
+      icon: <Store className="w-4 h-4 text-warning" />,
     },
     {
       key: 'home',
@@ -177,6 +183,16 @@ export default function Navbar({ onToggleTutor }) {
           <span className="hidden sm:inline text-xs">Portfolio</span>
         </a>
 
+        {/* Magazin Button */}
+        <a
+          href="#/shop"
+          className="btn btn-ghost btn-sm gap-1.5 tooltip hidden md:inline-flex"
+          data-tip="Qahramon magazini"
+        >
+          <Store className="w-4 h-4 text-warning" />
+          <span className="hidden sm:inline text-xs">Magazin</span>
+        </a>
+
         {/* Theme Picker */}
         <ThemePicker />
 
@@ -216,7 +232,13 @@ export default function Navbar({ onToggleTutor }) {
             {mobileNavItems.map(item => (
               <button
                 key={item.key}
-                onClick={item.onClick}
+                onClick={() => {
+                  if (item.onClick) item.onClick();
+                  else if (item.href) {
+                    window.location.hash = item.href;
+                    setMobileMenuOpen(false);
+                  }
+                }}
                 className="btn btn-ghost btn-sm justify-start gap-2 border border-base-300/60 bg-base-200/40"
               >
                 {item.icon}
