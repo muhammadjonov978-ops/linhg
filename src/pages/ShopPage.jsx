@@ -100,6 +100,14 @@ export default function ShopPage() {
           <span className="font-bold text-lg">{state.coins}</span>
           <span className="text-xs opacity-70">🪙 balans</span>
         </div>
+
+        {/* Admin rejimi — hamma narsa tekin */}
+        {state.isAdmin && (
+          <div className="flex items-center gap-2 badge badge-secondary badge-lg p-3 border-0 shadow-lg shadow-secondary/20">
+            <Sparkles className="w-4 h-4" />
+            <span className="font-bold text-sm">Admin — hamma narsa tekin</span>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-5 items-start">
@@ -202,7 +210,8 @@ export default function ShopPage() {
             {filtered.map(item => {
               const isOwned = owned.has(item.id);
               const isEquipped = equipped[item.category] === item.id;
-              const canAfford = state.coins >= item.price;
+              // Admin uchun hamma narsa tekin — tanga talab qilinmaydi
+              const canAfford = state.isAdmin || state.coins >= item.price;
               const meta = rarityCard(item);
               const isPreview = previewItemId === item.id;
 
@@ -254,8 +263,8 @@ export default function ShopPage() {
                         className={`btn btn-sm w-full gap-1.5 ${canAfford ? 'btn-primary' : 'btn-outline opacity-50'}`}
                         title={canAfford ? '' : 'Tangalar yetarli emas'}
                       >
-                        {canAfford ? <Coins className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                        <span>{item.price}</span>
+                        {state.isAdmin ? <Sparkles className="w-3.5 h-3.5" /> : canAfford ? <Coins className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+                        <span>{state.isAdmin ? 'Tekin' : item.price}</span>
                       </button>
                     )}
                   </div>

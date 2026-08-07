@@ -1,9 +1,12 @@
+import { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { getShopItem } from '../data/shop';
 
-// ==== QAHRAMON AVATARI ====
-// To'liq bo'yli kichkina qahramon: to'q jigarrang soch, ko'zoynak, och rangli
-// futbolka, xaki shim va etik, tuproq tepalik ustida. Kiygan narsalar
-// (bosh kiyim, kiyim, aksessuar, uy hayvoni) item.style bo'yicha chiziladi.
+// ==== QAHRAMON AVATARI (pixel-art) ====
+// SVG chizma avval quriladi, keyin PAST RUXSATDAGI kichik canvas'ga tushirilib,
+// cheklangan palitra bo'yicha kvantizatsiya qilinadi. Natija — retro "piksel"
+// ko'rinishdagi qahramon: AI'ga o'xshamaydigan, chinakam o'yin uslubidagi avatar.
 
 const SKIN = '#fcd7a8';
 const SKIN_SHADE = '#f0b97e';
@@ -312,21 +315,15 @@ function OutfitLayer({ item }) {
   );
 }
 
-export default function HeroAvatar({ equipped = {}, size = 180, previewNote = null, animate = false }) {
+// ============ SVG qatlami (pixel'ga aylantirishdan oldingi chizma) ============
+function HeroAvatarSvg({ equipped = {}, previewNote = null }) {
   const hat = getShopItem(equipped.hat);
   const outfit = getShopItem(equipped.outfit);
   const accessory = getShopItem(equipped.accessory);
   const pet = getShopItem(equipped.pet);
 
   return (
-    <svg
-      viewBox="0 0 200 270"
-      width={size}
-      height={size * 1.35}
-      className={animate ? 'animate-float' : ''}
-      role="img"
-      aria-label="Qahramon avatari"
-    >
+    <svg viewBox="0 0 200 270" width="200" height="270" role="img" aria-label="Qahramon avatari">
       {/* Tuproq tepalik */}
       <ellipse cx="100" cy="250" rx="62" ry="10" fill="#92400e" />
       <ellipse cx="100" cy="252" rx="46" ry="8" fill="#a16207" />
@@ -336,7 +333,6 @@ export default function HeroAvatar({ equipped = {}, size = 180, previewNote = nu
       {/* Uy hayvoni (orqa tomonda, yonida) */}
       {pet && pet.style === 'pet' && (
         <text x="160" y="200" fontSize="42" textAnchor="middle">
-          <animate attributeName="y" values="200;192;200" dur="2.6s" repeatCount="indefinite" />
           {pet.emoji}
         </text>
       )}
@@ -398,5 +394,165 @@ export default function HeroAvatar({ equipped = {}, size = 180, previewNote = nu
         </g>
       )}
     </svg>
+  );
+}
+
+// ============ PIXEL-ART YAKUNI ============
+// Cheklangan ranglar palitrasi — "retro o'yin" ko'rinishi uchun.
+const PIXEL_PALETTE = [
+  // oq / kulranglar
+  '#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b',
+  '#475569', '#334155', '#1e293b', '#0f172a', '#111827', '#1c1917',
+  // teri / yuz
+  '#fcd7a8', '#f0b97e', '#f8a5c2',
+  // soch / etik
+  '#5b3a26', '#42270f', '#292524', '#33241a', '#241811',
+  // jigarranglar (shim, tuproq)
+  '#c2b280', '#b3a26c', '#a16207', '#92400e', '#78350f', '#b45309', '#d97706',
+  // qizil / to'q qizil
+  '#f87171', '#ef4444', '#dc2626', '#991b1b',
+  // sariq / amber
+  '#fde047', '#facc15', '#fbbf24', '#f59e0b',
+  // ko'k / havo rang
+  '#60a5fa', '#38bdf8', '#3b82f6', '#0ea5e9',
+  // yashil
+  '#a7f3d0', '#22c55e', '#10b981', '#16a34a', '#14532d',
+  // pushti / binafsha
+  '#fbcfe8', '#f472b6', '#ec4899', '#c084fc', '#a78bfa', '#8b5cf6', '#7c3aed', '#4c1d95',
+  // olovrang
+  '#f97316', '#ea580c',
+];
+
+const PALETTE_RGB = PIXEL_PALETTE.map((hex) => [
+  parseInt(hex.slice(1, 3), 16),
+  parseInt(hex.slice(3, 5), 16),
+  parseInt(hex.slice(5, 7), 16),
+]);
+
+function quantize(data) {
+  for (let i = 0; i < data.length; i += 4) {
+    const alpha = data[i + 3];
+    if (alpha < 128) {
+      data[i + 3] = 0; // shaffof piksel — tozalab tashlaymiz
+      continue;
+    }
+    const r = data[i];
+    const g = data[i + 1];
+    const b = data[i + 2];
+    let best = 0;
+    let bestDist = Infinity;
+    for (let p = 0; p < PALETTE_RGB.length; p++) {
+      const dr = PALETTE_RGB[p][0] - r;
+      const dg = PALETTE_RGB[p][1] - g;
+      const db = PALETTE_RGB[p][2] - b;
+      const dist = dr * dr + dg * dg + db * db;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = p;
+      }
+    }
+    data[i] = PALETTE_RGB[best][0];
+    data[i + 1] = PALETTE_RGB[best][1];
+    data[i + 2] = PALETTE_RGB[best][2];
+    data[i + 3] = 255;
+  }
+}
+
+// Past ruxsatli "piksel" o'lchami (200x270 SVG => 44x59 blok)
+const PX_W = 44;
+const PX_H = 59;
+
+export default function HeroAvatar({ equipped = {}, size = 180, previewNote = null, animate = false }) {
+  const canvasRef = useRef(null);
+  const [ready, setReady] = useState(false);
+  // equipped ob'ekti har renderda yangi bo'lishi mumkin (ShopPage preview) —
+  // shuning uchun faqat MAZMUNI (equippedKey) o'zgarganida pipeline qayta ishga tushadi.
+  const equippedKey = JSON.stringify(equipped || {});
+  const equippedRef = useRef(equipped);
+  const noteRef = useRef(previewNote);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    // Ref'larni effect ichida yangilaymiz (render paytida emas)
+    equippedRef.current = equipped;
+    noteRef.current = previewNote;
+
+    // 1) SVG'ni ajratilgan (detached) container'ga chizib, serializatsiya qilamiz
+    //    react-dom/server emas — createRoot + flushSync (bundle kichik qoladi).
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    let svg = '';
+    try {
+      flushSync(() => {
+        root.render(<HeroAvatarSvg equipped={equippedRef.current} previewNote={noteRef.current} />);
+      });
+      svg = container.innerHTML;
+    } finally {
+      root.unmount();
+    }
+    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+
+    const img = new Image();
+    img.onload = () => {
+      if (cancelled) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      // 2) Past ruxsatga tushiramiz (nearest-neighbor => blokli ko'rinish)
+      ctx.clearRect(0, 0, PX_W, PX_H);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(img, 0, 0, PX_W, PX_H);
+
+      // 3) Ranglarni cheklangan palitra bo'yicha kvantizatsiya qilamiz
+      try {
+        const imageData = ctx.getImageData(0, 0, PX_W, PX_H);
+        quantize(imageData.data);
+        ctx.putImageData(imageData, 0, 0);
+      } catch {
+        /* CORS/kattalik cheklovi bo'lsa — kvantizatsiyasiz qoldiramiz */
+      }
+
+      setReady(true);
+    };
+    // Xavfsizlik to'ri: SVG yuklanmasa ham avatar ko'rinmas bo'lib qolmaydi
+    img.onerror = () => {
+      if (cancelled) return;
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      ctx.clearRect(0, 0, PX_W, PX_H);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(0, 0, PX_W, PX_H);
+      ctx.font = `${Math.floor(PX_H * 0.55)}px serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🦸', PX_W / 2, PX_H / 2 + 1);
+      setReady(true);
+    };
+    img.src = url;
+
+    return () => {
+      cancelled = true;
+    };
+    // oxlint: ataylab ref'lar orqali o'qiladi — equipped/previewNote prop'lari
+    // ob'ekt referensiyasi har renderda o'zgarsa ham pipeline faqat mazmuni
+    // o'zgarganida ishga tushishi kerak.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+  }, [equippedKey, previewNote]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={PX_W}
+      height={PX_H}
+      className={`pixel-hero transition-opacity duration-300 ${animate ? 'animate-float' : ''} ${ready ? 'opacity-100' : 'opacity-0'}`}
+      style={{ width: size, height: Math.round(size * 1.35), imageRendering: 'pixelated' }}
+      role="img"
+      aria-label="Qahramon avatari (pixel-art)"
+    />
   );
 }

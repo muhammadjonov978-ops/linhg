@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { adminLogin, verifyAdminSession, UNIVERSAL_USERNAME } from '../data/adminUsers';
+import { adminLogin, verifyAdminSession, UNIVERSAL_USERNAME, ADMIN_SESSION_KEY as SESSION_KEY } from '../data/adminUsers';
 import { useSiteConfig, saveConfig, getLangPrice } from '../data/siteConfig';
 import { languages } from '../data/languages';
 import { subscribeAdminCoins, giveAdminCoins, MAX_LOG } from '../lib/adminCoins';
@@ -21,7 +21,6 @@ import {
   FaExclamationTriangle as AlertIcon,
 } from 'react-icons/fa';
 
-const SESSION_KEY = 'lingohub_admin_session';
 const LOG_KEY = 'lingohub_admin_log';
 const GSC_KEY = 'lingohub_gsc_data';
 

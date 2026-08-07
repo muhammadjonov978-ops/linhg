@@ -15,6 +15,9 @@
 // Egasi logini — panel'dagi ro'yxatlar (masalan CoinsTab) uchun
 export const UNIVERSAL_USERNAME = 'shox';
 
+// Admin sessiya saqlanadigan localStorage kaliti (AdminPanel + asosiy ilova)
+export const ADMIN_SESSION_KEY = 'lingohub_admin_session';
+
 // Serverga kirish so'rovi. Natija:
 //   { ok: true, token, user: { username, name, role } }
 //   { ok: false, code: 'not_configured'|'invalid'|'server_error'|'network', error }

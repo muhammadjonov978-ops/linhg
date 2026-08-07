@@ -1,7 +1,9 @@
 import { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
 import { checkNewAchievements, calculateStats } from '../data/achievements';
 import { isThemeId, DEFAULT_THEME } from '../data/themes';
-import { getShopItem, DEFAULT_OWNED, DEFAULT_EQUIPPED } from '../data/shop';
+import { getShopItem, DEFAULT_OWNED, DEFAULT_EQUIPPED, SHOP_ITEMS } from '../data/shop';
+import { languages } from '../data/languages';
+import { verifyAdminSession, ADMIN_SESSION_KEY } from '../data/adminUsers';
 
 const AppContext = createContext();
 
@@ -68,6 +70,7 @@ function migrateShop(parsed) {
 function migrateSaved(parsed) {
   const shop = migrateShop(parsed);
   return {
+    isAdmin: false, // adminlik server'da tekshiriladi — localStorage'da saqlanmaydi
     selectedLanguage: null,
     currentLevel: null,
     progress: parsed.progress || {},
@@ -113,6 +116,7 @@ function loadInitialState() {
   if (legacy) {
     const shop = migrateShop(legacy);
     return {
+      isAdmin: false,
       selectedLanguage: null,
       currentLevel: null,
       progress: legacy.progress,
@@ -136,6 +140,7 @@ function loadInitialState() {
   }
 
   return {
+    isAdmin: false,
     selectedLanguage: null,
     currentLevel: null,
     progress: {},
@@ -223,6 +228,23 @@ function appReducer(state, action) {
         },
       };
 
+    // Admin rejimi — server'da tasdiqlangan admin uchun hamma narsa tekin:
+    // barcha tillar + premium + magazindagi barcha narsalar
+    case 'SET_ADMIN': {
+      const allUnlocked = {};
+      languages.forEach((l) => { allUnlocked[l.id] = true; });
+      return {
+        ...state,
+        isAdmin: true,
+        isPremium: true,
+        unlockedLanguages: allUnlocked,
+        inventory: Array.from(new Set([
+          ...(state.inventory || []),
+          ...SHOP_ITEMS.map((i) => i.id),
+        ])),
+      };
+    }
+
     case 'ADD_TUTOR_MESSAGE':
       return {
         ...state,
@@ -238,11 +260,12 @@ function appReducer(state, action) {
     case 'BUY_SHOP_ITEM': {
       const item = getShopItem(action.payload);
       if (!item || item.price <= 0) return state;
-      if (state.coins < item.price) return state; // yetarli tanga yo'q
       if (state.inventory.includes(item.id)) return state; // allaqachon xarid qilingan
+      // Admin uchun hamma narsa TEKIN — tanga sarflanmaydi
+      if (!state.isAdmin && state.coins < item.price) return state; // yetarli tanga yo'q
       return {
         ...state,
-        coins: state.coins - item.price,
+        coins: state.isAdmin ? state.coins : state.coins - item.price,
         inventory: [...state.inventory, item.id],
       };
     }
@@ -315,6 +338,26 @@ function appReducer(state, action) {
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
+  // Admin sessiyasi bo'lsa — server'da tekshiramiz. Tasdiqlangan taqdirda
+  // barcha tillar/premium/magazin narsalari bepul ochiladi (SET_ADMIN).
+  // Soxtalashtirilgan sessiya serverda rad etiladi — imtiyoz berilmaydi.
+  useEffect(() => {
+    let cancelled = false;
+    let token = null;
+    try {
+      token = JSON.parse(localStorage.getItem(ADMIN_SESSION_KEY) || 'null')?.token;
+    } catch {
+      /* ignore */
+    }
+    if (!token) return undefined;
+    (async () => {
+      const res = await verifyAdminSession(token);
+      if (cancelled) return;
+      if (res.ok) dispatch({ type: 'SET_ADMIN' });
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   // Save to localStorage whenever state changes
   useEffect(() => {
     try {
@@ -337,6 +380,15 @@ export function AppProvider({ children }) {
         equipped: state.equipped,
         energy: state.energy,
       };
+      if (state.isAdmin) {
+        // Admin imtiyozlari (barcha tillar/premium/magazin narsalari) localStorage'ga
+        // YOZILMAYDI — faqat joriy sessiyada amal qiladi. Har ochilishda server qayta
+        // tekshiradi (SET_ADMIN). Shunday qilib, brauzerni bo'lishgan oddiy foydalanuvchi
+        // admin imtiyozlarini meros qilib olmaydi.
+        toSave.unlockedLanguages = {};
+        toSave.isPremium = false;
+        toSave.inventory = DEFAULT_OWNED;
+      }
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     } catch (e) {
       console.warn('Failed to save data:', e);
@@ -346,7 +398,7 @@ export function AppProvider({ children }) {
     state.isPremium, state.unlockedLanguages, state.coins, state.streak, state.lastActive,
     state.achievements, state.dailyChallenges, state.theme,
     state.mistakesReviewed, state.perfectWeeks, state.courseRewards,
-    state.inventory, state.equipped, state.energy,
+    state.inventory, state.equipped, state.energy, state.isAdmin,
   ]);
 
   // Check streak and update achievements
