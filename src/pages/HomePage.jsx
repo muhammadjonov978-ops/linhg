@@ -86,7 +86,7 @@ export default function HomePage() {
             {/* User's personal stats if active */}
             {(totalCompletedLessons > 0 || achievementsUnlocked > 0) && (
               <div className="flex flex-wrap justify-center gap-4 mb-4">
-                {totalExercises > 0 && (
+                {(state.coins ?? 0) > 0 && (
                   <div className="flex items-center gap-2 bg-primary/5 px-4 py-2 rounded-xl border border-primary/10">
                     <Coins className="w-4 h-4 text-primary" />
                     <span className="text-sm">{state.coins} 🪙</span>
