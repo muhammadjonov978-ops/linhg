@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
 import {
-  FaHome as Home, FaCommentDots as MessageCircle, FaTrophy as Trophy,
-  FaCoins as Coins, FaAward as Award, FaSignInAlt as LogIn, FaUser as User,
+  FaHome as Home, FaCommentDots as MessageCircle,
+  FaCoins as Coins, FaSignInAlt as LogIn, FaUser as User,
   FaShieldAlt as Shield, FaBriefcase as Briefcase, FaStore as Store,
-  FaBars as MenuIcon, FaTimes as X,
+  FaBars as MenuIcon, FaTimes as X, FaFire as Flame, FaBolt as Bolt,
+  FaBell as Bell, FaCrown as Crown, FaGift as Gift,
 } from 'react-icons/fa';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal, { USER_EVENT } from './GoogleAuthModal';
+import PaywallModal from './PaywallModal';
 
 function loadSavedUser() {
   try {
@@ -22,6 +24,8 @@ function loadSavedUser() {
 export default function Navbar({ onToggleTutor }) {
   const { state, dispatch } = useApp();
   const [showAuth, setShowAuth] = useState(false);
+  const [showPremium, setShowPremium] = useState(false);
+  const [bellOpen, setBellOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [savedUser, setSavedUser] = useState(loadSavedUser);
 
@@ -38,6 +42,15 @@ export default function Navbar({ onToggleTutor }) {
 
   const currentLang = languages.find(l => l.id === state.selectedLanguage);
 
+  // Qo'ng'iroq (bell): ochilmagan va hali olinmagan yutuqlar bildirishnoma sifatida ko'rsatiladi
+  const claimable = (state.achievements || []).filter(a => a.unlocked && !a.claimed && (a.coinReward || a.xpReward));
+  const handleClaim = (achievement) => {
+    dispatch({
+      type: 'CLAIM_ACHIEVEMENT',
+      payload: { id: achievement.id, coinReward: achievement.coinReward ?? achievement.xpReward ?? 0 },
+    });
+  };
+
   const goHome = (e) => {
     e.preventDefault();
     if (window.location.hash.startsWith('#/portfolio') || window.location.hash.startsWith('#/shop')) {
@@ -53,6 +66,12 @@ export default function Navbar({ onToggleTutor }) {
       label: savedUser ? (savedUser.givenName || savedUser.name) : 'Kirish',
       onClick: () => { setShowAuth(true); setMobileMenuOpen(false); },
       icon: savedUser ? <User className="w-4 h-4 text-primary" /> : <LogIn className="w-4 h-4 text-primary" />,
+    },
+    {
+      key: 'premium',
+      label: 'Obuna bo\'ling',
+      onClick: () => { setShowPremium(true); setMobileMenuOpen(false); },
+      icon: <Crown className="w-4 h-4 text-secondary" />,
     },
     {
       key: 'admin',
@@ -109,33 +128,94 @@ export default function Navbar({ onToggleTutor }) {
           </div>
         )}
 
-        <div className="flex items-center gap-3 ml-4">
-          {/* Coins Display */}
-          <div className="badge badge-primary gap-1 p-3 tooltip border-0" data-tip="Tanga ball">
-            <Coins className="w-4 h-4" />
-            <span className="font-bold">{state.coins}</span>
-          </div>
-
+        <div className="flex items-center gap-2 ml-4">
           {/* Streak Display */}
           {state.streak > 0 && (
-            <div className="badge badge-secondary gap-1 p-3 tooltip border-0" data-tip="Kunlik streak">
-              <Trophy className="w-4 h-4" />
-              <span className="font-bold">{state.streak}</span>
-              <span className="text-xs opacity-70 hidden sm:inline">kun</span>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-base-100 border border-base-300 shadow-sm tooltip" data-tip="Kunlik streak">
+              <Flame className="w-4 h-4 text-orange-500" />
+              <span className="font-bold text-sm text-orange-500">{state.streak}</span>
             </div>
           )}
 
-          {/* Achievement badge count */}
-          {(state.achievements?.filter(a => a.unlocked && a.justUnlocked)?.length || 0) > 0 && (
-            <div className="badge badge-success gap-1 p-3 animate-pulse tooltip border-0" data-tip="Yangi yutuqlar!">
-              <Award className="w-4 h-4" />
-              <span className="font-bold">{state.achievements.filter(a => a.unlocked && a.justUnlocked).length}</span>
-            </div>
-          )}
+          {/* Coins Display */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-base-100 border border-base-300 shadow-sm tooltip" data-tip="Tanga balansi">
+            <Coins className="w-4 h-4 text-amber-500" />
+            <span className="font-bold text-sm text-amber-500">{state.coins}</span>
+          </div>
+
+          {/* Energy Display */}
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-base-100 border border-base-300 shadow-sm tooltip" data-tip="Kunlik energiya">
+            <Bolt className="w-4 h-4 text-yellow-500" />
+            <span className="font-bold text-sm text-yellow-600">{state.energy ?? 440}</span>
+          </div>
         </div>
       </div>
 
       <div className="navbar-end gap-1">
+        {/* Obuna bo'ling (gradient tugma) */}
+        <button
+          onClick={() => setShowPremium(true)}
+          className="btn btn-sm rounded-full border-0 text-white bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-400 shadow-md shadow-purple-500/25 gap-1.5 hidden lg:inline-flex hover:brightness-110 transition-all duration-300"
+        >
+          <Crown className="w-3.5 h-3.5" />
+          <span className="text-xs font-semibold">Obuna bo'ling</span>
+        </button>
+
+        {/* Bildirishnoma qo'ng'irog'i */}
+        <div className="relative hidden md:block">
+          <button
+            onClick={() => setBellOpen(o => !o)}
+            className={`btn btn-ghost btn-sm btn-circle tooltip ${bellOpen ? 'bg-primary/20 text-primary' : ''}`}
+            data-tip="Bildirishnomalar"
+          >
+            <Bell className="w-4 h-4" />
+            {claimable.length > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-error text-white text-[10px] font-bold flex items-center justify-center animate-pulse">
+                {claimable.length}
+              </span>
+            )}
+          </button>
+
+          {bellOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setBellOpen(false)} />
+              <div className="absolute right-0 top-full mt-2 w-80 max-w-[90vw] bg-base-100 rounded-2xl border border-base-300 shadow-2xl z-50 p-3 animate-[fadeIn_0.2s_ease-out]">
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <h3 className="font-bold text-sm flex items-center gap-1.5">
+                    <Bell className="w-4 h-4 text-primary" /> Bildirishnomalar
+                  </h3>
+                  <button onClick={() => setBellOpen(false)} className="btn btn-ghost btn-xs btn-circle">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+                {claimable.length === 0 ? (
+                  <p className="text-xs opacity-50 text-center py-4">Hozircha yangi bildirishnomalar yo'q ✨</p>
+                ) : (
+                  <div className="space-y-2 max-h-72 overflow-y-auto chat-scroll">
+                    {claimable.map(a => (
+                      <div key={a.id} className="flex items-center gap-2 p-2 rounded-xl bg-base-200/60 border border-base-300/60">
+                        <span className="text-xl">{a.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold truncate flex items-center gap-1">
+                            <Gift className="w-3 h-3 text-warning shrink-0" /> {a.name}
+                          </p>
+                          <p className="text-[11px] opacity-50 truncate">+{a.coinReward ?? a.xpReward ?? 0} 🪙 yutuq sovg'asi</p>
+                        </div>
+                        <button
+                          onClick={() => handleClaim(a)}
+                          className="btn btn-xs btn-warning gap-1 btn-wave"
+                        >
+                          <Coins className="w-3 h-3" /> Olib olish
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
         {/* Google sign-in / profile (md+) */}
         {savedUser ? (
           <button
@@ -251,6 +331,13 @@ export default function Navbar({ onToggleTutor }) {
 
       {/* Google auth modal */}
       <GoogleAuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
+
+      {/* Obuna (Pro Level) modali */}
+      <PaywallModal
+        isOpen={showPremium}
+        onClose={() => setShowPremium(false)}
+        onUnlock={() => dispatch({ type: 'UNLOCK_PREMIUM' })}
+      />
     </nav>
   );
 }

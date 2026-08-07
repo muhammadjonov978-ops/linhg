@@ -33,7 +33,7 @@ const hats = [
 
 // ===================== KIYIMLAR =====================
 const outfits = [
-  { id: 'outfit_tshirt', name: 'Ko\'k futbolka', style: 'tshirt', price: 0, rarity: 'oddiy', emoji: '👕', color: '#38bdf8', accent: '#0ea5e9' },
+  { id: 'outfit_tshirt', name: 'Oq futbolka', style: 'tshirt', price: 0, rarity: 'oddiy', emoji: '👕', color: '#f1f5f9', accent: '#cbd5e1' },
   { id: 'outfit_sweater', name: 'Chiziqli sviter', style: 'sweater', price: 200, rarity: 'oddiy', emoji: '🧶', color: '#10b981', accent: '#a7f3d0' },
   { id: 'outfit_hoodie', name: 'Hudi', style: 'hoodie', price: 250, rarity: 'oddiy', emoji: '🧥', color: '#6b7280', accent: '#9ca3af' },
   { id: 'outfit_lab', name: 'Oq xalat', style: 'lab', price: 350, rarity: 'nodir', emoji: '🥼', color: '#f8fafc', accent: '#cbd5e1' },
@@ -73,13 +73,14 @@ const pets = [
 
 export const SHOP_ITEMS = [...hats, ...outfits, ...accessories, ...pets];
 
-// Boshlang'ich (bepul) to'plam — har bir yangi foydalanuvchida mavjud
-export const DEFAULT_OWNED = ['hat_none', 'outfit_tshirt', 'accessory_none', 'pet_none'];
+// Boshlang'ich (bepul) to'plam — har bir yangi foydalanuvchida mavjud.
+// Qahramon 3-rasmdagi uslubga o'xshab: och futbolka + quyoshdan saqlovchi ko'zoynak.
+export const DEFAULT_OWNED = ['hat_none', 'outfit_tshirt', 'accessory_none', 'accessory_sunglasses', 'pet_none'];
 
 export const DEFAULT_EQUIPPED = {
   hat: 'hat_none',
   outfit: 'outfit_tshirt',
-  accessory: 'accessory_none',
+  accessory: 'accessory_sunglasses',
   pet: 'pet_none',
 };
 

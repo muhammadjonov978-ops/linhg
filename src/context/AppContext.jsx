@@ -90,8 +90,13 @@ function migrateSaved(parsed) {
     courseRewards: parsed.courseRewards || {},
     inventory: shop.inventory,
     equipped: shop.equipped,
+    energy: typeof parsed.energy === 'number' ? parsed.energy : MAX_ENERGY,
   };
 }
+
+// Kunlik energiya — 2-rasmdagi kabi navbar'da ⚡ sifatida ko'rsatiladi.
+// Har kuni 440 gacha to'ldiriladi (dars qilinganda yangilanadi).
+export const MAX_ENERGY = 440;
 
 function loadInitialState() {
   try {
@@ -126,6 +131,7 @@ function loadInitialState() {
       courseRewards: {},
       inventory: shop.inventory,
       equipped: shop.equipped,
+      energy: MAX_ENERGY,
     };
   }
 
@@ -148,6 +154,7 @@ function loadInitialState() {
     courseRewards: {},
     inventory: DEFAULT_OWNED,
     equipped: DEFAULT_EQUIPPED,
+    energy: MAX_ENERGY,
   };
 }
 
@@ -172,6 +179,7 @@ function appReducer(state, action) {
       const now = Date.now();
       const lastActive = state.lastActive;
       let newStreak = state.streak;
+      let newEnergy = state.energy;
       if (lastActive) {
         const diffHours = (now - lastActive) / (1000 * 60 * 60);
         if (diffHours > 48) {
@@ -179,8 +187,13 @@ function appReducer(state, action) {
         } else if (diffHours > 24) {
           newStreak = state.streak + 1;
         }
+        // Energeya har kuni qayta to'ldiriladi
+        if (diffHours > 24) {
+          newEnergy = MAX_ENERGY;
+        }
       } else {
         newStreak = 1;
+        newEnergy = MAX_ENERGY;
       }
 
       // Tanga dars ichida berilmaydi — +15 faqat oddiy darslarda to'g'ri javob uchun
@@ -189,6 +202,7 @@ function appReducer(state, action) {
         ...state,
         streak: newStreak,
         lastActive: now,
+        energy: newEnergy,
         progress: {
           ...state.progress,
           [key]: { score: bestScore, completed, timestamp: now },
@@ -284,6 +298,7 @@ function appReducer(state, action) {
         perfectWeeks: 0,
         inventory: DEFAULT_OWNED,
         equipped: DEFAULT_EQUIPPED,
+        energy: MAX_ENERGY,
       };
 
     case 'RESET_STREAK':
@@ -320,6 +335,7 @@ export function AppProvider({ children }) {
         courseRewards: state.courseRewards || {},
         inventory: state.inventory,
         equipped: state.equipped,
+        energy: state.energy,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     } catch (e) {
@@ -330,7 +346,7 @@ export function AppProvider({ children }) {
     state.isPremium, state.unlockedLanguages, state.coins, state.streak, state.lastActive,
     state.achievements, state.dailyChallenges, state.theme,
     state.mistakesReviewed, state.perfectWeeks, state.courseRewards,
-    state.inventory, state.equipped,
+    state.inventory, state.equipped, state.energy,
   ]);
 
   // Check streak and update achievements
