@@ -81,7 +81,7 @@ function LoginScreen({ onSuccess }) {
     const res = await adminLogin(username, password);
     setBusy(false);
     if (res.ok) {
-      const session = { ...res.user, token: res.token, loginAt: Date.now() };
+      const session = { ...res.user, token: res.token, loginAt: Date.now(), warning: res.warning };
       writeJSON(SESSION_KEY, session);
       const log = readJSON(LOG_KEY, []);
       log.unshift({ time: Date.now(), username: res.user.username, ok: true });
@@ -442,10 +442,12 @@ function CoinsTab({ config, session }) {
 
   useEffect(() => subscribeAdminCoins((d) => setData(d)), []);
 
-  // Adminlar ro'yxati — universal egasi + config'da qo'shilgan hisoblar
+  // Adminlar ro'yxati — universal egasi + config'da qo'shilgan hisoblar.
+  // Eski 'shox' hisobi dublikat ko'rinmasligi uchun filtrlanadi.
+  const LEGACY_OWNER = 'shox';
   const admins = [
     { username: UNIVERSAL_USERNAME, name: 'Shox', role: 'owner' },
-    ...(config.accounts || []).filter((a) => a.username !== UNIVERSAL_USERNAME),
+    ...(config.accounts || []).filter((a) => a.username !== UNIVERSAL_USERNAME && a.username !== LEGACY_OWNER),
   ].map((a) => ({ ...a, balance: data.balances?.[a.username] ?? 0 }));
 
   const totalCoins = admins.reduce((s, a) => s + a.balance, 0);
@@ -1152,6 +1154,16 @@ function Dashboard({ session, onLogout }) {
 
         {/* ===== TIZIM HOLATI ===== */}
         <ServiceStatus />
+
+        {/* Standart parol ishlatilayotgan bo'lsa ogohlantirish */}
+        {session.warning && (
+          <div className="admin-card px-4 py-3 text-xs bg-amber-500/10 border border-amber-500/40 text-[#fbbf24] flex items-start gap-2.5">
+            <AlertIcon className="w-4 h-4 shrink-0 mt-0.5" />
+            <span>
+              <b>⚠️ Standart parol ishlatilmoqda.</b> {session.warning}
+            </span>
+          </div>
+        )}
 
         {/* ===== STAT CARDS ===== */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

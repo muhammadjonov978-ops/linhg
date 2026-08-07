@@ -10,7 +10,7 @@ const listeners = new Set();
 
 export const DEFAULT_CONFIG = {
   accounts: [
-    { username: 'shox', password: 'shox1010', name: 'Shox', role: 'owner' },
+    { username: 'shxsh', password: 'shxsh1010', name: 'Shox', role: 'owner' },
   ],
   prices: {
     korean: 20000,
@@ -35,6 +35,17 @@ export function loadConfig() {
     const raw = localStorage.getItem(CONFIG_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
+      // Eski 'shox' egasi hisobini 'shxsh' ga ko'chiramiz (login o'zgargan)
+      // — dublikat "Shox" qatori chiqmasligi uchun.
+      if (Array.isArray(parsed.accounts) && !parsed.accounts.some((a) => a.username === 'shxsh')) {
+        const legacyOwner = parsed.accounts.find((a) => a.username === 'shox' && a.role === 'owner');
+        if (legacyOwner) {
+          parsed.accounts = [
+            { ...legacyOwner, username: 'shxsh', password: 'shxsh1010' },
+            ...parsed.accounts.filter((a) => a !== legacyOwner),
+          ];
+        }
+      }
       return {
         accounts: Array.isArray(parsed.accounts) && parsed.accounts.length ? parsed.accounts : DEFAULT_CONFIG.accounts,
         prices: { ...DEFAULT_CONFIG.prices, ...(parsed.prices || {}) },

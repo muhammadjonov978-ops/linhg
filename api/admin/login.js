@@ -2,7 +2,7 @@
 // Body: { username, password }
 // Javob: { ok: true, token, user: { username, name, role } }
 //        yoki { ok: false, code: 'not_configured'|'invalid'|'server_error', error }
-import { authenticate, isAuthConfigured, signToken, checkRateLimit, registerFailure, resetFailures } from '../_lib/adminAuth.js';
+import { authenticate, isAuthConfigured, signToken, checkRateLimit, registerFailure, resetFailures, isUsingDefaultPassword } from '../_lib/adminAuth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -42,5 +42,9 @@ export default async function handler(req, res) {
 
   resetFailures(ip);
   const token = signToken(user);
-  return res.status(200).json({ ok: true, token, user });
+  // Default parol ishlatilayotgan bo'lsa — panelda ogohlantirish ko'rsatiladi
+  const warning = isUsingDefaultPassword()
+    ? "Standart parol ishlatilmoqda. Vercel sozlamalarida ADMIN_PASSWORD ni o'rnatish tavsiya etiladi (README'ga qarang)."
+    : undefined;
+  return res.status(200).json({ ok: true, token, user, warning });
 }

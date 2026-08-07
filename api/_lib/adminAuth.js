@@ -3,25 +3,47 @@
 // brauzer kodiga hech qachon chiqmaydi.
 //
 // Vercel sozlamalarida (Environment Variables):
-//   ADMIN_USERNAME        (ixtiyoriy, default: shox)
-//   ADMIN_PASSWORD        (majburiy — egasi paroli)
+//   ADMIN_USERNAME        (ixtiyoriy, default: shxsh)
+//   ADMIN_PASSWORD        (tavsiya — o'rnatilmasa default 'shxsh1010' ishlaydi)
 //   ADMIN_NAME            (ixtiyoriy, default: Shox)
-//   ADMIN_TOKEN_SECRET    (ixtiyoriy — token imzosi. Bo'sh bo'lsa ADMIN_PASSWORD ishlatiladi)
+//   ADMIN_TOKEN_SECRET    (ixtiyoriy — token imzosi. Bo'sh bo'lsa faol parol ishlatiladi)
 //   ADMIN_EXTRA_ACCOUNTS  (ixtiyoriy: login:parol:Ism,login2:parol2:Ism2)
+//
+// ⚠️ DEFAULT parol ('shxsh1010') repo'da ochiq turgan fallback — qulay boshlash
+// uchun. REAL xavfsizlik uchun Vercel'da ADMIN_PASSWORD o'rnating; panel
+// standart parol ishlatilayotganda ogohlantirish ko'rsatadi.
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-const OWNER_USERNAME = (process.env.ADMIN_USERNAME || 'shox').trim().toLowerCase();
-const OWNER_PASSWORD = process.env.ADMIN_PASSWORD || '';
-const OWNER_NAME = (process.env.ADMIN_NAME || 'Shox').trim();
-// Token imzosi uchun maxfiy kalit — alohida ADMIN_TOKEN_SECRET yo'q bo'lsa,
-// ADMIN_PASSWORD (maxfiy) ishlatiladi.
-const TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET || OWNER_PASSWORD;
+const DEFAULT_OWNER_PASSWORD = 'shxsh1010';
 
 const SESSION_TTL = 12 * 60 * 60 * 1000; // 12 soat
 
-// Serverda admin auth sozlanganmi?
+// Env qiymatlari chaqiruv paytida o'qiladi (module yuklanishida emas) —
+// bu test'lar va serverless muhitida ishonchliroq.
+function ownerUsername() {
+  return (process.env.ADMIN_USERNAME || 'shxsh').trim().toLowerCase();
+}
+function ownerPassword() {
+  return process.env.ADMIN_PASSWORD || '';
+}
+function activePassword() {
+  return ownerPassword() || DEFAULT_OWNER_PASSWORD;
+}
+function ownerName() {
+  return (process.env.ADMIN_NAME || 'Shox').trim();
+}
+function tokenSecret() {
+  return process.env.ADMIN_TOKEN_SECRET || activePassword();
+}
+
+// Serverda admin auth sozlanganmi? (default parol bilan ham ishlaydi)
 export function isAuthConfigured() {
-  return Boolean(OWNER_PASSWORD);
+  return Boolean(activePassword());
+}
+
+// Standart (default) parol ishlatilmoqdami? — panelda ogohlantirish ko'rsatish uchun
+export function isUsingDefaultPassword() {
+  return !ownerPassword();
 }
 
 // Qo'shimcha adminlar: "login:parol:Ism,login2:parol2:Ism2"
@@ -48,8 +70,8 @@ export function authenticate(username, password) {
   const u = String(username || '').trim().toLowerCase();
   const p = String(password || '');
 
-  if (u === OWNER_USERNAME && p === OWNER_PASSWORD) {
-    return { username: OWNER_USERNAME, name: OWNER_NAME, role: 'owner' };
+  if (u === ownerUsername() && p === activePassword()) {
+    return { username: ownerUsername(), name: ownerName(), role: 'owner' };
   }
   const extra = parseExtraAccounts().find((a) => a.username === u && a.password === p);
   if (extra) return { username: extra.username, name: extra.name, role: 'admin' };
@@ -64,7 +86,7 @@ function b64urlDecode(str) {
   return Buffer.from(str.replace(/-/g, '+').replace(/_/g, '/'), 'base64');
 }
 function hmacSign(data) {
-  return createHmac('sha256', TOKEN_SECRET).update(data).digest('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  return createHmac('sha256', tokenSecret()).update(data).digest('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 export function signToken(user) {
@@ -76,6 +98,37 @@ export function signToken(user) {
     exp: Date.now() + SESSION_TTL,
   }));
   return `${header}.${payload}.${hmacSign(`${header}.${payload}`)}`;
+}
+
+// Token'ni tekshiradi — yaroqsiz/eskirgan bo'lsa null
+export function verifyToken(token) {
+  if (!tokenSecret() || !token) return null;
+  const parts = String(token).split('.');
+  if (parts.length !== 3) return null;
+  const [header, payload, sig] = parts;
+
+  const expected = hmacSign(`${header}.${payload}`);
+  if (sig.length !== expected.length) return null;
+  let valid = false;
+  try {
+    valid = timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+  } catch {
+    return null;
+  }
+  if (!valid) return null;
+
+  try {
+    const data = JSON.parse(b64urlDecode(payload).toString('utf8'));
+    if (!data.u || typeof data.u !== 'string') return null;
+    if (!data.exp || Date.now() > data.exp) return null;
+    return {
+      username: data.u,
+      name: data.n || data.u,
+      role: data.r === 'owner' ? 'owner' : 'admin',
+    };
+  } catch {
+    return null;
+  }
 }
 
 // ---------- Oddiy brute-force himoyasi (in-memory) ----------
@@ -103,35 +156,4 @@ export function registerFailure(ip) {
 // Muvaffaqiyatli login — hisoblagichni tozalaymiz
 export function resetFailures(ip) {
   attemptMap.delete(ip);
-}
-
-// Token'ni tekshiradi — yaroqsiz/eskirgan bo'lsa null
-export function verifyToken(token) {
-  if (!TOKEN_SECRET || !token) return null;
-  const parts = String(token).split('.');
-  if (parts.length !== 3) return null;
-  const [header, payload, sig] = parts;
-
-  const expected = hmacSign(`${header}.${payload}`);
-  if (sig.length !== expected.length) return null;
-  let valid = false;
-  try {
-    valid = timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
-  } catch {
-    return null;
-  }
-  if (!valid) return null;
-
-  try {
-    const data = JSON.parse(b64urlDecode(payload).toString('utf8'));
-    if (!data.u || typeof data.u !== 'string') return null;
-    if (!data.exp || Date.now() > data.exp) return null;
-    return {
-      username: data.u,
-      name: data.n || data.u,
-      role: data.r === 'owner' ? 'owner' : 'admin',
-    };
-  } catch {
-    return null;
-  }
 }

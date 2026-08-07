@@ -13,7 +13,7 @@
 // tushunarli xato ko'rsatadi (README'ga qarang).
 
 // Egasi logini — panel'dagi ro'yxatlar (masalan CoinsTab) uchun
-export const UNIVERSAL_USERNAME = 'shox';
+export const UNIVERSAL_USERNAME = 'shxsh';
 
 // Admin sessiya saqlanadigan localStorage kaliti (AdminPanel + asosiy ilova)
 export const ADMIN_SESSION_KEY = 'lingohub_admin_session';
