@@ -442,15 +442,23 @@ function CoinsTab({ config, session }) {
 
   useEffect(() => subscribeAdminCoins((d) => setData(d)), []);
 
+  // Hozir kirgan admin — o'ziga coin berish uchun
+  const SELF = session?.username || UNIVERSAL_USERNAME;
+
   // Adminlar ro'yxati — universal egasi + config'da qo'shilgan hisoblar.
   // Eski 'shox' hisobi dublikat ko'rinmasligi uchun filtrlanadi.
   const LEGACY_OWNER = 'shox';
   const admins = [
     { username: UNIVERSAL_USERNAME, name: 'Shox', role: 'owner' },
     ...(config.accounts || []).filter((a) => a.username !== UNIVERSAL_USERNAME && a.username !== LEGACY_OWNER),
-  ].map((a) => ({ ...a, balance: data.balances?.[a.username] ?? 0 }));
+  ];
+  // Hozir kirgan admin ro'yxatda bo'lmasa — qo'shamiz (o'ziga berishi uchun)
+  if (!admins.some((a) => a.username === SELF)) {
+    admins.push({ username: SELF, name: session?.name || 'Siz', role: 'admin' });
+  }
+  const adminRows = admins.map((a) => ({ ...a, balance: data.balances?.[a.username] ?? 0 }));
 
-  const totalCoins = admins.reduce((s, a) => s + a.balance, 0);
+  const totalCoins = adminRows.reduce((s, a) => s + a.balance, 0);
   const isFirebase = data.mode === 'firebase';
 
   const handleGive = async (username) => {
@@ -461,7 +469,7 @@ function CoinsTab({ config, session }) {
     }
     setBusy(true);
     setMsg('');
-    const res = await giveAdminCoins(session.username || 'admin', username, amt);
+    const res = await giveAdminCoins(session?.username || 'admin', username, amt);
     setBusy(false);
     if (res.ok) {
       setMsg(`✅ ${username} ga +${amt.toLocaleString('uz-UZ')} tanga berildi`);
@@ -470,6 +478,30 @@ function CoinsTab({ config, session }) {
       setMsg(`❌ ${res.error}`);
     }
     setTimeout(() => setMsg(''), 3000);
+  };
+
+  // O'zimga tez coin berish (cheksiz)
+  const handleSelfGive = async () => {
+    const amt = Math.floor(Number(amount));
+    if (!Number.isFinite(amt) || amt <= 0) {
+      setMsg('❌ Miqdor noto\u2018g\u2018ri — musbat butun son kiriting');
+      return;
+    }
+    setBusy(true);
+    setMsg('');
+    const res = await giveAdminCoins(SELF, SELF, amt);
+    setBusy(false);
+    if (res.ok) {
+      const newBalance = Number.isFinite(Number(res.balance)) ? Number(res.balance) : null;
+      setMsg(
+        `✅ Sizga +${amt.toLocaleString('uz-UZ')} tanga berildi` +
+        (newBalance !== null ? ` — balans: ${newBalance.toLocaleString('uz-UZ')} 🪙` : '')
+      );
+      setAmount('');
+    } else {
+      setMsg(`❌ ${res.error}`);
+    }
+    setTimeout(() => setMsg(''), 3500);
   };
 
   const fmtTime = (t) => new Date(t).toLocaleString('uz-UZ', {
@@ -498,6 +530,68 @@ function CoinsTab({ config, session }) {
         )}
       </div>
 
+      {/* ⚡ O'zimga tez coin berish (cheksiz) */}
+      <div className="rounded-xl bg-gradient-to-br from-[#facc15]/20 to-[#f59e0b]/[0.07] border border-[#facc15]/40 p-4 sm:p-5 relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-[#facc15]/10 blur-2xl pointer-events-none" />
+        <div className="flex flex-wrap items-center gap-2 mb-3 relative">
+          <div className="w-8 h-8 rounded-lg bg-[#facc15] flex items-center justify-center shadow-lg shadow-[#facc15]/30 shrink-0">
+            <UserIcon className="w-4 h-4 text-black" />
+          </div>
+          <h3 className="font-bold text-sm text-white">O\u2018zimga coin berish</h3>
+          <span className="badge badge-warning badge-sm gap-1 border-0 text-[10px]">
+            <InfinityIcon className="w-3 h-3" /> Cheksiz
+          </span>
+          <span className="text-[10px] text-white/40 ml-auto hidden md:block">
+            Hozirgi balans: <b className="text-[#facc15] tabular-nums">{(data.balances?.[SELF] ?? 0).toLocaleString('uz-UZ')} 🪙</b>
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 relative">
+          <div className="flex flex-wrap gap-1.5">
+            {[1000, 10000, 100000, 1000000].map((n) => (
+              <button
+                key={n}
+                onClick={() => { setTarget(''); setAmount(String(n)); }}
+                className={`btn btn-xs border tabular-nums transition-colors ${
+                  amount === String(n)
+                    ? 'bg-[#facc15] border-[#facc15] text-black font-bold'
+                    : 'bg-white/[0.04] border-white/15 text-white/70 hover:border-[#facc15]/60 hover:text-[#facc15]'
+                }`}
+              >
+                +{n.toLocaleString('uz-UZ')}
+              </button>
+            ))}
+            <button
+              onClick={() => { setTarget(''); setAmount('999999999'); }}
+              className={`btn btn-xs gap-1 border transition-colors ${
+                amount === '999999999'
+                  ? 'bg-[#facc15] border-[#facc15] text-black font-bold'
+                  : 'bg-white/[0.04] border-white/15 text-white/70 hover:border-[#facc15]/60 hover:text-[#facc15]'
+              }`}
+              title="999 999 999 tanga — amalda cheksiz"
+            >
+              <InfinityIcon className="w-3 h-3" /> Cheksiz
+            </button>
+          </div>
+          <input
+            type="number"
+            min="1"
+            step="1"
+            placeholder="Miqdor"
+            value={amount}
+            onChange={(e) => { setTarget(''); setAmount(e.target.value); }}
+            className="input input-bordered input-sm w-36 bg-black/30 border-white/15 text-white placeholder:text-white/30 focus:border-[#facc15] transition-colors tabular-nums"
+          />
+          <button
+            onClick={handleSelfGive}
+            disabled={busy}
+            className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black hover:brightness-105 shadow-lg shadow-[#facc15]/20 disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Gift className="w-3.5 h-3.5" />}
+            {busy ? 'Berilmoqda...' : 'O\u2018zimga berish'}
+          </button>
+        </div>
+      </div>
+
       {/* Jami balans */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-xl bg-[#facc15]/10 border border-[#facc15]/25 p-4 flex items-center gap-3">
@@ -523,7 +617,7 @@ function CoinsTab({ config, session }) {
             <Users className="w-5 h-5 text-[#60a5fa]" />
           </div>
           <div>
-            <p className="text-sm font-bold text-white">{admins.length} ta admin</p>
+            <p className="text-sm font-bold text-white">{adminRows.length} ta admin</p>
             <p className="text-[10px] text-white/40">Faqat adminlar o\u2018rtasida</p>
           </div>
         </div>
@@ -541,7 +635,7 @@ function CoinsTab({ config, session }) {
             </tr>
           </thead>
           <tbody>
-            {admins.map((a) => (
+            {adminRows.map((a) => (
               <tr key={a.username} className="hover:bg-white/[0.03] transition-colors">
                 <td>
                   <div className="flex items-center gap-2.5">
@@ -549,7 +643,14 @@ function CoinsTab({ config, session }) {
                       {(a.name || a.username).charAt(0).toUpperCase()}
                     </span>
                     <div className="min-w-0">
-                      <p className="font-mono text-xs font-bold text-white">{a.username}</p>
+                      <p className="font-mono text-xs font-bold text-white flex items-center gap-1.5">
+                        {a.username}
+                        {a.username === SELF && (
+                          <span className="badge badge-primary badge-xs gap-0.5 border-0 bg-[#facc15] text-black font-bold">
+                            <UserIcon className="w-2 h-2" /> Siz
+                          </span>
+                        )}
+                      </p>
                       <p className="text-[10px] text-white/40 truncate">{a.name}</p>
                     </div>
                   </div>
