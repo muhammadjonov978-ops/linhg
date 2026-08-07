@@ -246,17 +246,12 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Payment modal for paid languages */}
+      {/* Payment modal for paid languages — haqiqiy to'lov (Payme/Click) */}
       {payingLang && (
         <PaywallModal
           isOpen={!!payingLang}
           lang={payingLang}
           onClose={() => setPayingLang(null)}
-          onUnlock={() => {
-            dispatch({ type: 'UNLOCK_LANGUAGE', payload: payingLang.id });
-            dispatch({ type: 'SELECT_LANGUAGE', payload: payingLang.id });
-            setPayingLang(null);
-          }}
         />
       )}
 

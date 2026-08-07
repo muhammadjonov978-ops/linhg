@@ -21,7 +21,10 @@ import { startVisitsTracking } from './utils/visits';
 import {
   FaCommentDots as MessageCircle, FaTimes as X, FaMagic as Sparkles,
   FaColumns as PanelRightOpen, FaBars as MenuIcon,
+  FaCheckCircle as CheckCircleIcon, FaExclamationTriangle as AlertIcon,
+  FaSpinner as Loader2,
 } from 'react-icons/fa';
+import { getOrderStatus, pollOrderStatus } from './lib/payments';
 
 function AppContent() {
   const { state, dispatch } = useApp();
@@ -46,6 +49,80 @@ function AppContent() {
     startVisitsTracking();
     return () => stopPresence();
   }, []);
+
+  // ===== Haqiqiy to'lovdan qaytish (Payme/Click) =====
+  // URL'da ?payment=ORDER_ID bo'lsa — foydalanuvchi to'lov sahifasidan qaytdi.
+  // Order holatini tekshirib, to'langan bo'lsa til/premium ochiladi.
+  const [paymentToast, setPaymentToast] = useState(null);
+  const [pendingOrderId, setPendingOrderId] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('payment');
+    if (!orderId) return;
+
+    // URL'dan orderId ni tozalab qo'yamiz (qayta ishga tushganda takrorlanmasin)
+    const cleanUrl = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('payment');
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+    };
+
+    let cancelled = false;
+    const run = async () => {
+      const pendingRaw = localStorage.getItem('lingohub_pending_payment');
+      let pending = null;
+      try { pending = pendingRaw ? JSON.parse(pendingRaw) : null; } catch { /* ignore */ }
+
+      // Order haqida backend'dan ma'lumot olamiz
+      const order = await getOrderStatus(orderId).catch(() => null);
+      if (cancelled) return;
+      if (!order) {
+        cleanUrl();
+        setPaymentToast({ ok: false, msg: 'To\'lov buyurtmasi topilmadi. Agar to\'lagan bo\'lsangiz, admin bilan bog\'laning.' });
+        return;
+      }
+
+      // To'lov hali tasdiqlanmagan bo'lsa — kutamiz (webhook kelishi uchun)
+      if (order.status !== 'paid') {
+        setPendingOrderId(orderId);
+        const confirmed = await pollOrderStatus(orderId, { timeout: 120000 });
+        if (cancelled) return;
+        if (!confirmed) {
+          cleanUrl();
+          setPendingOrderId(null);
+          setPaymentToast({ ok: false, msg: 'To\'lov holati hali tasdiqlanmadi. Agar to\'lagan bo\'lsangiz, sahifani yangilang.' });
+          return;
+        }
+      }
+
+      cleanUrl();
+      setPendingOrderId(null);
+
+      // Qaysi til/premium ochilishini aniqlaymiz
+      const langId = pending?.langId || order.langId;
+
+      if (langId && langId !== 'premium') {
+        dispatch({ type: 'UNLOCK_LANGUAGE', payload: langId });
+        // Foydalanuvchini to'langan tilga yo'naltiramiz — darhol darslarini ko'radi
+        dispatch({ type: 'SELECT_LANGUAGE', payload: langId });
+      } else {
+        dispatch({ type: 'UNLOCK_PREMIUM' });
+      }
+
+      setPaymentToast({
+        ok: true,
+        msg: langId && langId !== 'premium'
+          ? 'To\'lov muvaffaqiyatli! Til ochildi. 🎉'
+          : 'To\'lov muvaffaqiyatli! Premium ochildi. 👑',
+      });
+
+      try { localStorage.removeItem('lingohub_pending_payment'); } catch { /* ignore */ }
+    };
+
+    run();
+    return () => { cancelled = true; };
+  }, [dispatch]);
 
   // Admin panel route
   if (hash.startsWith('#/admin')) {
@@ -174,6 +251,30 @@ function AppContent() {
           )}
           <AITutor />
         </>
+      )}
+
+      {/* To'lov natijasi toast'lar */}
+      {pendingOrderId && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-2 bg-base-100 border border-base-300 rounded-2xl shadow-2xl px-5 py-3 animate-[fadeIn_0.3s_ease-out]">
+          <Loader2 className="w-5 h-5 animate-spin text-primary" />
+          <span className="text-sm font-medium">To'lov tekshirilmoqda...</span>
+        </div>
+      )}
+      {paymentToast && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[110] flex items-center gap-2 rounded-2xl shadow-2xl px-5 py-3 animate-[fadeIn_0.3s_ease-out] max-w-[92vw]">
+          {paymentToast.ok ? (
+            <CheckCircleIcon className="w-5 h-5 text-success shrink-0" />
+          ) : (
+            <AlertIcon className="w-5 h-5 text-warning shrink-0" />
+          )}
+          <span className="text-sm font-medium">{paymentToast.msg}</span>
+          <button
+            onClick={() => setPaymentToast(null)}
+            className="btn btn-ghost btn-xs btn-circle ml-2"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
       )}
     </div>
   );

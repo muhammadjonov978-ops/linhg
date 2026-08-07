@@ -332,11 +332,10 @@ export default function Navbar({ onToggleTutor }) {
       {/* Google auth modal */}
       <GoogleAuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
 
-      {/* Obuna (Pro Level) modali */}
+      {/* Obuna (Pro Level) modali — haqiqiy to'lov (Payme/Click) */}
       <PaywallModal
         isOpen={showPremium}
         onClose={() => setShowPremium(false)}
-        onUnlock={() => dispatch({ type: 'UNLOCK_PREMIUM' })}
       />
     </nav>
   );

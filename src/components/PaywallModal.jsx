@@ -1,36 +1,91 @@
 import { useState } from 'react';
-import { FaCrown as Crown, FaStar as Star, FaCheck as Check, FaTimes as X, FaMagic as Sparkles, FaShieldAlt as Shield, FaBolt as Zap, FaInfinity as InfinityIcon, FaCreditCard as CreditCard, FaLock as Lock, FaCoins as Coins, FaSpinner as Loader2 } from 'react-icons/fa';
+import { FaCrown as Crown, FaStar as Star, FaCheck as Check, FaTimes as X, FaMagic as Sparkles, FaShieldAlt as Shield, FaBolt as Zap, FaInfinity as InfinityIcon, FaLock as Lock, FaCoins as Coins, FaSpinner as Loader2, FaExternalLinkAlt as ExternalLink } from 'react-icons/fa';
 import { useSiteConfig, getLangPrice } from '../data/siteConfig';
+import { HAS_PAYMENT, PAYME_MERCHANT_ID, CLICK_MERCHANT_ID, CLICK_SERVICE_ID, PREMIUM_MONTHLY_PRICE, PREMIUM_YEARLY_PRICE } from '../config';
+import { generateOrderId, createPaymentOrder, getCheckoutUrl, buildReturnUrl } from '../lib/payments';
+
+const PENDING_KEY = 'lingohub_pending_payment';
 
 /**
  * PaywallModal
- * - mode "premium": Pro Level obunasi (mavjud funksiya)
- * - mode "language": pullik til (20 000 so'm) — karta bilan ochish
+ * - mode "premium": Pro Level obunasi (haqiqiy to'lov)
+ * - mode "language": pullik til (so'm) — haqiqiy to'lov
+ *
+ * To'lov Payme yoki Click checkout sahifasida amalga oshiriladi.
+ * To'lov tasdiqlangach foydalanuvchi saytga qaytadi va App.jsx
+ * order holatini tekshirib tilni/premium'ni ochadi.
  */
-export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
+export default function PaywallModal({ isOpen, onClose, lang }) {
   const config = useSiteConfig();
   const [processing, setProcessing] = useState(false);
-  const [method, setMethod] = useState('card');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExp, setCardExp] = useState('');
-  const [cardName, setCardName] = useState('');
+  const [method, setMethod] = useState('payme');
+  const [error, setError] = useState('');
+  const [payPlan, setPayPlan] = useState(null); // premium rejimda tanlangan plan
 
   if (!isOpen) return null;
 
   const isLanguageMode = !!lang;
-  const price = isLanguageMode ? (getLangPrice(config, lang) || 20000) : 20000;
-
-  const handlePay = (_plan) => {
-    // Simulate payment processing (real gateway: Payme/Click/UzCard/HUMO)
-    setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
-      onUnlock();
-      onClose();
-    }, 1500);
-  };
+  const langPrice = isLanguageMode ? (getLangPrice(config, lang) || 20000) : 0;
 
   const formatPrice = (n) => n.toLocaleString('uz-UZ') + " so'm";
+
+  const getPrice = (plan) => (isLanguageMode ? langPrice : (plan === 'yearly' ? PREMIUM_YEARLY_PRICE : PREMIUM_MONTHLY_PRICE));
+
+  const startPayment = async (plan = 'language') => {
+    if (!HAS_PAYMENT) {
+      setError('To\'lov tizimi hali sozlanmagan. Admin Vercel sozlamalarida VITE_PAYME_MERCHANT_ID yoki VITE_CLICK_MERCHANT_ID ni kiriting.');
+      return;
+    }
+    if (method === 'payme' && !PAYME_MERCHANT_ID) {
+      setError('Payme sozlanmagan. Iltimos, boshqa usulni tanlang.');
+      return;
+    }
+    if (method === 'click' && (!CLICK_MERCHANT_ID || !CLICK_SERVICE_ID)) {
+      setError('Click sozlanmagan. Iltimos, boshqa usulni tanlang.');
+      return;
+    }
+
+    setProcessing(true);
+    setError('');
+
+    try {
+      const orderId = generateOrderId(isLanguageMode ? 'lng' : 'prm');
+      const amount = getPrice(plan);
+      // Qaytishda qaysi til/premium ochilishini eslab qolamiz
+      localStorage.setItem(PENDING_KEY, JSON.stringify({
+        orderId,
+        langId: isLanguageMode ? lang.id : null,
+        plan,
+        timestamp: Date.now(),
+      }));
+
+      await createPaymentOrder({
+        orderId,
+        langId: isLanguageMode ? lang.id : 'premium',
+        amount,
+        provider: method,
+        plan,
+      });
+
+      const checkoutUrl = getCheckoutUrl({
+        provider: method,
+        orderId,
+        amount,
+        returnUrl: buildReturnUrl(orderId),
+      });
+
+      // Payme/Click sahifasiga yo'naltiramiz
+      window.location.href = checkoutUrl;
+    } catch (e) {
+      setProcessing(false);
+      setError(e.message || 'To\'lovni boshlab bo\'lmadi. Qayta urinib ko\'ring.');
+    }
+  };
+
+  const handlePremiumPay = (plan) => {
+    setPayPlan(plan);
+    startPayment(plan);
+  };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -66,7 +121,7 @@ export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
             </h2>
             <p className="text-white/80 text-lg">
               {isLanguageMode
-                ? `Bu til uchun bir martalik to'lov — ${formatPrice(price)}`
+                ? `Bu til uchun bir martalik to'lov — ${formatPrice(langPrice)}`
                 : 'Advanced (B2-C1) darajasiga chiqing va tilni mukammal o\'rganing'}
             </p>
           </div>
@@ -99,7 +154,7 @@ export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
                   <h3 className="card-title text-lg">{lang.flag} {lang.name}</h3>
                 </div>
                 <div className="my-3">
-                  <span className="text-5xl font-extrabold text-primary">{formatPrice(price)}</span>
+                  <span className="text-5xl font-extrabold text-primary">{formatPrice(langPrice)}</span>
                   <div className="text-xs opacity-60 mt-1">Bir martalik to'lov • umrbod ochiq</div>
                 </div>
                 <ul className="text-sm space-y-2 mb-4">
@@ -116,7 +171,7 @@ export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
                 <div className="card-body items-center text-center">
                   <h3 className="card-title text-lg">Oylik</h3>
                   <div className="my-4">
-                    <span className="text-4xl font-bold">$9.99</span>
+                    <span className="text-4xl font-bold">{formatPrice(PREMIUM_MONTHLY_PRICE)}</span>
                     <span className="text-sm opacity-70">/oy</span>
                   </div>
                   <ul className="text-sm space-y-2 mb-4">
@@ -124,8 +179,8 @@ export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-success" /> AI Tutor</li>
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-success" /> Speaking mashqlar</li>
                   </ul>
-                  <button onClick={() => handlePay('monthly')} disabled={processing} className="btn btn-primary w-full">
-                    {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : null} Obuna bo'lish
+                  <button onClick={() => handlePremiumPay('monthly')} disabled={processing} className="btn btn-primary w-full">
+                    {processing && payPlan === 'monthly' ? <Loader2 className="w-4 h-4 animate-spin" /> : null} Obuna bo'lish
                   </button>
                 </div>
               </div>
@@ -140,7 +195,7 @@ export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
                 <div className="card-body items-center text-center pt-8">
                   <h3 className="card-title text-lg">Yillik</h3>
                   <div className="my-4">
-                    <span className="text-4xl font-bold">$79.99</span>
+                    <span className="text-4xl font-bold">{formatPrice(PREMIUM_YEARLY_PRICE)}</span>
                     <span className="text-sm opacity-70">/yil</span>
                   </div>
                   <div className="badge badge-success mb-2">2 oy bepul</div>
@@ -150,8 +205,8 @@ export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-success" /> Speaking mashqlar</li>
                     <li className="flex items-center gap-2"><Check className="w-4 h-4 text-success" /> Sertifikat</li>
                   </ul>
-                  <button onClick={() => handlePay('yearly')} disabled={processing} className="btn btn-primary w-full">
-                    {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : null} Obuna bo'lish
+                  <button onClick={() => handlePremiumPay('yearly')} disabled={processing} className="btn btn-primary w-full">
+                    {processing && payPlan === 'yearly' ? <Loader2 className="w-4 h-4 animate-spin" /> : null} Obuna bo'lish
                   </button>
                 </div>
               </div>
@@ -159,90 +214,62 @@ export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
           )}
         </div>
 
-        {/* Card payment form (language mode) */}
-        {isLanguageMode && (
-          <div className="px-8 pb-4">
-            <div className="card bg-base-100 border border-base-300">
-              <div className="card-body p-5">
-                <h4 className="font-bold text-sm flex items-center gap-2 mb-3">
-                  <CreditCard className="w-4 h-4 text-primary" />
-                  Karta ma'lumotlari
-                </h4>
+        {/* Payment method selection (both modes) */}
+        <div className="px-8 pb-4">
+          <div className="card bg-base-100 border border-base-300">
+            <div className="card-body p-5">
+              <h4 className="font-bold text-sm flex items-center gap-2 mb-3">
+                <Shield className="w-4 h-4 text-primary" />
+                To'lov usulini tanlang
+              </h4>
 
-                {/* Method tabs */}
-                <div className="flex gap-2 mb-4">
-                  {[
-                    { id: 'card', label: '💳 Karta' },
-                    { id: 'payme', label: 'Payme' },
-                    { id: 'click', label: 'Click' },
-                  ].map(m => (
-                    <button
-                      key={m.id}
-                      onClick={() => setMethod(m.id)}
-                      className={`btn btn-xs ${method === m.id ? 'btn-primary' : 'btn-ghost'}`}
-                    >
-                      {m.label}
-                    </button>
-                  ))}
-                </div>
-
-                {method === 'card' && (
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <CreditCard className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 opacity-40" />
-                      <input
-                        type="text"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value.replace(/[^\d ]/g, '').slice(0, 19))}
-                        placeholder="Karta raqami (0000 0000 0000 0000)"
-                        className="input input-bordered w-full pl-9 font-mono"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <input
-                        type="text"
-                        value={cardExp}
-                        onChange={(e) => setCardExp(e.target.value)}
-                        placeholder="MM/YY"
-                        className="input input-bordered font-mono"
-                      />
-                      <input
-                        type="text"
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        placeholder="Karta egasi ismi"
-                        className="input input-bordered"
-                      />
-                    </div>
-                    <p className="text-[11px] opacity-50 flex items-center gap-1">
-                      <Shield className="w-3 h-3 text-success" />
-                      Ma'lumotlaringiz shifrlangan va xavfsiz saqlanadi (PCI DSS)
-                    </p>
-                  </div>
-                )}
-
-                {method !== 'card' && (
-                  <div className="text-center py-4 text-sm opacity-60">
-                    {method === 'payme' ? '📱 Payme ilovasida to\'lov oynasi ochiladi' : '📱 Click ilovasida to\'lov oynasi ochiladi'}
-                  </div>
-                )}
-
-                <button
-                  onClick={() => handlePay('language')}
-                  disabled={processing || (method === 'card' && cardNumber.replace(/\s/g, '').length < 12)}
-                  className="btn btn-primary w-full mt-2 gap-2"
-                >
-                  {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Lock className="w-4 h-4" />}
-                  {processing ? 'To\'lov amalga oshirilmoqda...' : `${formatPrice(price)} to'lash`}
-                </button>
+              {/* Method tabs */}
+              <div className="flex gap-2 mb-4">
+                {[
+                  { id: 'payme', label: 'Payme' },
+                  { id: 'click', label: 'Click' },
+                ].map(m => (
+                  <button
+                    key={m.id}
+                    onClick={() => { setMethod(m.id); setError(''); }}
+                    className={`btn btn-xs ${method === m.id ? 'btn-primary' : 'btn-ghost'}`}
+                  >
+                    {m.label}
+                  </button>
+                ))}
               </div>
+
+              <div className="text-center py-2 text-sm opacity-70">
+                📱 {method === 'payme' ? 'Payme ilovasida to\'lov oynasi ochiladi' : 'Click ilovasida to\'lov oynasi ochiladi'}
+                <span className="block text-xs opacity-50 mt-1">
+                  To'lovdan so'ng avtomatik qaytasiz va {isLanguageMode ? 'til ochiladi' : 'premium faollashadi'}
+                </span>
+              </div>
+
+              {error && (
+                <div className="alert alert-warning text-xs mt-3 py-2">
+                  <span>⚠️ {error}</span>
+                </div>
+              )}
+
+              {/* Language mode: yagona to'lash tugmasi */}
+              {isLanguageMode && (
+                <button
+                  onClick={() => startPayment('language')}
+                  disabled={processing || !HAS_PAYMENT}
+                  className="btn btn-primary w-full mt-3 gap-2"
+                >
+                  {processing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ExternalLink className="w-4 h-4" />}
+                  {processing ? 'To\'lov sahifasiga yo\'naltirilmoqda...' : `${formatPrice(langPrice)} to'lash`}
+                </button>
+              )}
             </div>
           </div>
-        )}
+        </div>
 
-        {/* Payment methods mock */}
+        {/* Payment methods note */}
         <div className="px-8 pb-6 text-center">
-          <p className="text-xs opacity-60 mb-3">To'lov usullari:</p>
+          <p className="text-xs opacity-60 mb-3">Qabul qilinadigan to'lov usullari:</p>
           <div className="flex justify-center gap-3">
             <div className="btn btn-sm btn-ghost bg-base-200">Payme</div>
             <div className="btn btn-sm btn-ghost bg-base-200">Click</div>
@@ -250,11 +277,11 @@ export default function PaywallModal({ isOpen, onClose, onUnlock, lang }) {
             <div className="btn btn-sm btn-ghost bg-base-200">HUMO</div>
             <div className="btn btn-sm btn-ghost bg-base-200">Visa/MC</div>
           </div>
-          <p className="text-xs opacity-40 mt-3">
-            {isLanguageMode
-              ? '* Haqiqiy to\'lov uchun Payme/Click merchant ID ulanishi kerak'
-              : '* Bu mock to\'lov tizimi. Haqiqiy to\'lov amalga oshirilmaydi.'}
-          </p>
+          {!HAS_PAYMENT && (
+            <p className="text-xs opacity-40 mt-3">
+              * Haqiqiy to'lov ulash uchun Vercel sozlamalarida VITE_PAYME_MERCHANT_ID va VITE_CLICK_MERCHANT_ID/SERVICE_ID kiriting
+            </p>
+          )}
         </div>
       </div>
     </div>

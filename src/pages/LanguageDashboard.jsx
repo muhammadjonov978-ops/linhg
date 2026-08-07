@@ -381,19 +381,11 @@ export default function LanguageDashboard({ onSelectLevel }) {
       </div>
       )}
 
-      {/* Paywall Modal — supports both premium and paid language modes */}
+      {/* Paywall Modal — supports both premium and paid language modes (haqiqiy to'lov) */}
       <PaywallModal
         isOpen={showPaywall}
         lang={isLangPaid ? currentLang : null}
         onClose={() => setShowPaywall(false)}
-        onUnlock={() => {
-          if (isLangPaid) {
-            dispatch({ type: 'UNLOCK_LANGUAGE', payload: currentLang.id });
-          } else {
-            dispatch({ type: 'UNLOCK_PREMIUM' });
-          }
-          setShowPaywall(false);
-        }}
       />
     </div>
   );
