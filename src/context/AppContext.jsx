@@ -58,7 +58,7 @@ function migrateShop(parsed) {
     : DEFAULT_EQUIPPED;
   // Faqat mavjud itemlar saqlanadi — sotib olinmagan narsa kiyib bo'lmaydi
   const validEquipped = {};
-  ['hat', 'outfit', 'accessory', 'pet'].forEach(cat => {
+  ['bg', 'hat', 'outfit', 'accessory', 'pet'].forEach(cat => {
     const id = equipped[cat];
     const item = getShopItem(id);
     validEquipped[cat] = item && item.category === cat && owned.includes(id) ? id : DEFAULT_EQUIPPED[cat];

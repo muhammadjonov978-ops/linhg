@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { flushSync } from 'react-dom';
-import { createRoot } from 'react-dom/client';
 import { getShopItem } from '../data/shop';
 
-// ==== QAHRAMON AVATARI (pixel-art) ====
-// SVG chizma avval quriladi, keyin PAST RUXSATDAGI kichik canvas'ga tushirilib,
-// cheklangan palitra bo'yicha kvantizatsiya qilinadi. Natija — retro "piksel"
-// ko'rinishdagi qahramon: AI'ga o'xshamaydigan, chinakam o'yin uslubidagi avatar.
+// ==== QAHRAMON AVATARI (silliq) ====
+// Rasmga bir-bir mos qahramon: qo'ng'ir tikanli soch, qalin qoshlar, katta qora
+// ko'zoynak, krem futbolka, xaki yukxalta shim, tan bog'ichli etiklar, tuproq
+// tepalik ustida. Kiyilgan narsalar (fon, bosh kiyim, kiyim, aksessuar, uy
+// hayvoni) item.style bo'yicha chiziladi.
 
 const SKIN = '#fcd7a8';
 const SKIN_SHADE = '#f0b97e';
@@ -14,8 +12,63 @@ const HAIR = '#5b3a26';
 const HAIR_DARK = '#42270f';
 const PANTS = '#c2b280';
 const PANTS_DARK = '#b3a26c';
-const BOOT = '#33241a';
-const BOOT_DARK = '#241811';
+const BOOT = '#a16207'; // tan etik
+const BOOT_DARK = '#78350f';
+const EYE = '#292524';
+
+// Yulduzlar pozitsiyalari — har safar bir xil chiqishi uchun statik
+const STARS = [
+  [12, 18], [30, 34], [52, 12], [70, 46], [95, 22], [120, 40],
+  [142, 14], [168, 30], [186, 50], [24, 58], [150, 58], [60, 64],
+];
+
+function BgLayer({ item }) {
+  if (!item || item.style === 'none') return null;
+  const c = item.color;
+  return (
+    <g>
+      <rect x="0" y="0" width="200" height="270" fill={c} />
+      {/* Yulduzlar */}
+      {STARS.map(([x, y], i) => (
+        <circle key={i} cx={x} cy={y} r={i % 3 === 0 ? 2 : 1.4} fill="#ffffff" opacity={0.45 + (i % 3) * 0.15} />
+      ))}
+      {item.style === 'night' && (
+        <g>
+          <circle cx="158" cy="72" r="34" fill="#3b82f6" />
+          <circle cx="148" cy="62" r="9" fill="#93c5fd" opacity="0.5" />
+          <ellipse cx="158" cy="72" rx="52" ry="12" fill="none" stroke="#60a5fa" strokeWidth="4" opacity="0.8" transform="rotate(-18 158 72)" />
+          <circle cx="120" cy="102" r="5" fill="#cbd5e1" opacity="0.6" />
+          <circle cx="66" cy="118" r="3" fill="#cbd5e1" opacity="0.5" />
+        </g>
+      )}
+      {item.style === 'galaxy' && (
+        <g>
+          <circle cx="40" cy="60" r="26" fill="#7c3aed" opacity="0.55" />
+          <circle cx="160" cy="150" r="40" fill="#a855f7" opacity="0.35" />
+          <path d="M-10 212 Q 100 162 210 202" stroke="#c084fc" strokeWidth="5" fill="none" opacity="0.5" />
+          <circle cx="90" cy="40" r="3" fill="#fde047" />
+          <circle cx="180" cy="30" r="2.4" fill="#fde047" />
+        </g>
+      )}
+      {item.style === 'mars' && (
+        <g>
+          <circle cx="150" cy="80" r="38" fill="#f97316" />
+          <circle cx="140" cy="70" r="10" fill="#fdba74" opacity="0.5" />
+          <ellipse cx="150" cy="80" rx="50" ry="14" fill="none" stroke="#fb923c" strokeWidth="4" opacity="0.7" transform="rotate(-12 150 80)" />
+          <circle cx="60" cy="130" r="6" fill="#cbd5e1" opacity="0.4" />
+        </g>
+      )}
+      {item.style === 'sunset' && (
+        <g>
+          <circle cx="100" cy="150" r="60" fill="#f97316" opacity="0.55" />
+          <circle cx="100" cy="150" r="46" fill="#fb923c" opacity="0.5" />
+          <rect x="0" y="150" width="200" height="120" fill="#7c2d12" opacity="0.55" />
+          <circle cx="140" cy="70" r="3" fill="#fde047" />
+        </g>
+      )}
+    </g>
+  );
+}
 
 function HatLayer({ item }) {
   if (!item || item.style === 'none') return null;
@@ -96,6 +149,19 @@ function HatLayer({ item }) {
           <circle cx="112" cy="42" r="3.5" fill="#22c55e" />
         </g>
       )}
+      {item.style === 'spacehat' && (
+        <g>
+          {/* Shisha gumbaz */}
+          <ellipse cx="100" cy="36" rx="32" ry="26" fill={c} opacity="0.92" />
+          <path d="M76 24 Q100 10 124 24" stroke="#fff" strokeWidth="4" fill="none" opacity="0.55" strokeLinecap="round" />
+          {/* Antenna */}
+          <path d="M100 14 L106 4" stroke={a} strokeWidth="3" strokeLinecap="round" />
+          <circle cx="106" cy="3" r="3.4" fill="#ef4444" />
+          {/* Bo'yin halqasi */}
+          <rect x="64" y="48" width="72" height="11" rx="5" fill={a} />
+          <rect x="60" y="57" width="80" height="7" rx="3.5" fill={c} />
+        </g>
+      )}
     </g>
   );
 }
@@ -125,6 +191,14 @@ function AccessoryLayer({ item }) {
           <path d="M98 82 L102 82" stroke={a} strokeWidth="2.5" />
           <path d="M74 80 L66 76" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
           <path d="M126 80 L134 76" stroke={c} strokeWidth="3.5" strokeLinecap="round" />
+        </g>
+      );
+    case 'visor':
+      return (
+        <g>
+          <path d="M66 78 Q100 64 134 78 L134 94 Q100 108 66 94 Z" fill={c} opacity="0.85" />
+          <path d="M78 86 Q100 92 122 86" stroke="#fff" strokeWidth="3" fill="none" opacity="0.5" />
+          <path d="M66 80 Q100 66 134 80" stroke={a} strokeWidth="2.5" fill="none" opacity="0.6" />
         </g>
       );
     case 'bowtie':
@@ -275,6 +349,19 @@ function OutfitLayer({ item }) {
         </g>
       );
       break;
+    case 'spacesuit':
+      details = (
+        <g>
+          <rect x="82" y="120" width="36" height="9" rx="4" fill={a} opacity="0.9" />
+          <rect x="86" y="146" width="28" height="22" rx="4" fill="#cbd5e1" />
+          <circle cx="94" cy="154" r="3" fill="#ef4444" />
+          <circle cx="100" cy="160" r="3" fill="#3b82f6" />
+          <circle cx="106" cy="154" r="3" fill="#22c55e" />
+          <rect x="72" y="168" width="56" height="7" rx="3" fill={a} />
+          <circle cx="100" cy="171.5" r="2.5" fill="#facc15" />
+        </g>
+      );
+      break;
     case 'superhero':
       details = (
         <g>
@@ -315,40 +402,58 @@ function OutfitLayer({ item }) {
   );
 }
 
-// ============ SVG qatlami (pixel'ga aylantirishdan oldingi chizma) ============
-function HeroAvatarSvg({ equipped = {}, previewNote = null }) {
+export default function HeroAvatar({ equipped = {}, size = 180, previewNote = null, animate = false }) {
+  const bg = getShopItem(equipped.bg);
   const hat = getShopItem(equipped.hat);
   const outfit = getShopItem(equipped.outfit);
   const accessory = getShopItem(equipped.accessory);
   const pet = getShopItem(equipped.pet);
 
   return (
-    <svg viewBox="0 0 200 270" width="200" height="270" role="img" aria-label="Qahramon avatari">
+    <svg
+      viewBox="0 0 200 270"
+      width={size}
+      height={size * 1.35}
+      className={animate ? 'animate-float' : ''}
+      role="img"
+      aria-label="Qahramon avatari"
+    >
+      {/* Kosmik fon (space shop) */}
+      <BgLayer item={bg} />
+
       {/* Tuproq tepalik */}
       <ellipse cx="100" cy="250" rx="62" ry="10" fill="#92400e" />
       <ellipse cx="100" cy="252" rx="46" ry="8" fill="#a16207" />
       <ellipse cx="66" cy="254" rx="7" ry="3.5" fill="#78350f" />
       <ellipse cx="138" cy="253" rx="5" ry="2.5" fill="#78350f" />
+      {/* Oyog' ostidagi soya */}
+      <ellipse cx="100" cy="243" rx="36" ry="6" fill="#78350f" opacity="0.35" />
 
       {/* Uy hayvoni (orqa tomonda, yonida) */}
       {pet && pet.style === 'pet' && (
         <text x="160" y="200" fontSize="42" textAnchor="middle">
+          <animate attributeName="y" values="200;192;200" dur="2.6s" repeatCount="indefinite" />
           {pet.emoji}
         </text>
       )}
 
-      {/* Etiklar */}
+      {/* Etiklar (tan, bog'ichli) */}
       <rect x="64" y="216" width="30" height="18" rx="9" fill={BOOT} />
       <rect x="106" y="216" width="30" height="18" rx="9" fill={BOOT} />
       <rect x="62" y="230" width="34" height="7" rx="3" fill={BOOT_DARK} />
       <rect x="104" y="230" width="34" height="7" rx="3" fill={BOOT_DARK} />
+      {/* Bog'ich */}
+      <path d="M70 222 h8 M70 227 h8 M112 222 h8 M112 227 h8" stroke={BOOT_DARK} strokeWidth="1.6" opacity="0.85" strokeLinecap="round" />
 
-      {/* Xaki shim */}
+      {/* Xaki yukxalta shim */}
       <rect x="70" y="180" width="24" height="42" rx="9" fill={PANTS} />
       <rect x="106" y="180" width="24" height="42" rx="9" fill={PANTS} />
       <rect x="64" y="192" width="12" height="15" rx="3" fill={PANTS_DARK} />
       <rect x="124" y="192" width="12" height="15" rx="3" fill={PANTS_DARK} />
-      <path d="M64 196 L76 196 M124 196 L136 196" stroke={BOOT} strokeWidth="1.5" opacity="0.5" />
+      {/* Yong'oq cho'ntaklar */}
+      <rect x="72" y="196" width="16" height="12" rx="2.5" fill={PANTS_DARK} />
+      <rect x="112" y="196" width="16" height="12" rx="2.5" fill={PANTS_DARK} />
+      <path d="M72 198 h16 M112 198 h16" stroke={BOOT} strokeWidth="1.4" opacity="0.5" />
 
       {/* Tana (ko'ylak) */}
       <OutfitLayer item={outfit} />
@@ -369,12 +474,16 @@ function HeroAvatarSvg({ equipped = {}, previewNote = null }) {
       />
       <path d="M76 40 L82 52 L88 44 L94 36 L100 50 L106 36 L112 46 L118 40 L124 40 L130 58 L124 44 L118 52 L114 44 L106 48 L100 42 L94 48 L88 44 L84 52 L76 40 Z" fill={HAIR_DARK} opacity="0.55" />
 
+      {/* Qalin qoshlar */}
+      <path d="M78 70 Q88 63 98 70" stroke={EYE} strokeWidth="5.5" fill="none" strokeLinecap="round" />
+      <path d="M102 70 Q112 63 122 70" stroke={EYE} strokeWidth="5.5" fill="none" strokeLinecap="round" />
+
       {/* Yuz */}
-      <circle cx="88" cy="84" r="4" fill="#292524" />
-      <circle cx="112" cy="84" r="4" fill="#292524" />
+      <circle cx="88" cy="84" r="4" fill={EYE} />
+      <circle cx="112" cy="84" r="4" fill={EYE} />
       <circle cx="90.5" cy="82.5" r="1.3" fill="#fff" />
       <circle cx="114.5" cy="82.5" r="1.3" fill="#fff" />
-      <path d="M92 100 Q100 108 108 100" fill="none" stroke="#292524" strokeWidth="3" strokeLinecap="round" />
+      <path d="M92 100 Q100 108 108 100" fill="none" stroke={EYE} strokeWidth="3" strokeLinecap="round" />
       {/* Yonoqlar */}
       <ellipse cx="76" cy="96" rx="6" ry="4" fill="#f8a5c2" opacity="0.5" />
       <ellipse cx="124" cy="96" rx="6" ry="4" fill="#f8a5c2" opacity="0.5" />
@@ -394,165 +503,5 @@ function HeroAvatarSvg({ equipped = {}, previewNote = null }) {
         </g>
       )}
     </svg>
-  );
-}
-
-// ============ PIXEL-ART YAKUNI ============
-// Cheklangan ranglar palitrasi — "retro o'yin" ko'rinishi uchun.
-const PIXEL_PALETTE = [
-  // oq / kulranglar
-  '#ffffff', '#f8fafc', '#f1f5f9', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b',
-  '#475569', '#334155', '#1e293b', '#0f172a', '#111827', '#1c1917',
-  // teri / yuz
-  '#fcd7a8', '#f0b97e', '#f8a5c2',
-  // soch / etik
-  '#5b3a26', '#42270f', '#292524', '#33241a', '#241811',
-  // jigarranglar (shim, tuproq)
-  '#c2b280', '#b3a26c', '#a16207', '#92400e', '#78350f', '#b45309', '#d97706',
-  // qizil / to'q qizil
-  '#f87171', '#ef4444', '#dc2626', '#991b1b',
-  // sariq / amber
-  '#fde047', '#facc15', '#fbbf24', '#f59e0b',
-  // ko'k / havo rang
-  '#60a5fa', '#38bdf8', '#3b82f6', '#0ea5e9',
-  // yashil
-  '#a7f3d0', '#22c55e', '#10b981', '#16a34a', '#14532d',
-  // pushti / binafsha
-  '#fbcfe8', '#f472b6', '#ec4899', '#c084fc', '#a78bfa', '#8b5cf6', '#7c3aed', '#4c1d95',
-  // olovrang
-  '#f97316', '#ea580c',
-];
-
-const PALETTE_RGB = PIXEL_PALETTE.map((hex) => [
-  parseInt(hex.slice(1, 3), 16),
-  parseInt(hex.slice(3, 5), 16),
-  parseInt(hex.slice(5, 7), 16),
-]);
-
-function quantize(data) {
-  for (let i = 0; i < data.length; i += 4) {
-    const alpha = data[i + 3];
-    if (alpha < 128) {
-      data[i + 3] = 0; // shaffof piksel — tozalab tashlaymiz
-      continue;
-    }
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    let best = 0;
-    let bestDist = Infinity;
-    for (let p = 0; p < PALETTE_RGB.length; p++) {
-      const dr = PALETTE_RGB[p][0] - r;
-      const dg = PALETTE_RGB[p][1] - g;
-      const db = PALETTE_RGB[p][2] - b;
-      const dist = dr * dr + dg * dg + db * db;
-      if (dist < bestDist) {
-        bestDist = dist;
-        best = p;
-      }
-    }
-    data[i] = PALETTE_RGB[best][0];
-    data[i + 1] = PALETTE_RGB[best][1];
-    data[i + 2] = PALETTE_RGB[best][2];
-    data[i + 3] = 255;
-  }
-}
-
-// Past ruxsatli "piksel" o'lchami (200x270 SVG => 44x59 blok)
-const PX_W = 44;
-const PX_H = 59;
-
-export default function HeroAvatar({ equipped = {}, size = 180, previewNote = null, animate = false }) {
-  const canvasRef = useRef(null);
-  const [ready, setReady] = useState(false);
-  // equipped ob'ekti har renderda yangi bo'lishi mumkin (ShopPage preview) —
-  // shuning uchun faqat MAZMUNI (equippedKey) o'zgarganida pipeline qayta ishga tushadi.
-  const equippedKey = JSON.stringify(equipped || {});
-  const equippedRef = useRef(equipped);
-  const noteRef = useRef(previewNote);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    // Ref'larni effect ichida yangilaymiz (render paytida emas)
-    equippedRef.current = equipped;
-    noteRef.current = previewNote;
-
-    // 1) SVG'ni ajratilgan (detached) container'ga chizib, serializatsiya qilamiz
-    //    react-dom/server emas — createRoot + flushSync (bundle kichik qoladi).
-    const container = document.createElement('div');
-    const root = createRoot(container);
-    let svg = '';
-    try {
-      flushSync(() => {
-        root.render(<HeroAvatarSvg equipped={equippedRef.current} previewNote={noteRef.current} />);
-      });
-      svg = container.innerHTML;
-    } finally {
-      root.unmount();
-    }
-    const url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-
-    const img = new Image();
-    img.onload = () => {
-      if (cancelled) return;
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      // 2) Past ruxsatga tushiramiz (nearest-neighbor => blokli ko'rinish)
-      ctx.clearRect(0, 0, PX_W, PX_H);
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(img, 0, 0, PX_W, PX_H);
-
-      // 3) Ranglarni cheklangan palitra bo'yicha kvantizatsiya qilamiz
-      try {
-        const imageData = ctx.getImageData(0, 0, PX_W, PX_H);
-        quantize(imageData.data);
-        ctx.putImageData(imageData, 0, 0);
-      } catch {
-        /* CORS/kattalik cheklovi bo'lsa — kvantizatsiyasiz qoldiramiz */
-      }
-
-      setReady(true);
-    };
-    // Xavfsizlik to'ri: SVG yuklanmasa ham avatar ko'rinmas bo'lib qolmaydi
-    img.onerror = () => {
-      if (cancelled) return;
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-      ctx.clearRect(0, 0, PX_W, PX_H);
-      ctx.fillStyle = '#1e293b';
-      ctx.fillRect(0, 0, PX_W, PX_H);
-      ctx.font = `${Math.floor(PX_H * 0.55)}px serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('🦸', PX_W / 2, PX_H / 2 + 1);
-      setReady(true);
-    };
-    img.src = url;
-
-    return () => {
-      cancelled = true;
-    };
-    // oxlint: ataylab ref'lar orqali o'qiladi — equipped/previewNote prop'lari
-    // ob'ekt referensiyasi har renderda o'zgarsa ham pipeline faqat mazmuni
-    // o'zgarganida ishga tushishi kerak.
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [equippedKey, previewNote]);
-
-  return (
-    <canvas
-      ref={canvasRef}
-      width={PX_W}
-      height={PX_H}
-      className={`pixel-hero transition-opacity duration-300 ${animate ? 'animate-float' : ''} ${ready ? 'opacity-100' : 'opacity-0'}`}
-      style={{ width: size, height: Math.round(size * 1.35), imageRendering: 'pixelated' }}
-      role="img"
-      aria-label="Qahramon avatari (pixel-art)"
-    />
   );
 }

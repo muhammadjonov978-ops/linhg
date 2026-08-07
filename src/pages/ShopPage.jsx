@@ -4,8 +4,26 @@ import HeroAvatar from '../components/HeroAvatar';
 import { SHOP_CATEGORIES, SHOP_ITEMS, RARITY_META, getShopItem } from '../data/shop';
 import {
   FaCoins as Coins, FaShoppingBag as ShoppingBag, FaCheck as Check,
-  FaMagic as Sparkles, FaLock as Lock, FaTimes as X,
+  FaMagic as Sparkles, FaTimes as X, FaClock as Clock,
 } from 'react-icons/fa';
+
+const HISTORY_KEY = 'lingohub_shop_history';
+
+function readHistory() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+function writeHistory(h) {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 60)));
+  } catch {
+    /* ignore */
+  }
+}
 
 function rarityCard(item) {
   const meta = RARITY_META[item.rarity] || RARITY_META.oddiy;
@@ -20,13 +38,71 @@ function rarityCard(item) {
   };
 }
 
+// Kosmik fon (BG) uchun kichik oldindan ko'rish
+function BgPreview({ item }) {
+  const pal = { night: '#0b1026', galaxy: '#1e1b4b', mars: '#7c2d12', sunset: '#431407' };
+  const bg = pal[item.style] || '#0b1026';
+  return (
+    <div className="w-full h-24 rounded-xl overflow-hidden relative flex items-center justify-center" style={{ background: bg }}>
+      <span className="absolute top-1.5 left-2 text-[10px] text-white/70">✦</span>
+      <span className="absolute top-4 right-3 text-[10px] text-white/50">✧</span>
+      <span className="absolute bottom-2 left-4 text-[10px] text-white/40">✦</span>
+      <span className="text-3xl drop-shadow-lg">{item.emoji}</span>
+    </div>
+  );
+}
+
+function HistoryModal({ onClose }) {
+  const [history] = useState(() => readHistory());
+  return (
+    <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm" onClick={onClose}>
+      <div
+        className="relative bg-base-100 rounded-3xl shadow-2xl max-w-md w-full max-h-[80vh] overflow-y-auto animate-[fadeInUp_0.3s_ease-out]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-6 pt-5 pb-3 border-b border-base-300">
+          <h3 className="font-bold text-sm flex items-center gap-2">
+            <Clock className="w-4 h-4 text-primary" /> Xaridlar tarixi
+          </h3>
+          <button onClick={onClose} className="btn btn-ghost btn-xs btn-circle">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="p-4">
+          {history.length === 0 ? (
+            <p className="text-sm opacity-50 text-center py-8">Hozircha xaridlar yo'q 🛒</p>
+          ) : (
+            <div className="space-y-2">
+              {history.map((h, i) => (
+                <div key={i} className="flex items-center gap-3 rounded-xl bg-base-200/60 px-3 py-2.5 text-sm">
+                  <span className="w-9 h-9 rounded-lg bg-base-100 border border-base-300 flex items-center justify-center text-xl shrink-0">
+                    {h.emoji || '🛍️'}
+                  </span>
+                  <span className="font-semibold text-xs flex-1">{h.name}</span>
+                  <span className="text-xs font-bold text-amber-500 shrink-0">🪙 {h.price}</span>
+                  <span className="text-[10px] opacity-40 tabular-nums shrink-0">
+                    {new Date(h.time).toLocaleDateString('uz-UZ')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ShopPage() {
   const { state, dispatch } = useApp();
+  const [storeTab, setStoreTab] = useState('hero'); // 'hero' | 'space'
   const [activeCat, setActiveCat] = useState('all');
   const [previewItemId, setPreviewItemId] = useState(null);
   const [toast, setToast] = useState(null);
   const toastTimer = useRef(null);
   const [burst, setBurst] = useState(0); // sotib olinganda konfetti
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   const owned = useMemo(() => new Set(state.inventory || []), [state.inventory]);
   const equipped = state.equipped || {};
@@ -41,7 +117,6 @@ export default function ShopPage() {
 
   // Tanlangan itemni ko'rib chiqish uchun avatarda vaqtinchalik kiyish
   const previewItem = getShopItem(previewItemId);
-
   const previewEquipped = previewItem
     ? { ...equipped, [previewItem.category]: previewItem.id }
     : equipped;
@@ -51,14 +126,20 @@ export default function ShopPage() {
       equipItem(item);
       return;
     }
-    if (state.coins < item.price) {
+    if (!state.isAdmin && state.coins < item.price) {
       showToast(`Tangalar yetarli emas! Yana ${item.price - state.coins} 🪙 kerak`, 'error');
       return;
     }
     dispatch({ type: 'BUY_SHOP_ITEM', payload: item.id });
     dispatch({ type: 'EQUIP_SHOP_ITEM', payload: item.id });
     setPreviewItemId(item.id);
-    if (item.rarity === 'afsonaviy') setBurst(b => b + 1);
+    if (item.rarity === 'afsonaviy') setBurst((b) => b + 1);
+    // Xaridlar tarixiga yozamiz (bepul admin xaridlari hisoblanmaydi)
+    if (item.price > 0) {
+      const h = readHistory();
+      h.unshift({ id: item.id, name: item.name, emoji: item.emoji, price: item.price, time: Date.now() });
+      writeHistory(h);
+    }
     showToast(`${item.name} xarid qilindi! 🎉`);
   };
 
@@ -71,9 +152,19 @@ export default function ShopPage() {
 
   const clearPreview = () => setPreviewItemId(null);
 
+  // ===== Shop bo'limlari (HERO SHOP / SPACE SHOP) =====
+  const isSpace = storeTab === 'space';
+  const storeItems = isSpace
+    ? SHOP_ITEMS.filter((i) => i.shop === 'space' || i.category === 'bg')
+    : SHOP_ITEMS.filter((i) => i.shop !== 'space');
+
+  const heroCats = SHOP_CATEGORIES.filter((c) => c.id !== 'bg');
+  const spaceCats = SHOP_CATEGORIES; // bg + kiyimlar
+  const cats = isSpace ? spaceCats : heroCats;
+
   const filtered = activeCat === 'all'
-    ? SHOP_ITEMS
-    : SHOP_ITEMS.filter(i => i.category === activeCat);
+    ? storeItems
+    : storeItems.filter((i) => i.category === activeCat);
 
   const stats = {
     ownedCount: owned.size,
@@ -90,24 +181,55 @@ export default function ShopPage() {
           </div>
           <div>
             <h1 className="font-display text-2xl font-bold">Qahramon Magazini</h1>
-            <p className="text-sm opacity-70">O'zingning qahramoningni tanga bilan bezat! 🪙</p>
+            <p className="text-sm opacity-70">O'zingning qahramoningni bezat! 🪙</p>
           </div>
         </div>
 
-        {/* Tanga balansi */}
-        <div className="flex items-center gap-2 badge badge-primary badge-lg p-3 border-0 shadow-lg shadow-primary/20">
-          <Coins className="w-5 h-5 animate-coin-spin" />
-          <span className="font-bold text-lg">{state.coins}</span>
-          <span className="text-xs opacity-70">🪙 balans</span>
-        </div>
-
-        {/* Admin rejimi — hamma narsa tekin */}
-        {state.isAdmin && (
-          <div className="flex items-center gap-2 badge badge-secondary badge-lg p-3 border-0 shadow-lg shadow-secondary/20">
-            <Sparkles className="w-4 h-4" />
-            <span className="font-bold text-sm">Admin — hamma narsa tekin</span>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Tanga balansi */}
+          <div className="flex items-center gap-2 badge badge-primary badge-lg p-3 border-0 shadow-lg shadow-primary/20">
+            <Coins className="w-5 h-5 animate-coin-spin" />
+            <span className="font-bold text-lg">{state.coins}</span>
+            <span className="text-xs opacity-70">🪙 balans</span>
           </div>
-        )}
+          {/* Admin rejimi — hamma narsa tekin */}
+          {state.isAdmin && (
+            <div className="flex items-center gap-2 badge badge-secondary badge-lg p-3 border-0 shadow-lg shadow-secondary/20">
+              <Sparkles className="w-4 h-4" />
+              <span className="font-bold text-sm">Admin — hamma narsa tekin</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ===== Shop tablari (rasmdagidek) ===== */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={() => { setStoreTab('hero'); setActiveCat('all'); }}
+          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-all ${
+            !isSpace
+              ? 'bg-gradient-to-r from-[#ff6b35] to-[#f43f5e] text-white shadow-lg shadow-[#ff6b35]/25'
+              : 'bg-base-100 border border-base-300 text-base-content/60 hover:border-base-content/30'
+          }`}
+        >
+          👕 Hero Shop
+        </button>
+        <button
+          onClick={() => { setStoreTab('space'); setActiveCat('all'); }}
+          className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wide transition-all ${
+            isSpace
+              ? 'bg-gradient-to-r from-[#ff6b35] to-[#f43f5e] text-white shadow-lg shadow-[#ff6b35]/25'
+              : 'bg-base-100 border border-base-300 text-base-content/60 hover:border-base-content/30'
+          }`}
+        >
+          🎧 Space Shop
+        </button>
+        <button
+          onClick={() => setHistoryOpen(true)}
+          className="ml-auto text-xs font-semibold text-[#ff6b35] hover:underline transition-all inline-flex items-center gap-1"
+        >
+          Xaridlar tarixi ›
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-5 items-start">
@@ -192,9 +314,9 @@ export default function ShopPage() {
               onClick={() => setActiveCat('all')}
               className={`btn btn-sm ${activeCat === 'all' ? 'btn-primary' : 'btn-ghost bg-base-100 border border-base-300'}`}
             >
-              🛍️ Barchasi
+              {isSpace ? '🌌 Barchasi' : '🛍️ Barchasi'}
             </button>
-            {SHOP_CATEGORIES.map(cat => (
+            {cats.map(cat => (
               <button
                 key={cat.id}
                 onClick={() => setActiveCat(cat.id)}
@@ -205,12 +327,11 @@ export default function ShopPage() {
             ))}
           </div>
 
-          {/* Itemlar grid */}
+          {/* Itemlar grid — rasmdagidek karta uslubi */}
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
             {filtered.map(item => {
               const isOwned = owned.has(item.id);
               const isEquipped = equipped[item.category] === item.id;
-              // Admin uchun hamma narsa tekin — tanga talab qilinmaydi
               const canAfford = state.isAdmin || state.coins >= item.price;
               const meta = rarityCard(item);
               const isPreview = previewItemId === item.id;
@@ -227,46 +348,52 @@ export default function ShopPage() {
                     ${isEquipped ? 'ring-1 ring-success/60' : ''}
                   `}
                 >
-                  <figure className="p-4 pb-1 flex flex-col items-center gap-2 bg-base-200/50">
-                    <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-4xl ${isEquipped ? 'bg-success/10' : 'bg-base-100'} border ${isEquipped ? 'border-success/40' : 'border-base-300'} shadow-inner`}>
-                      <span className={isEquipped ? '' : ''}>{item.emoji}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <span className={`badge badge-xs ${meta.badge} gap-1`}>{meta.name}</span>
-                      {isEquipped && (
-                        <span className="badge badge-xs badge-success gap-1">
-                          <Check className="w-2.5 h-2.5" /> Kiyilgan
-                        </span>
-                      )}
-                    </div>
+                  <figure className="p-3 pb-1 bg-base-200/50 relative">
+                    {item.category === 'bg' ? (
+                      <BgPreview item={item} />
+                    ) : (
+                      <div className="w-full h-24 rounded-xl bg-base-100 border border-base-300 flex items-center justify-center text-5xl shadow-inner">
+                        {item.emoji}
+                      </div>
+                    )}
+                    <span className={`absolute top-4 right-4 badge badge-xs ${meta.badge} gap-1 shadow`}>{meta.name}</span>
+                    {isEquipped && (
+                      <span className="absolute bottom-1 right-2 badge badge-xs badge-success gap-1">
+                        <Check className="w-2.5 h-2.5" /> Kiyilgan
+                      </span>
+                    )}
                   </figure>
 
-                  <div className="card-body p-3 gap-2">
-                    <h3 className="font-semibold text-sm leading-tight">{item.name}</h3>
-
-                    {isOwned ? (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); equipItem(item); }}
-                        disabled={isEquipped}
-                        className={`btn btn-sm w-full ${isEquipped ? 'btn-ghost opacity-60 cursor-default' : 'btn-success'}`}
-                      >
-                        {isEquipped ? (
-                          <><Check className="w-4 h-4" /> Kiyilgan</>
-                        ) : (
-                          <>Kiyish</>
-                        )}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); buyItem(item); }}
-                        disabled={!canAfford}
-                        className={`btn btn-sm w-full gap-1.5 ${canAfford ? 'btn-primary' : 'btn-outline opacity-50'}`}
-                        title={canAfford ? '' : 'Tangalar yetarli emas'}
-                      >
-                        {state.isAdmin ? <Sparkles className="w-3.5 h-3.5" /> : canAfford ? <Coins className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
-                        <span>{state.isAdmin ? 'Tekin' : item.price}</span>
-                      </button>
-                    )}
+                  <div className="p-3 pt-2">
+                    <h3 className="font-semibold text-sm leading-tight truncate">{item.name}</h3>
+                    <div className="flex items-center justify-between mt-2">
+                      {isOwned ? (
+                        <span className="text-xs font-semibold text-base-content/50">🪙 {item.price}</span>
+                      ) : (
+                        <span className={`text-xs font-semibold flex items-center gap-1 ${canAfford ? 'text-base-content/70' : 'text-error/70'}`}>
+                          🪙 {item.price}
+                        </span>
+                      )}
+                      {isOwned ? (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); equipItem(item); }}
+                          disabled={isEquipped}
+                          className={`text-xs font-bold transition-all ${
+                            isEquipped ? 'text-success/60 cursor-default' : 'text-success hover:underline'
+                          }`}
+                        >
+                          {isEquipped ? 'Kiyilgan ✓' : 'Kiyish ›'}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); buyItem(item); }}
+                          disabled={!canAfford}
+                          className="text-xs font-bold text-[#2563eb] hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          {canAfford ? 'Sotib olish ›' : 'Yetarli emas'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -291,6 +418,9 @@ export default function ShopPage() {
 
       {/* Afsonaviy xarid uchun konfetti */}
       {burst > 0 && <ConfettiBurst key={burst} />}
+
+      {/* Xaridlar tarixi */}
+      {historyOpen && <HistoryModal onClose={() => setHistoryOpen(false)} />}
     </div>
   );
 }

@@ -5,11 +5,15 @@
 // style: HeroAvatar komponentida shu style bo'yicha SVG chiziladi.
 
 export const SHOP_CATEGORIES = [
+  { id: 'bg', name: 'Fonlar', icon: '🌌' },
   { id: 'hat', name: 'Bosh kiyimlar', icon: '🧢' },
   { id: 'outfit', name: 'Kiyimlar', icon: '👕' },
   { id: 'accessory', name: 'Aksessuarlar', icon: '🕶️' },
   { id: 'pet', name: 'Uy hayvonlari', icon: '🐾' },
 ];
+
+// buyum qaysi shop bo'limiga tegishli: 'hero' (odatiy) | 'space'
+// (bg kategoriyasi ham space shop'ga kiradi)
 
 export const RARITY_META = {
   oddiy: { name: 'Oddiy', badge: 'badge-ghost', ring: '', glow: '' },
@@ -29,11 +33,12 @@ const hats = [
   { id: 'hat_viking', name: "Viking dubulg'asi", style: 'viking', price: 700, rarity: 'nodir', emoji: '⛑️', color: '#94a3b8', accent: '#facc15' },
   { id: 'hat_wizard', name: 'Sehrgar shlyapasi', style: 'wizard', price: 1200, rarity: 'afsonaviy', emoji: '🧙', color: '#7c3aed', accent: '#c084fc' },
   { id: 'hat_crown', name: 'Oltin toj', style: 'crown', price: 2000, rarity: 'afsonaviy', emoji: '👑', color: '#fbbf24', accent: '#f59e0b' },
+  { id: 'hat_spacehelmet', name: "Kosmik dubulg'a", style: 'spacehat', price: 250, rarity: 'nodir', emoji: '👨‍🚀', color: '#e2e8f0', accent: '#f59e0b', shop: 'space' },
 ];
 
 // ===================== KIYIMLAR =====================
 const outfits = [
-  { id: 'outfit_tshirt', name: 'Oq futbolka', style: 'tshirt', price: 0, rarity: 'oddiy', emoji: '👕', color: '#f1f5f9', accent: '#cbd5e1' },
+  { id: 'outfit_tshirt', name: 'Krem futbolka', style: 'tshirt', price: 0, rarity: 'oddiy', emoji: '👕', color: '#f5e9d8', accent: '#e6d3b8' },
   { id: 'outfit_sweater', name: 'Chiziqli sviter', style: 'sweater', price: 200, rarity: 'oddiy', emoji: '🧶', color: '#10b981', accent: '#a7f3d0' },
   { id: 'outfit_hoodie', name: 'Hudi', style: 'hoodie', price: 250, rarity: 'oddiy', emoji: '🧥', color: '#6b7280', accent: '#9ca3af' },
   { id: 'outfit_lab', name: 'Oq xalat', style: 'lab', price: 350, rarity: 'nodir', emoji: '🥼', color: '#f8fafc', accent: '#cbd5e1' },
@@ -43,6 +48,7 @@ const outfits = [
   { id: 'outfit_astronaut', name: 'Astronavt kostyumi', style: 'astronaut', price: 1000, rarity: 'afsonaviy', emoji: '🧑‍🚀', color: '#e2e8f0', accent: '#ef4444' },
   { id: 'outfit_superhero', name: 'Superqahramon libosi', style: 'superhero', price: 1500, rarity: 'afsonaviy', emoji: '🦸', color: '#ef4444', accent: '#facc15' },
   { id: 'outfit_armor', name: 'Rytsar zirhi', style: 'armor', price: 1800, rarity: 'afsonaviy', emoji: '🛡️', color: '#e2e8f0', accent: '#fbbf24' },
+  { id: 'outfit_spacesuit', name: 'Kosmik skafandr', style: 'spacesuit', price: 350, rarity: 'nodir', emoji: '🧑‍🚀', color: '#f1f5f9', accent: '#ef4444', shop: 'space' },
 ];
 
 // ===================== AKSESSUARLAR =====================
@@ -56,6 +62,16 @@ const accessories = [
   { id: 'accessory_headphones', name: 'Naushniklar', style: 'headphones', price: 500, rarity: 'nodir', emoji: '🎧', color: '#8b5cf6', accent: '#7c3aed' },
   { id: 'accessory_chain', name: 'Oltin zanjir', style: 'chain', price: 900, rarity: 'nodir', emoji: '📿', color: '#fbbf24', accent: '#f59e0b' },
   { id: 'accessory_halo', name: 'Farishta halosi', style: 'halo', price: 1300, rarity: 'afsonaviy', emoji: '😇', color: '#fde047', accent: '#facc15' },
+  { id: 'accessory_visor', name: 'Kosmik vizor', style: 'visor', price: 200, rarity: 'oddiy', emoji: '🥽', color: '#38bdf8', accent: '#0ea5e9', shop: 'space' },
+];
+
+// ===================== FONLAR (SPACE SHOP — BG) =====================
+const backgrounds = [
+  { id: 'bg_none', name: "Fon yo'q", style: 'none', price: 0, rarity: 'oddiy', emoji: '🌫️', color: '#0b1026', accent: '#3b82f6', shop: 'space' },
+  { id: 'bg_night', name: 'BG (Night)', style: 'night', price: 29, rarity: 'oddiy', emoji: '🌃', color: '#0b1026', accent: '#3b82f6', shop: 'space' },
+  { id: 'bg_mars', name: 'BG (Mars)', style: 'mars', price: 39, rarity: 'nodir', emoji: '🔴', color: '#7c2d12', accent: '#f97316', shop: 'space' },
+  { id: 'bg_galaxy', name: 'BG (Galaxy)', style: 'galaxy', price: 49, rarity: 'nodir', emoji: '🌌', color: '#1e1b4b', accent: '#a78bfa', shop: 'space' },
+  { id: 'bg_sunset', name: 'BG (Sunset)', style: 'sunset', price: 59, rarity: 'afsonaviy', emoji: '🌇', color: '#431407', accent: '#f97316', shop: 'space' },
 ];
 
 // ===================== UY HAYVONLARI =====================
@@ -69,15 +85,28 @@ const pets = [
   { id: 'pet_penguin', name: 'Pingvin', style: 'pet', price: 650, rarity: 'nodir', emoji: '🐧', color: '#0ea5e9', accent: '#f8fafc' },
   { id: 'pet_panda', name: 'Panda', style: 'pet', price: 800, rarity: 'afsonaviy', emoji: '🐼', color: '#64748b', accent: '#0f172a' },
   { id: 'pet_dragon', name: 'Ajdaho', style: 'pet', price: 1500, rarity: 'afsonaviy', emoji: '🐲', color: '#16a34a', accent: '#fbbf24' },
+  { id: 'pet_alien', name: 'Kichkina alien', style: 'pet', price: 300, rarity: 'nodir', emoji: '👽', color: '#22c55e', accent: '#14532d', shop: 'space' },
+  { id: 'pet_rocket', name: 'Raketa', style: 'pet', price: 350, rarity: 'afsonaviy', emoji: '🚀', color: '#ef4444', accent: '#facc15', shop: 'space' },
 ];
 
-export const SHOP_ITEMS = [...hats, ...outfits, ...accessories, ...pets];
+// Har bir itemga o'z kategoriyasini qo'shamiz — kiyish/xarid qilish tizimi
+// (equipped[item.category]) aynan shu maydonga tayanadi.
+const withCat = (category, items) => items.map((i) => ({ category, ...i }));
+
+export const SHOP_ITEMS = [
+  ...withCat('bg', backgrounds),
+  ...withCat('hat', hats),
+  ...withCat('outfit', outfits),
+  ...withCat('accessory', accessories),
+  ...withCat('pet', pets),
+];
 
 // Boshlang'ich (bepul) to'plam — har bir yangi foydalanuvchida mavjud.
 // Qahramon 3-rasmdagi uslubga o'xshab: och futbolka + quyoshdan saqlovchi ko'zoynak.
-export const DEFAULT_OWNED = ['hat_none', 'outfit_tshirt', 'accessory_none', 'accessory_sunglasses', 'pet_none'];
+export const DEFAULT_OWNED = ['bg_none', 'hat_none', 'outfit_tshirt', 'accessory_none', 'accessory_sunglasses', 'pet_none'];
 
 export const DEFAULT_EQUIPPED = {
+  bg: 'bg_none',
   hat: 'hat_none',
   outfit: 'outfit_tshirt',
   accessory: 'accessory_sunglasses',
