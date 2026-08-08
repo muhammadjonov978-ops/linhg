@@ -1,7 +1,7 @@
 // POST /api/payment/create — yangi to'lov buyurtmasi yaratadi
 // Body: { orderId, langId, amount (so'm), provider: 'payme'|'click', plan?: 'language'|'premium' }
-import { createOrder } from '../_lib/orders.js';
-import { LANGUAGE_PRICES, PREMIUM_MONTHLY_PRICE, PREMIUM_YEARLY_PRICE } from '../_lib/prices.js';
+import { createOrder } from '../lib/orders.js';
+import { LANGUAGE_PRICES, PREMIUM_MONTHLY_PRICE, PREMIUM_YEARLY_PRICE } from '../lib/prices.js';
 
 // Premium plan uchun ruxsat etilgan narxlar ro'yxati
 const PREMIUM_PRICES = new Set([PREMIUM_MONTHLY_PRICE, PREMIUM_YEARLY_PRICE]);
@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, error: 'amount noto\'g\'ri' });
   }
   // Minimal to'lov — juda kichik/noto'g'ri summalarni oldindan rad etish.
-  // Aniq narx tekshiruvi quyida (api/_lib/prices.js bo'yicha) amalga oshiriladi.
+  // Aniq narx tekshiruvi quyida (server/lib/prices.js bo'yicha) amalga oshiriladi.
   if (amt < 1000) {
     return res.status(400).json({ ok: false, error: 'Minimal to\'lov summasi 1000 so\'m' });
   }
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
     }
   } else {
     // Til (language) buyurtmasi: langId pullik tillar ro'yxatida bo'lishi va
-    // summa aynan shu til narxiga teng bo'lishi shart (api/_lib/prices.js).
+    // summa aynan shu til narxiga teng bo'lishi shart (server/lib/prices.js).
     const expectedPrice = LANGUAGE_PRICES[langId];
     if (!expectedPrice) {
       return res.status(400).json({ ok: false, error: 'Bunday til aniqlanmadi' });

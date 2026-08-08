@@ -4,8 +4,8 @@
 //   today   — bugungi kirishlar
 //   mode    — 'redis' (barcha qurilmalarda doimiy) | 'memory' (demo rejim)
 // Faqat admin sessiya tokeni bilan ishlaydi.
-import { verifyToken } from '../_lib/adminAuth.js';
-import { getAdminActivity } from '../_lib/activityLog.js';
+import { verifyToken } from '../lib/adminAuth.js';
+import { getAdminActivity } from '../lib/activityLog.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

@@ -2,7 +2,7 @@
 // Brauzer localStorage'ida saqlangan sessiyani soxtalashtirib bo'lmaydi —
 // chunki token faqat server (ADMIN_PASSWORD/ADMIN_TOKEN_SECRET) bilan
 // imzolangan bo'ladi va bu yerda tasdiqlanadi.
-import { verifyToken, isAuthConfigured } from '../_lib/adminAuth.js';
+import { verifyToken, isAuthConfigured } from '../lib/adminAuth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

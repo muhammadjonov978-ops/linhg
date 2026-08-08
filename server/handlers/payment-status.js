@@ -1,5 +1,5 @@
 // GET /api/payment/status?orderId=... — buyurtma to'langanini tekshiradi
-import { getOrder } from '../_lib/orders.js';
+import { getOrder } from '../lib/orders.js';
 
 export default async function handler(req, res) {
   const { orderId } = req.query || {};

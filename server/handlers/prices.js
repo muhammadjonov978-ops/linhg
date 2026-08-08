@@ -1,7 +1,7 @@
 // GET /api/prices — server'dagi QAT'IY narxlar (source of truth).
 // Admin panel "Til narxlari" bo'limida ko'rsatiladi: agar panel'dagi narx
 // server narxidan farq qilsa, to'lov "Til narxi noto'g'ri" deb rad etiladi.
-import { LANGUAGE_PRICES, PREMIUM_MONTHLY_PRICE, PREMIUM_YEARLY_PRICE } from './_lib/prices.js';
+import { LANGUAGE_PRICES, PREMIUM_MONTHLY_PRICE, PREMIUM_YEARLY_PRICE } from '../lib/prices.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

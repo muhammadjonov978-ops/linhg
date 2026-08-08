@@ -1,6 +1,6 @@
 // GET /api/telegram/info — bot holati (admin panel "Telegram" bo'limi uchun).
 // Bot sozlanganmi, username nima, webhook o'rnatilganmi?
-import { telegramApi, telegramConfigured, ownerChatId } from '../_lib/telegram.js';
+import { telegramApi, telegramConfigured, ownerChatId } from '../lib/telegram.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

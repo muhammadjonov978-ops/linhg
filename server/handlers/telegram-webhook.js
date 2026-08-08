@@ -8,8 +8,8 @@
 //   /help  — barcha buyruqlar ro'yxati
 //   /stats — sayt statistikasi
 //   /site  — sayt manzili
-import { telegramApi, rememberChat, notifyTelegram, escapeHtml, telegramConfigured, botToken } from '../_lib/telegram.js';
-import { redis } from '../_lib/redis.js';
+import { telegramApi, rememberChat, notifyTelegram, escapeHtml, telegramConfigured, botToken } from '../lib/telegram.js';
+import { redis } from '../lib/redis.js';
 
 const SITE_URL = process.env.VITE_SITE_URL || 'https://lingohub.uz';
 

@@ -2,8 +2,8 @@
 // Body: { username, password }
 // Javob: { ok: true, token, user: { username, name, role } }
 //        yoki { ok: false, code: 'not_configured'|'invalid'|'server_error', error }
-import { authenticate, isAuthConfigured, signToken, checkRateLimit, registerFailure, resetFailures, isUsingDefaultPassword } from '../_lib/adminAuth.js';
-import { logAdminAttempt } from '../_lib/activityLog.js';
+import { authenticate, isAuthConfigured, signToken, checkRateLimit, registerFailure, resetFailures, isUsingDefaultPassword } from '../lib/adminAuth.js';
+import { logAdminAttempt } from '../lib/activityLog.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

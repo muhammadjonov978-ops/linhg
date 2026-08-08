@@ -3,8 +3,8 @@
 // Xavfsizlik: Admin sessiya tokeni talab qilinadi (api/admin/login'da olingan).
 //   Authorization: Bearer <token>
 // Javob: { ok, results } — xabar yuborilgan chatlar ro'yxati.
-import { notifyTelegram, telegramConfigured } from '../_lib/telegram.js';
-import { verifyToken } from '../_lib/adminAuth.js';
+import { notifyTelegram, telegramConfigured } from '../lib/telegram.js';
+import { verifyToken } from '../lib/adminAuth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

@@ -61,22 +61,30 @@ Vercel → Project → Settings → Environment Variables (barcha environment'la
 > 📄 Mahalliy ishlash uchun `.env.example` ni `.env` deb nusxalab, xuddi shu
 > qiymatlarni to'ldiring (`.env` git'ga qo'shilmaydi).
 
-> 💰 **Narxlar server'da qat'iy tekshiriladi!** To'lov summasi `api/_lib/prices.js`
+> 💰 **Narxlar server'da qat'iy tekshiriladi!** To'lov summasi `server/lib/prices.js`
 > dagi ro'yxat bo'yicha tekshiriladi — foydalanuvchi arzonroq summa yuborib
-> til/premium ochib ola olmaydi. **Narx o'zgartirganda** `api/_lib/prices.js` va
+> til/premium ochib ola olmaydi. **Narx o'zgartirganda** `server/lib/prices.js` va
 > `src/data/siteConfig.js` (DEFAULT_CONFIG.prices) ni birga yangilab, deploy qiling.
 > Admin paneldagi narx o'zgarishi faqat ko'rinish uchun — to'lov miqdori server
 > ro'yxatidan olinadi.
 
 ### 1.1. Deploy qilishdan oldin (MUHIM!)
 
-- `api/` papkasi **git'ga qo'shilgan va Vercel'ga deploy bo'lgan** bo'lishi shart —
-  u Vercel serverless funksiyalarni o'z ichiga oladi (`/api/payment/*`, `/api/payme/*`, `/api/click/*`).
-  Agar loyiha faqat frontend'ni deploy qilgan bo'lsa, to'lov ishlamaydi.
-- Loyiha ildizida `vercel.json` bor — u Vite frontend + `api/` funksiyalarni
-  Vercel'da to'g'ri sozlashni ta'minlaydi.
+- `api/` papkasi **git'ga qo'shilgan va Vercel'ga deploy bo'lgan** bo'lishi shart.
+  Vercel **Hobby planda deploy uchun ko'pi bilan 12 ta serverless funksiya** qo'shish
+  mumkin — shuning uchun barcha API **bitta funksiyaga** birlashtirilgan:
+  `api/index.js` (router). Barcha `/api/*` so'rovlar unga keladi
+  (vercel.json'dagi rewrite orqali) va u handler'larni chaqiradi.
+  Handler kodlari `server/handlers/` da, umumiy logika `server/lib/` da —
+  bu fayllar funksiya EMAS (cheklovga kirmaydi).
+- Loyiha ildizida `vercel.json` bor — u Vite frontend + `api/index.js` funksiyani
+  Vercel'da to'g'ri sozlashni ta'minlaydi (rewrites + maxDuration).
 - Deploy'dan so'ng tekshiring: `https://lingohub.uz/api/payment/status?orderId=test123`
   so'roviga `{ "ok": false, ... }` qaytsa ham API ishlayapti (order yo'q degani).
+
+> 🔧 **Yangi endpoint qo'shish:** `server/handlers/` ga handler yarating va uni
+> `api/index.js` dagi `routes` ro'yxatiga qo'shing — yangi serverless funksiya
+> yaratish shart EMAS (cheklovga ta'sir qilmaydi).
 
 ### 2. Payme kabinetida webhook'ni sozlash
 

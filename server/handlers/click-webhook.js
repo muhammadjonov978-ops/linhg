@@ -3,7 +3,7 @@
 //   https://lingohub.uz/api/click/webhook
 // Server-side env: CLICK_SERVICE_ID, CLICK_MERCHANT_ID, CLICK_SECRET_KEY
 import { createHash } from 'node:crypto';
-import { getOrder, markOrderPaid } from '../_lib/orders.js';
+import { getOrder, markOrderPaid } from '../lib/orders.js';
 
 const SERVICE_ID = process.env.CLICK_SERVICE_ID || '';
 const SECRET_KEY = process.env.CLICK_SECRET_KEY || '';

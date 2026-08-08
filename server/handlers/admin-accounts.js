@@ -6,8 +6,8 @@
 //
 // Yaratilgan hisoblar endi HAQIQIY ishlaydi — darhol login qilish mumkin
 // (Redis saqlanadi; Redis yo'q bo'lsa vaqtincha xotirada).
-import { verifyToken, getAllAccounts } from '../_lib/adminAuth.js';
-import { addStoredAccount, removeStoredAccount, getStoreMode } from '../_lib/adminAccounts.js';
+import { verifyToken, getAllAccounts } from '../lib/adminAuth.js';
+import { addStoredAccount, removeStoredAccount, getStoreMode } from '../lib/adminAccounts.js';
 
 function extractToken(req) {
   const auth = req.headers?.authorization || '';

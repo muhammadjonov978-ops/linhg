@@ -2,8 +2,8 @@
 // Payme kabinetida "Merchant API URL" sifatida shu endpoint ko'rsatiladi:
 //   https://lingohub.uz/api/payme/webhook
 // Basic auth: login = merchant_id, parol = Payme KEY (server-side env: PAYME_MERCHANT_ID, PAYME_KEY)
-import { getOrder, markOrderPaid, txnKey } from '../_lib/orders.js';
-import { redis } from '../_lib/redis.js';
+import { getOrder, markOrderPaid, txnKey } from '../lib/orders.js';
+import { redis } from '../lib/redis.js';
 
 const MERCHANT_ID = process.env.PAYME_MERCHANT_ID || '';
 const KEY = process.env.PAYME_KEY || '';
