@@ -1,7 +1,8 @@
 // GET /api/health — backend tizim holati (admin panelda ko'rsatiladi)
-// Redis ishlayaptimi? Payme/Click sozlanganmi? Admin login yoniqmi?
+// Redis ishlayaptimi? Payme/Click sozlanganmi? Admin login yoniqmi? Telegram bot?
 import { redis } from './_lib/redis.js';
 import { isAuthConfigured } from './_lib/adminAuth.js';
+import { telegramConfigured, ownerChatId } from './_lib/telegram.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -25,6 +26,8 @@ export default async function handler(req, res) {
       payme: Boolean(process.env.PAYME_MERCHANT_ID && process.env.PAYME_KEY),
       click: Boolean(process.env.CLICK_MERCHANT_ID && process.env.CLICK_SERVICE_ID && process.env.CLICK_SECRET_KEY),
       adminAuth: isAuthConfigured(),
+      telegram: telegramConfigured(),
+      telegramChat: Boolean(ownerChatId()),
     },
   });
 }

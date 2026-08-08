@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fa';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal, { USER_EVENT } from './GoogleAuthModal';
+import Flag from './Flag';
 
 function loadSavedUser() {
   try {
@@ -98,7 +99,7 @@ export default function Navbar({ onToggleTutor }) {
   ];
 
   return (
-    <nav className="navbar bg-base-100/85 backdrop-blur-md sticky top-0 z-50 shadow-lg border-b border-primary/15 min-h-0 py-1.5">
+    <nav className="navbar bg-base-100/70 backdrop-blur-xl sticky top-0 z-50 shadow-lg shadow-black/20 border-b border-primary/20 min-h-0 py-1.5">
       <div className="navbar-start gap-1">
         <a href="/" onClick={goHome} className="btn btn-ghost text-xl gap-2 px-2">
           <img
@@ -114,8 +115,8 @@ export default function Navbar({ onToggleTutor }) {
 
       <div className="navbar-center hidden lg:flex gap-2">
         {currentLang && (
-          <div className="badge badge-lg gap-2 p-3 border border-primary/25 bg-primary/10">
-            <span className="text-lg">{currentLang.flag}</span>
+          <div className="badge badge-lg gap-2 p-3 border border-primary/25 bg-primary/10 gold-glow">
+            <Flag lang={currentLang} size={22} />
             <span className="font-medium">{currentLang.name}</span>
           </div>
         )}

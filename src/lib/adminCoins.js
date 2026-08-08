@@ -1,5 +1,7 @@
 // ==== ADMIN COIN WALLET (Firebase realtime + localStorage fallback) ====
-// Admin panelda adminlar bir-biriga CHEKSIZ bepul coin bera oladi.
+// Admin panelda adminlar bir-biriga BEPUL coin bera oladi — bitta berishda
+// ko'pi bilan MAX_GIFT (100 000) tanga. Adminlar orasida sovg'a qilish
+// cheklovi shu yerda ham, panel UI'da ham qo'llaniladi.
 //
 // Ikkita rejim:
 //  1) FIREBASE — balanslar Firebase Realtime Database'da saqlanadi
@@ -18,6 +20,9 @@ const LOG_PATH = 'adminCoinLog';
 const LOCAL_COINS_KEY = 'lingohub_admin_coins';
 const LOCAL_LOG_KEY = 'lingohub_admin_coin_log';
 export const MAX_LOG = 50;
+
+// Bitta berishda eng ko'p 100 000 tanga — adminlar orasidagi bepul sovg'a limiti
+export const MAX_GIFT = 100000;
 
 const listeners = new Set();
 let started = false;
@@ -127,12 +132,15 @@ function start() {
 
 // ---------- PUBLIC API ----------
 
-// Adminga cheksiz coin berish. fromUsername — kim berayotgani (session),
-// toUsername — kimga, amount — qancha (har qanday musbat butun son).
+// Adminga bepul coin berish. fromUsername — kim berayotgani (session),
+// toUsername — kimga, amount — qancha (maksimal MAX_GIFT = 100 000).
 export async function giveAdminCoins(fromUsername, toUsername, amount) {
   const amt = Math.floor(Number(amount));
   if (!Number.isFinite(amt) || amt <= 0) {
     return { ok: false, error: "Miqdor noto'g'ri — musbat butun son kiriting" };
+  }
+  if (amt > MAX_GIFT) {
+    return { ok: false, error: `Bitta berishda maksimal ${MAX_GIFT.toLocaleString('uz-UZ')} tanga (100 000 limit)` };
   }
   if (!toUsername) {
     return { ok: false, error: 'Kimga berishni tanlang' };

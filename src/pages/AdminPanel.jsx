@@ -3,7 +3,8 @@ import { useApp } from '../context/AppContext';
 import { adminLogin, verifyAdminSession, UNIVERSAL_USERNAME, ADMIN_SESSION_KEY as SESSION_KEY } from '../data/adminUsers';
 import { useSiteConfig, saveConfig } from '../data/siteConfig';
 import { languages } from '../data/languages';
-import { subscribeAdminCoins, giveAdminCoins, MAX_LOG } from '../lib/adminCoins';
+import Flag from '../components/Flag';
+import { subscribeAdminCoins, giveAdminCoins, MAX_LOG, MAX_GIFT } from '../lib/adminCoins';
 import {
   startPresence, setPresenceLocation, subscribePresence,
 } from '../utils/presence';
@@ -18,8 +19,8 @@ import {
   FaUpload as Upload, FaLink as Link2, FaTimes as X, FaChevronRight as ChevronRight,
   FaFileExcel as FileSpreadsheet, FaChartLine as TrendingUp,
   FaMousePointer as MousePointerClick, FaChartBar as BarChart3,
-  FaGift as Gift, FaSpinner as Loader2, FaInfinity as InfinityIcon,
-  FaExclamationTriangle as AlertIcon, FaGlobe as Globe,
+  FaGift as Gift, FaSpinner as Loader2, FaPaperPlane as PaperPlane,
+  FaTelegramPlane as TelegramPlane, FaExclamationTriangle as AlertIcon, FaGlobe as Globe,
 } from 'react-icons/fa';
 
 const LOG_KEY = 'lingohub_admin_log';
@@ -339,7 +340,7 @@ function LanguagesTab() {
             className="rounded-xl border border-white/10 bg-white/[0.02] p-3 hover:border-[#facc15]/40 hover:bg-white/[0.04] transition-all duration-200"
           >
             <div className="flex items-center gap-2">
-              <span className="text-2xl">{lang.flag}</span>
+              <Flag lang={lang} size={24} />
               <div className="min-w-0">
                 <p className="text-xs font-bold truncate text-white">{lang.name}</p>
                 <p className="text-[10px] text-white/40 truncate">{(lang.totalLearners || 0).toLocaleString('uz-UZ')} o'quvchi</p>
@@ -404,7 +405,156 @@ function TextsTab({ config, onSave }) {
   );
 }
 
-// ================= COINS TAB (adminlar bir-biriga cheksiz coin beradi) =================
+// ================= TELEGRAM TAB (bot holati + test xabar) =================
+function TelegramTab() {
+  const [info, setInfo] = useState(null);
+  const [testText, setTestText] = useState('Salom! 👋 Bu Lingohub admin panelidan yuborilgan test xabar ✅');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  const load = () => {
+    fetch('/api/telegram/info')
+      .then((r) => r.json())
+      .then((d) => setInfo(d))
+      .catch(() => setInfo({ ok: false, configured: false, error: 'Serverga ulanishmadi' }));
+  };
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  const sendTest = async () => {
+    setBusy(true);
+    setMsg('');
+    try {
+      // Admin sessiya tokenini yuboramiz — faqat adminlar xabar yubora oladi
+      const session = readJSON(SESSION_KEY, null);
+      const res = await fetch('/api/telegram/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(session?.token ? { Authorization: `Bearer ${session.token}` } : {}),
+        },
+        body: JSON.stringify({ text: testText }),
+      });
+      const data = await res.json().catch(() => null);
+      setMsg(
+        data?.ok
+          ? '✅ Xabar yuborildi — Telegram botni tekshiring!'
+          : `❌ ${data?.error || 'Xato yuz berdi'}`
+      );
+    } catch {
+      setMsg('❌ Serverga ulanishmadi');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const webhookUrl = typeof window !== 'undefined' ? `${window.location.origin}/api/telegram/webhook` : '';
+
+  return (
+    <div className="space-y-4">
+      {/* Status card */}
+      <div className="rounded-xl bg-gradient-to-br from-[#38bdf8]/15 to-[#0ea5e9]/[0.05] border border-[#38bdf8]/30 p-4 sm:p-5 relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-[#38bdf8]/10 blur-2xl pointer-events-none" />
+        <div className="flex flex-wrap items-center gap-3 relative">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#38bdf8] to-[#0ea5e9] flex items-center justify-center shadow-lg shadow-[#38bdf8]/30 shrink-0">
+            <TelegramPlane className="w-5 h-5 text-white" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+              Telegram Bot
+              {info?.configured ? (
+                <span className="badge badge-success badge-xs gap-1 border-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" /> Faol
+                </span>
+              ) : (
+                <span className="badge badge-error badge-xs gap-1 border-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400" /> Sozlanmagan
+                </span>
+              )}
+            </h3>
+            <p className="text-[11px] text-white/50 mt-0.5">
+              {info?.username
+                ? `@${info.username} — bot tayyor, xabarlarni qabul qilmoqda`
+                : (info?.error || 'Holat tekshirilmoqda...')}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-4 relative">
+          <div className="rounded-lg bg-black/25 border border-white/10 px-3 py-2.5">
+            <p className="text-[10px] text-white/40">Webhook</p>
+            <p className="text-xs font-bold text-white truncate">
+              {info?.webhookUrl ? '✅ O\u2018rnatilgan' : (info?.configured === false ? '—' : '⚠️ O\u2018rnatilmagan')}
+            </p>
+          </div>
+          <div className="rounded-lg bg-black/25 border border-white/10 px-3 py-2.5">
+            <p className="text-[10px] text-white/40">Egasining chat ID</p>
+            <p className="text-xs font-bold text-white">{info?.hasOwnerChat ? '✅ Bor' : '⚠️ Yo\u2018q'}</p>
+          </div>
+          <div className="rounded-lg bg-black/25 border border-white/10 px-3 py-2.5">
+            <p className="text-[10px] text-white/40">Kutilayotgan xabarlar</p>
+            <p className="text-xs font-bold text-white">{info?.pendingCount ?? '—'}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Test message */}
+      <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4">
+        <h3 className="font-bold text-sm flex items-center gap-2 mb-2 text-white">
+          <PaperPlane className="w-4 h-4 text-[#38bdf8]" /> Test xabar yuborish
+        </h3>
+        <p className="text-[11px] text-white/40 mb-3 leading-relaxed">
+          Botga <b className="text-[#38bdf8]">/start</b> yuborgan barcha chatlarga (va egasiga) xabar boradi.
+          Yangi to\u2018lovlar bo\u2018lganda bot avtomatik xabar yuboradi. 💰
+        </p>
+        <div className="flex flex-wrap gap-2">
+          <input
+            value={testText}
+            onChange={(e) => setTestText(e.target.value)}
+            className="input input-bordered input-sm flex-1 min-w-[220px] bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 focus:border-[#38bdf8] transition-colors"
+          />
+          <button
+            onClick={sendTest}
+            disabled={busy}
+            className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#38bdf8] to-[#0ea5e9] text-white hover:brightness-110 disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <PaperPlane className="w-3.5 h-3.5" />}
+            {busy ? 'Yuborilmoqda...' : 'Yuborish'}
+          </button>
+        </div>
+        {msg && <div className="text-xs font-medium mt-2 animate-[fadeIn_0.3s_ease-out]">{msg}</div>}
+      </div>
+
+      {/* Webhook setup guide */}
+      <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4">
+        <h3 className="font-bold text-sm flex items-center gap-2 mb-2 text-white">
+          <Link2 className="w-4 h-4 text-[#a78bfa]" /> Webhook sozlash
+        </h3>
+        <p className="text-[11px] text-white/40 mb-3 leading-relaxed">
+          Bot buyruqlari ishlashi uchun webhook o\u2018rnatilgan bo\u2018lishi kerak. Mahalliy
+          kompyuterda bitta buyruq yetarli:
+        </p>
+        <div className="rounded-lg bg-black/40 border border-white/10 overflow-hidden">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
+            <span className="text-[10px] font-mono text-white/40">terminal</span>
+            <CopyButton text="node scripts/set-telegram-webhook.mjs" label="Buyruqni nusxalash" />
+          </div>
+          <pre className="px-3 py-2.5 text-[11px] font-mono text-white/70 overflow-x-auto whitespace-pre-wrap">node scripts/set-telegram-webhook.mjs {webhookUrl || ''}</pre>
+        </div>
+        <p className="text-[11px] text-white/40 mt-2.5 leading-relaxed">
+          Vercel'da ishlayotgan bo\u2018lsa — <b className="text-white/70">TELEGRAM_BOT_TOKEN</b> va ixtiyoriy{' '}
+          <b className="text-white/70">TELEGRAM_CHAT_ID</b> env o\u2018zgaruvchilarini qo\u2018shing, so\u2018ng yuqoridagi
+          skriptni ishga tushiring. Botga <b className="text-[#38bdf8]">/start</b> yuborish orqali chat ID avtomatik eslab qolinadi.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ================= COINS TAB (adminlar bir-biriga 100 000 gacha bepul coin beradi) =================
 function CoinsTab({ config, session }) {
   const { dispatch } = useApp();
   const [data, setData] = useState({ balances: {}, log: [], mode: 'local' });
@@ -457,11 +607,15 @@ function CoinsTab({ config, session }) {
     setTimeout(() => setMsg(''), 3000);
   };
 
-  // O'zimga tez coin berish (cheksiz)
+  // O'zimga tez coin berish (100 000 gacha)
   const handleSelfGive = async () => {
     const amt = Math.floor(Number(amount));
     if (!Number.isFinite(amt) || amt <= 0) {
       setMsg('❌ Miqdor noto\u2018g\u2018ri — musbat butun son kiriting');
+      return;
+    }
+    if (amt > MAX_GIFT) {
+      setMsg(`❌ Maksimal ${MAX_GIFT.toLocaleString('uz-UZ')} tanga — 100 000 limit`);
       return;
     }
     setBusy(true);
@@ -510,7 +664,7 @@ function CoinsTab({ config, session }) {
         )}
       </div>
 
-      {/* ⚡ O'zimga tez coin berish (cheksiz) */}
+      {/* ⚡ O'zimga tez coin berish (100 000 gacha) */}
       <div className="rounded-xl bg-gradient-to-br from-[#facc15]/20 to-[#f59e0b]/[0.07] border border-[#facc15]/40 p-4 sm:p-5 relative overflow-hidden">
         <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-[#facc15]/10 blur-2xl pointer-events-none" />
         <div className="flex flex-wrap items-center gap-2 mb-3 relative">
@@ -519,7 +673,7 @@ function CoinsTab({ config, session }) {
           </div>
           <h3 className="font-bold text-sm text-white">O\u2018zimga coin berish</h3>
           <span className="badge badge-warning badge-sm gap-1 border-0 text-[10px]">
-            <InfinityIcon className="w-3 h-3" /> Cheksiz
+            <Gift className="w-3 h-3" /> 100 000 gacha
           </span>
           <span className="text-[10px] text-white/40 ml-auto hidden md:block">
             Hozirgi balans: <b className="text-[#facc15] tabular-nums">{(data.balances?.[SELF] ?? 0).toLocaleString('uz-UZ')} 🪙</b>
@@ -527,7 +681,7 @@ function CoinsTab({ config, session }) {
         </div>
         <div className="flex flex-wrap items-center gap-2 relative">
           <div className="flex flex-wrap gap-1.5">
-            {[1000, 10000, 100000, 1000000].map((n) => (
+            {[1000, 10000, 50000, MAX_GIFT].map((n) => (
               <button
                 key={n}
                 onClick={() => { setTarget(''); setAmount(String(n)); }}
@@ -540,21 +694,11 @@ function CoinsTab({ config, session }) {
                 +{n.toLocaleString('uz-UZ')}
               </button>
             ))}
-            <button
-              onClick={() => { setTarget(''); setAmount('999999999'); }}
-              className={`btn btn-xs gap-1 border transition-colors ${
-                amount === '999999999'
-                  ? 'bg-[#facc15] border-[#facc15] text-black font-bold'
-                  : 'bg-white/[0.04] border-white/15 text-white/70 hover:border-[#facc15]/60 hover:text-[#facc15]'
-              }`}
-              title="999 999 999 tanga — amalda cheksiz"
-            >
-              <InfinityIcon className="w-3 h-3" /> Cheksiz
-            </button>
           </div>
           <input
             type="number"
             min="1"
+            max={MAX_GIFT}
             step="1"
             placeholder="Miqdor"
             value={amount}
@@ -570,6 +714,9 @@ function CoinsTab({ config, session }) {
             {busy ? 'Berilmoqda...' : 'O\u2018zimga berish'}
           </button>
         </div>
+        <p className="text-[10px] text-white/35 mt-3 relative">
+          💡 Adminlar bir-biriga tekinga, bitta berishda ko\u2018pi bilan <b className="text-[#facc15]">100 000 tanga</b> bera oladi.
+        </p>
       </div>
 
       {/* Jami balans */}
@@ -585,11 +732,11 @@ function CoinsTab({ config, session }) {
         </div>
         <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center shrink-0">
-            <InfinityIcon className="w-5 h-5 text-[#fbbf24]" />
+            <Gift className="w-5 h-5 text-[#fbbf24]" />
           </div>
           <div>
-            <p className="text-sm font-bold text-white">Cheksiz berish</p>
-            <p className="text-[10px] text-white/40">Hech qanday limit yo\u2018q — tekinga, istalgan miqdorda</p>
+            <p className="text-sm font-bold text-white">100 000 gacha</p>
+            <p className="text-[10px] text-white/40">Bitta berishda maksimal 100 000 tanga — tekinga</p>
           </div>
         </div>
         <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4 flex items-center gap-3">
@@ -611,7 +758,7 @@ function CoinsTab({ config, session }) {
               <th>Admin</th>
               <th>Rol</th>
               <th className="text-right">Balans (tanga)</th>
-              <th className="text-right">Cheksiz berish</th>
+              <th className="text-right">Bepul berish</th>
             </tr>
           </thead>
           <tbody>
@@ -659,6 +806,7 @@ function CoinsTab({ config, session }) {
                     <input
                       type="number"
                       min="1"
+                      max={MAX_GIFT}
                       step="1"
                       placeholder="Miqdor"
                       value={target === a.username ? amount : ''}
@@ -1091,7 +1239,8 @@ function ServiceStatus() {
     { key: 'redis', label: "To'lov bazasi (Redis)", ok: health.redis, hint: 'UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN' },
     { key: 'payme', label: 'Payme', ok: health.payme, hint: 'PAYME_MERCHANT_ID + PAYME_KEY' },
     { key: 'click', label: 'Click', ok: health.click, hint: 'CLICK_MERCHANT_ID + CLICK_SERVICE_ID + CLICK_SECRET_KEY' },
-    { key: 'adminAuth', label: 'Admin login', ok: health.adminAuth, hint: 'ADMIN_PASSWORD' },
+    { key: 'adminAuth', label: 'Admin login', ok: health.adminAuth, hint: 'ADMIN_USERNAME + ADMIN_PASSWORD' },
+    { key: 'telegram', label: 'Telegram bot', ok: health.telegram, hint: 'TELEGRAM_BOT_TOKEN' },
   ];
 
   return (
@@ -1178,6 +1327,7 @@ function Dashboard({ session, onLogout }) {
     { id: 'tillar', label: 'Tillar', icon: Coins },
     { id: 'tanga', label: 'Tanga berish', icon: Gift },
     { id: 'matnlar', label: 'Sayt matnlari', icon: Type },
+    { id: 'telegram', label: 'Telegram', icon: PaperPlane },
   ];
 
   return (
@@ -1330,6 +1480,7 @@ function Dashboard({ session, onLogout }) {
           {tab === 'tillar' && <LanguagesTab />}
           {tab === 'tanga' && <CoinsTab config={config} session={session} />}
           {tab === 'matnlar' && <TextsTab config={config} onSave={saveConfig} />}
+          {tab === 'telegram' && <TelegramTab />}
         </div>
 
         {/* ===== LOGIN LOG ===== */}

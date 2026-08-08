@@ -2,18 +2,23 @@
 // Admin paroli faqat SERVER'da (env o'zgaruvchilarida) saqlanadi —
 // brauzer kodiga hech qachon chiqmaydi.
 //
-// Vercel sozlamalarida (Environment Variables) MAJBURIY o'rnatilishi kerak:
+// Vercel sozlamalarida (Environment Variables):
 //   ADMIN_USERNAME        (ixtiyoriy, default: shxsh)
-//   ADMIN_PASSWORD        (MAJBURIY — o'rnatilmasa login butunlay yopiq!)
+//   ADMIN_PASSWORD        (ixtiyoriy — bo'sh bo'lsa DEFAULT 'shshsh' ishlatiladi,
+//                          panel darhol ishlaydi. Haqiqiy saytda kuchli parol qo'yish tavsiya etiladi)
 //   ADMIN_NAME            (ixtiyoriy, default: Shox)
 //   ADMIN_TOKEN_SECRET    (ixtiyoriy — token imzosi. Bo'sh bo'lsa ADMIN_PASSWORD ishlatiladi)
 //   ADMIN_EXTRA_ACCOUNTS  (ixtiyoriy: login:parol:Ism,login2:parol2:Ism2)
 //
-// ⚠️ Xavfsizlik: DEFAULT parol olib tashlandi. ADMIN_PASSWORD o'rnatilmagan
-// bo'lsa panelga kirish butunlay yopiq (not_configured xatosi chiqadi).
+// ⚠️ Xavfsizlik: ADMIN_PASSWORD env'da o'rnatilmagan bo'lsa DEFAULT parol
+// ('shshsh') ishlatiladi — bu sayt o'rnatilishi bilan darhol ishlashi uchun.
+// Haqiqiy foydalanishda Vercel env'lariga kuchli ADMIN_PASSWORD qo'yish tavsiya etiladi.
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const SESSION_TTL = 12 * 60 * 60 * 1000; // 12 soat
+
+// Default (standart) parol — faqat ADMIN_PASSWORD env'i bo'lmaganda ishlatiladi
+const DEFAULT_PASSWORD = 'shshsh';
 
 // Env qiymatlari chaqiruv paytida o'qiladi (module yuklanishida emas) —
 // bu test'lar va serverless muhitida ishonchliroq.
@@ -21,7 +26,7 @@ function ownerUsername() {
   return (process.env.ADMIN_USERNAME || 'shxsh').trim().toLowerCase();
 }
 function ownerPassword() {
-  return process.env.ADMIN_PASSWORD || '';
+  return process.env.ADMIN_PASSWORD || DEFAULT_PASSWORD;
 }
 function ownerName() {
   return (process.env.ADMIN_NAME || 'Shox').trim();
@@ -30,14 +35,14 @@ function tokenSecret() {
   return process.env.ADMIN_TOKEN_SECRET || ownerPassword();
 }
 
-// Serverda admin auth sozlanganmi? (ADMIN_PASSWORD o'rnatilgan bo'lishi shart)
+// Serverda admin auth sozlanganmi? (env bo'lmasa ham default parol ishlaydi)
 export function isAuthConfigured() {
-  return Boolean(ownerPassword());
+  return true;
 }
 
 // Standart (default) parol ishlatilmoqdami? — panelda ogohlantirish ko'rsatish uchun
 export function isUsingDefaultPassword() {
-  return false;
+  return !process.env.ADMIN_PASSWORD;
 }
 
 // Qo'shimcha adminlar: "login:parol:Ism,login2:parol2:Ism2"

@@ -11,6 +11,7 @@ import {
   FaGlobe as Globe,
 } from 'react-icons/fa';
 import StypingAdBanner from '../components/StypingAdBanner';
+import Flag from '../components/Flag';
 
 const features = [
   { icon: GraduationCap, title: 'Alifbo', desc: "Harflarni o'rganish" },
@@ -111,28 +112,28 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-base-200 via-base-100 to-base-200">
-        <div className="absolute inset-0 opacity-30">
+      <div className="aurora-bg relative">
+        <div className="absolute inset-0 opacity-40 pointer-events-none">
           <div className="absolute top-20 left-10 text-6xl animate-float">🌍</div>
           <div className="absolute top-40 right-20 text-5xl animate-float" style={{ animationDelay: '1s' }}>🗣️</div>
           <div className="absolute bottom-40 left-1/4 text-4xl animate-float" style={{ animationDelay: '2s' }}>📚</div>
           <div className="absolute bottom-20 right-1/3 text-5xl animate-float" style={{ animationDelay: '0.5s' }}>✨</div>
         </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 py-12 md:py-16">
+        <div className="relative max-w-6xl mx-auto px-4 py-12 md:py-20">
           <div className="text-center mb-10">
             <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="badge badge-primary badge-lg gap-2 px-4 py-3 shadow-lg shadow-primary/20">
-                <Sparkles className="w-4 h-4" />
+              <div className="badge badge-primary badge-lg gap-2 px-4 py-3 shadow-lg shadow-primary/20 gold-glow animate-[fadeInUp_0.5s_ease-out]">
+                <Sparkles className="w-4 h-4 animate-coin-spin" />
                 {getSiteText(config, 'heroBadge', 'Interaktiv til o\u2018rganish')}
               </div>
             </div>
-            <h1 className="text-4xl md:text-6xl font-extrabold mb-4 font-display">
+            <h1 className="text-4xl md:text-7xl font-extrabold mb-4 font-display tracking-tight animate-[fadeInUp_0.6s_ease-out]">
               <span className="gold-text">
                 {getSiteText(config, 'heroTitle', '130+ Tilda Erkin Gaplashing')}
               </span>
             </h1>
-            <p className="text-lg md:text-xl opacity-70 max-w-2xl mx-auto mb-8">
+            <p className="text-lg md:text-xl opacity-70 max-w-2xl mx-auto mb-8 animate-[fadeInUp_0.7s_ease-out]">
               {getSiteText(config, 'heroSubtitle', "Reading, Listening, Writing va Speaking — 4 ta asosiy ko'nikmani interaktiv mashqlar orqali rivojlantiring")}
             </p>
 
@@ -255,13 +256,13 @@ export default function HomePage() {
                   <button
                     key={lang.id}
                     onClick={() => handleLanguageSelect(lang.id)}
-                    className="card bg-base-100 border border-base-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 group text-left animate-[fadeIn_0.5s_ease-out] card-shine"
+                    className="card gold-border-card glow-hover group text-left animate-[fadeIn_0.5s_ease-out] card-shine"
                     style={{ animationDelay: `${Math.min(index, 20) * 30}ms` }}
                   >
                     <div className="card-body p-5">
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-4xl drop-shadow-sm">{lang.flag}</span>
-                        <span className="badge badge-ghost badge-sm">
+                        <Flag lang={lang} size={52} className="drop-shadow-md" />
+                        <span className="badge badge-ghost badge-sm bg-white/[0.04] border-white/10">
                           {Math.round((completedCount / totalLessons) * 100)}%
                         </span>
                       </div>
@@ -319,11 +320,11 @@ export default function HomePage() {
             {features.map((feature, i) => (
               <div
                 key={i}
-                className="card bg-base-100 border border-base-300 hover:border-primary/30 hover:shadow-md transition-all duration-300 group"
+                className="card glass-panel glow-hover group"
               >
                 <div className="card-body items-center text-center p-6">
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300">
-                    <feature.icon className="w-7 h-7 text-primary" />
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#facc15]/25 to-[#f59e0b]/10 border border-[#facc15]/25 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
+                    <feature.icon className="w-7 h-7 text-[#f5d27a]" />
                   </div>
                   <h3 className="font-bold">{feature.title}</h3>
                   <p className="text-xs opacity-60">{feature.desc}</p>
@@ -335,7 +336,7 @@ export default function HomePage() {
           {/* Achievement preview */}
           <div className="mt-12 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Award className="w-6 h-6 text-warning" />
+              <Award className="w-6 h-6 text-warning animate-coin-spin" />
               <h3 className="text-xl font-bold">Yutuqlar va Statistika</h3>
             </div>
             <p className="text-sm opacity-60 mb-6 max-w-lg mx-auto">
@@ -348,7 +349,7 @@ export default function HomePage() {
                 { icon: '👑', title: 'Poliglot', desc: '100 ta dars' },
                 { icon: '🏆', title: 'Tanga Legendasi', desc: '5000 tanga' },
               ].map((item, i) => (
-                <div key={i} className="bg-base-100 rounded-xl p-4 border border-base-300 hover:border-primary/30 transition-all">
+                <div key={i} className="glass-panel rounded-xl p-4 glow-hover">
                   <div className="text-2xl mb-1">{item.icon}</div>
                   <p className="font-bold text-sm">{item.title}</p>
                   <p className="text-xs opacity-50">{item.desc}</p>

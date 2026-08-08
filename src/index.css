@@ -4,36 +4,36 @@
   themes: all;
 }
 
-/* ===== QORA + OLTIN — LINGOHUB MAXSUS MAVZU ===== */
+/* ===== QORA + OLTIN — LINGOHUB MAXSUS MAVZU (yangilangan premium dizayn) ===== */
 @plugin "daisyui/theme" {
   name: "lingohub";
   default: true;
   prefersdark: true;
   color-scheme: dark;
 
-  --color-base-100: oklch(0.15 0.01 285);
-  --color-base-200: oklch(0.19 0.012 285);
-  --color-base-300: oklch(0.24 0.014 285);
-  --color-base-content: oklch(0.95 0.008 85);
-  --color-primary: oklch(0.83 0.15 90);
-  --color-primary-content: oklch(0.2 0.03 90);
-  --color-secondary: oklch(0.73 0.13 55);
+  --color-base-100: oklch(0.145 0.012 262);
+  --color-base-200: oklch(0.185 0.014 262);
+  --color-base-300: oklch(0.24 0.016 262);
+  --color-base-content: oklch(0.955 0.008 90);
+  --color-primary: oklch(0.855 0.155 92);
+  --color-primary-content: oklch(0.18 0.03 92);
+  --color-secondary: oklch(0.75 0.14 55);
   --color-secondary-content: oklch(0.16 0.02 55);
-  --color-accent: oklch(0.86 0.1 100);
-  --color-accent-content: oklch(0.22 0.02 100);
-  --color-neutral: oklch(0.22 0.01 285);
-  --color-neutral-content: oklch(0.93 0.01 85);
-  --color-info: oklch(0.72 0.1 230);
-  --color-info-content: oklch(0.15 0.02 230);
-  --color-success: oklch(0.74 0.14 150);
-  --color-success-content: oklch(0.15 0.02 150);
-  --color-warning: oklch(0.85 0.16 85);
+  --color-accent: oklch(0.88 0.1 105);
+  --color-accent-content: oklch(0.22 0.02 105);
+  --color-neutral: oklch(0.24 0.015 262);
+  --color-neutral-content: oklch(0.93 0.01 90);
+  --color-info: oklch(0.74 0.11 232);
+  --color-info-content: oklch(0.15 0.02 232);
+  --color-success: oklch(0.76 0.15 152);
+  --color-success-content: oklch(0.15 0.02 152);
+  --color-warning: oklch(0.87 0.16 85);
   --color-warning-content: oklch(0.2 0.03 85);
-  --color-error: oklch(0.66 0.19 25);
+  --color-error: oklch(0.68 0.2 25);
   --color-error-content: oklch(0.95 0.02 25);
-  --radius-selector: 0.6rem;
-  --radius-field: 0.75rem;
-  --radius-box: 1.1rem;
+  --radius-selector: 0.7rem;
+  --radius-field: 0.8rem;
+  --radius-box: 1.25rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
@@ -59,6 +59,121 @@ body {
 
 .font-display {
   font-family: var(--font-display);
+}
+
+/* ==== Yangilangan premium dizayn: global fon, scrollbar, selection ==== */
+
+/* Sahifa orqa foni — yumshoq ko'k-qora + oltin aurora */
+body {
+  background:
+    radial-gradient(1100px 600px at 85% -10%, rgba(250, 204, 21, 0.08), transparent 55%),
+    radial-gradient(900px 520px at -12% 20%, rgba(96, 165, 250, 0.07), transparent 55%),
+    radial-gradient(800px 500px at 50% 115%, rgba(167, 139, 250, 0.06), transparent 55%),
+    oklch(0.14 0.012 262);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(212, 175, 55, 0.35);
+  color: #fff;
+}
+
+/* Butun sahifa uchun chiroyli scrollbar */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.45), rgba(212, 175, 55, 0.2));
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, rgba(212, 175, 55, 0.7), rgba(212, 175, 55, 0.35));
+  background-clip: padding-box;
+}
+
+/* ==== Aurora (harakatlanuvchi gradient) ==== */
+.aurora-bg {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.aurora-bg::before {
+  content: '';
+  position: absolute;
+  inset: -40% -30%;
+  z-index: -2;
+  background:
+    radial-gradient(38% 45% at 22% 28%, rgba(250, 204, 21, 0.16), transparent 60%),
+    radial-gradient(34% 42% at 78% 22%, rgba(96, 165, 250, 0.15), transparent 60%),
+    radial-gradient(40% 48% at 60% 82%, rgba(167, 139, 250, 0.13), transparent 62%),
+    radial-gradient(30% 36% at 92% 64%, rgba(52, 211, 153, 0.1), transparent 60%);
+  filter: blur(30px);
+  animation: aurora-drift 16s ease-in-out infinite alternate;
+}
+
+.aurora-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, black 30%, transparent 75%);
+}
+
+@keyframes aurora-drift {
+  0% {
+    transform: translate3d(-4%, -2%, 0) rotate(0.001deg);
+  }
+  50% {
+    transform: translate3d(3%, 3%, 0);
+  }
+  100% {
+    transform: translate3d(-2%, 4%, 0);
+  }
+}
+
+/* ==== Glassmorphism ==== */
+.glass-panel {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02));
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.glass-panel-strong {
+  background: linear-gradient(160deg, rgba(28, 30, 42, 0.82), rgba(18, 20, 30, 0.86));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Oltin gradient chegara */
+.gold-border-card {
+  position: relative;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(oklch(0.16 0.014 262), oklch(0.155 0.012 262)) padding-box,
+    linear-gradient(135deg, rgba(250, 204, 21, 0.55), rgba(250, 204, 21, 0.06) 40%, rgba(96, 165, 250, 0.25)) border-box;
+}
+
+/* Yumshoq oltin glow hover */
+.glow-hover {
+  transition: transform 0.25s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+.glow-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 40px rgba(212, 175, 55, 0.14), 0 4px 18px rgba(0, 0, 0, 0.35);
 }
 
 /* Oltin gradient matn */

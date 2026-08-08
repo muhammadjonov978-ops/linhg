@@ -12,6 +12,7 @@ import DailyChallenge from '../components/DailyChallenge';
 import AchievementsPanel from '../components/AchievementsPanel';
 import StatsDashboard from '../components/StatsDashboard';
 import StreakCalendar from '../components/StreakCalendar';
+import Flag from '../components/Flag';
 
 const LESSONS_PER_PAGE = 20;
 
@@ -89,7 +90,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
   return (
     <div>
       {/* Header */}
-      <div className="bg-gradient-to-br from-primary/5 via-base-100 to-secondary/5 border-b border-base-300">
+      <div className="aurora-bg border-b border-base-300">
         <div className="max-w-6xl mx-auto px-4 py-6">
           <button
             onClick={() => dispatch({ type: 'SELECT_LANGUAGE', payload: null })}
@@ -100,9 +101,9 @@ export default function LanguageDashboard({ onSelectLevel }) {
 
           <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
             <div className="flex items-center gap-4">
-              <span className="text-5xl">{currentLang.flag}</span>
+              <Flag lang={currentLang} size={60} className="shadow-lg shadow-black/25" />
               <div>
-                <h1 className="text-3xl font-bold">{currentLang.name}</h1>
+                <h1 className="text-3xl md:text-4xl font-bold font-display">{currentLang.name}</h1>
                 <p className="opacity-60">{currentLang.description}</p>
               </div>
             </div>

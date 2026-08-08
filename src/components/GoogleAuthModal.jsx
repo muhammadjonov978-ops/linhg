@@ -187,10 +187,11 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
       <div className="relative bg-base-100 rounded-3xl shadow-2xl max-w-md w-full animate-[fadeIn_0.3s_ease-out] overflow-hidden border border-primary/20 gold-glow">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 btn btn-ghost btn-circle btn-sm z-10 modal-close-focus"
+          className="absolute top-3.5 right-3.5 z-10 w-9 h-9 rounded-full flex items-center justify-center bg-base-200/90 border border-base-300 text-white/80 hover:text-white hover:bg-error hover:border-error hover:scale-110 active:scale-95 transition-all duration-200 modal-close-focus shadow-lg"
           title="Yopish (Esc)"
+          aria-label="Yopish"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4.5 h-4.5" />
         </button>
 
         {user ? (
