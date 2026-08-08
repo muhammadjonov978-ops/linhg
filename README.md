@@ -154,6 +154,32 @@ Ilgari admin paroli brauzer kodida ochiq saqlanardi (`shox1010`) — buni har ki
    xavfsizlik choralari. `shxsh1010` standart paroli kod'dan **butunlay olib
    tashlandi** — endi hech kim ochiq default parol bilan kira olmaydi.
 
+### Admin hisoblarini panel'da yaratish (endi HAQIQIY ishlaydi!)
+
+Admin panel → **Hisoblar** bo'limida yangi login/parol yaratganingizda bu hisob
+**server'da saqlanadi va darhol ishlaydi** — paneldan chiqib, yaratgan login/parol
+bilan qaytadan kirishingiz mumkin (avvalgi versiyada bu faqat ko'rinish uchun edi
+va "Login yoki parol noto'g'ri" xatosi chiqardi).
+
+- **Redis o'rnatilgan bo'lsa** (`UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`)
+  — hisoblar barcha qurilmalarda **doimiy** saqlanadi.
+- **Redis bo'lmasa** — demo rejim: hisoblar vaqtincha server xotirasida turadi.
+- Parol **faqat server'da** saqlanadi, brauzerga hech qachon chiqmaydi.
+- Yangi hisob yaratish/o'chirish — faqat **ega** (owner) uchun.
+
+### Jonli faoliyat (kim kirganini ko'rish)
+
+Admin paneldagi **Jonli faoliyat** bo'limi har 15 soniyada server'dan o'qib turadi:
+bugungi kirishlar soni, jami kirishlar, hozir onlayn adminlar va so'nggi kirish
+urinishlari (kim, qachon, muvaffaqiyatlimi, IP). Server mavjud bo'lmasa,
+shu brauzerdagi lokal log ko'rsatiladi.
+
+### Sayt tillari (UZ / RU / ENG)
+
+Sayt tepasidagi (Navbar) **UZ · RU · ENG** tugmalari interfeysni o'zgartiradi.
+Tanlangan til brauzerda saqlanadi. Tarjimalar `src/i18n.jsx` da — yangi matn
+qo'shilsa 3 tilda ham yoziladi.
+
 Qo'shimcha xavfsizlik choralari (tavsiya):
 
 - **Payme/Click**: `PAYME_KEY`, `CLICK_SECRET_KEY`, `UPSTASH_*` lar o'rnatilmagan bo'lsa,

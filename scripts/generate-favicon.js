@@ -1,3 +1,8 @@
+// ⚠️ ESKI (deprecated) skript — ishlatilmaydi!
+// Yangi va to'liq generator: node scripts/generate-favicons.js
+// (bu skript 'L' harfli gradient favicon yaratadi, lekin sayt hozir
+//  brend logosi logo.png dan yaratilgan faviconlarni ishlatadi).
+//
 // favicon PNG generator — lingohub.uz
 // Usage: node scripts/generate-favicon.js
 // Generates branded PNG favicons (48x48 + 180x180) into the 'public' folder.

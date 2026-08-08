@@ -9,7 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "sitemap": "node scripts/generate-sitemap.js",
-    "favicon": "node scripts/generate-favicon.js",
+    "favicon": "node scripts/generate-favicons.js",
     "og-image": "node scripts/generate-og-image.js"
   },
   "dependencies": {

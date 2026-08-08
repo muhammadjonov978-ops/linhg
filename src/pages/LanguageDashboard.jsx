@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { useI18n } from '../i18n';
 import { languages, getLessons, getLanguageStats } from '../data/languages';
 import {
   FaLock as Lock, FaChevronRight as ChevronRight, FaCheckCircle as CheckCircle,
@@ -17,18 +18,19 @@ import Flag from '../components/Flag';
 const LESSONS_PER_PAGE = 20;
 
 const skillFilters = [
-  { id: 'all', icon: Sparkles, label: 'Barcha', color: 'primary' },
-  { id: 'alphabet', icon: GraduationCap, label: 'Alifbo', color: 'info' },
-  { id: 'vocabulary', icon: BookOpen, label: 'So\'zlar', color: 'success' },
-  { id: 'reading', icon: BookOpen, label: 'O\'qish', color: 'secondary' },
-  { id: 'listening', icon: Headphones, label: 'Tinglash', color: 'warning' },
-  { id: 'speaking', icon: Mic, label: 'Gapirish', color: 'error' },
-  { id: 'writing', icon: Pencil, label: 'Yozish', color: 'accent' },
-  { id: 'grammar', icon: Crown, label: 'Grammatika', color: 'neutral' },
+  { id: 'all', icon: Sparkles, labelKey: 'lang.all', color: 'primary' },
+  { id: 'alphabet', icon: GraduationCap, labelKey: 'lang.skill.alphabet', color: 'info' },
+  { id: 'vocabulary', icon: BookOpen, labelKey: 'lang.skill.words', color: 'success' },
+  { id: 'reading', icon: BookOpen, labelKey: 'lang.skill.reading', color: 'secondary' },
+  { id: 'listening', icon: Headphones, labelKey: 'lang.skill.listening', color: 'warning' },
+  { id: 'speaking', icon: Mic, labelKey: 'lang.skill.speaking', color: 'error' },
+  { id: 'writing', icon: Pencil, labelKey: 'lang.skill.writing', color: 'accent' },
+  { id: 'grammar', icon: Crown, labelKey: 'lang.skill.grammar', color: 'neutral' },
 ];
 
 export default function LanguageDashboard({ onSelectLevel }) {
   const { state, dispatch } = useApp();
+  const { t } = useI18n();
   const [activeFilter, setActiveFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [showCompleted, setShowCompleted] = useState(true);
@@ -83,9 +85,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
 
   // Calculate streak display
   let streakText = '';
-  if (state.streak >= 7) streakText = `🔥 ${state.streak} kun`;
-  else if (state.streak > 0) streakText = `🔥 ${state.streak} kun`;
-  else streakText = '';
+  if (state.streak > 0) streakText = t('lang.streakDays', { n: state.streak });
 
   return (
     <div>
@@ -96,7 +96,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
             onClick={() => dispatch({ type: 'SELECT_LANGUAGE', payload: null })}
             className="btn btn-ghost btn-sm gap-2 mb-4"
           >
-            <ArrowLeft className="w-4 h-4" /> Barcha tillar
+            <ArrowLeft className="w-4 h-4" /> {t('lang.allLanguages')}
           </button>
 
           <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
@@ -123,7 +123,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
               )}
               {achievementsUnlocked > 0 && (
                 <div className="badge badge-success badge-lg p-3">
-                  🏆 {achievementsUnlocked} yutuq
+                  🏆 {t('lang.achievements', { n: achievementsUnlocked })}
                 </div>
               )}
             </div>
@@ -138,7 +138,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
           </div>
           <div className="flex items-center justify-between mt-2">
             <p className="text-xs opacity-50">
-              Umumiy taraqqiyot: {stats.completed}/{stats.total} dars
+              {t('lang.progressLabel', { a: stats.completed, b: stats.total })}
             </p>
             <p className="text-xs font-medium text-primary">{stats.percentage}%</p>
           </div>
@@ -163,7 +163,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
                     }`}
                   >
                     <Icon className="w-3 h-3" />
-                    <span>{filter.label}</span>
+                    <span>{t(filter.labelKey)}</span>
                     {filter.id === 'all' && (
                       <span className="opacity-60">({allLessons.length})</span>
                     )}
@@ -181,7 +181,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
                 className={`btn btn-xs gap-1.5 ${!showCompleted ? 'btn-ghost' : 'btn-ghost opacity-50'}`}
               >
                 <CheckCircle className="w-3 h-3" />
-                <span>{showCompleted ? 'Barcha' : 'Yangi'}</span>
+                <span>{t(showCompleted ? 'lang.all' : 'lang.new')}</span>
               </button>
             </div>
 
@@ -189,8 +189,8 @@ export default function LanguageDashboard({ onSelectLevel }) {
             {paginatedLessons.length === 0 ? (
               <div className="card bg-base-100 border border-base-300 p-8 text-center">
                 <Target className="w-12 h-12 opacity-30 mx-auto mb-3" />
-                <h3 className="font-bold text-lg mb-1">Darslar topilmadi</h3>
-                <p className="text-sm opacity-60">Boshqa filtrni tanlang</p>
+                <h3 className="font-bold text-lg mb-1">{t('lang.noLessons')}</h3>
+                <p className="text-sm opacity-60">{t('lang.chooseFilter')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -249,7 +249,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className="text-[10px] opacity-50">{lesson.category}</span>
                               <span className="text-[10px] opacity-30">•</span>
-                              <span className="text-[10px] opacity-50">Dars {lesson.number}</span>
+                              <span className="text-[10px] opacity-50">{t('lang.lesson', { n: lesson.number })}</span>
                             </div>
                           </div>
 
@@ -314,24 +314,24 @@ export default function LanguageDashboard({ onSelectLevel }) {
               <div className="card-body p-4">
                 <h3 className="font-bold text-sm flex items-center gap-2 mb-3">
                   <Coins className="w-4 h-4 text-primary" />
-                  Tezkor statistika
+                  {t('lang.quickStats')}
                 </h3>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="bg-base-200 rounded-lg p-3 text-center">
                     <p className="text-lg font-bold text-primary">{stats.completed}</p>
-                    <p className="text-[10px] opacity-50">Bajarilgan</p>
+                    <p className="text-[10px] opacity-50">{t('lang.completed')}</p>
                   </div>
                   <div className="bg-base-200 rounded-lg p-3 text-center">
                     <p className="text-lg font-bold text-secondary">{stats.total - stats.completed}</p>
-                    <p className="text-[10px] opacity-50">Qolgan</p>
+                    <p className="text-[10px] opacity-50">{t('lang.remaining')}</p>
                   </div>
                   <div className="bg-base-200 rounded-lg p-3 text-center">
                     <p className="text-lg font-bold text-accent">{stats.percentage}%</p>
-                    <p className="text-[10px] opacity-50">Taraqqiyot</p>
+                    <p className="text-[10px] opacity-50">{t('lang.progress')}</p>
                   </div>
                   <div className="bg-base-200 rounded-lg p-3 text-center">
                     <p className="text-lg font-bold text-warning">{allLessons.filter(l => l.type === 'alphabet').length}</p>
-                    <p className="text-[10px] opacity-50">Alifbo dars</p>
+                    <p className="text-[10px] opacity-50">{t('lang.alphabetLessons')}</p>
                   </div>
                 </div>
               </div>

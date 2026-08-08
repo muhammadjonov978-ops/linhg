@@ -1,7 +1,11 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
-import { adminLogin, verifyAdminSession, UNIVERSAL_USERNAME, ADMIN_SESSION_KEY as SESSION_KEY } from '../data/adminUsers';
+import {
+  adminLogin, verifyAdminSession, adminFetchAccounts, adminCreateAccount,
+  adminDeleteAccount, adminFetchActivity, UNIVERSAL_USERNAME, ADMIN_SESSION_KEY as SESSION_KEY,
+} from '../data/adminUsers';
 import { useSiteConfig, saveConfig } from '../data/siteConfig';
+import { useI18n } from '../i18n';
 import { languages } from '../data/languages';
 import Flag from '../components/Flag';
 import { subscribeAdminCoins, giveAdminCoins, MAX_LOG, MAX_GIFT } from '../lib/adminCoins';
@@ -21,6 +25,7 @@ import {
   FaMousePointer as MousePointerClick, FaChartBar as BarChart3,
   FaGift as Gift, FaSpinner as Loader2, FaPaperPlane as PaperPlane,
   FaTelegramPlane as TelegramPlane, FaExclamationTriangle as AlertIcon, FaGlobe as Globe,
+  FaUserClock as UserClock, FaServer as ServerIcon, FaHistory as HistoryIcon,
 } from 'react-icons/fa';
 
 const LOG_KEY = 'lingohub_admin_log';
@@ -69,6 +74,7 @@ function CopyButton({ text, label }) {
 
 // ================= LOGIN SCREEN =================
 function LoginScreen({ onSuccess }) {
+  const { t } = useI18n();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -103,20 +109,28 @@ function LoginScreen({ onSuccess }) {
   };
 
   return (
-    <div data-theme="dark" className="admin-shell min-h-screen flex items-center justify-center p-4">
-      <div className="w-full max-w-md animate-[fadeInUp_0.5s_ease-out]">
+    <div data-theme="dark" className="admin-shell min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Dekorativ fon */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-[#facc15]/10 blur-3xl" />
+        <div className="absolute -bottom-32 -right-24 w-[28rem] h-[28rem] rounded-full bg-[#60a5fa]/10 blur-3xl" />
+        <div className="absolute top-1/3 right-10 w-40 h-40 rounded-full bg-[#a78bfa]/10 blur-3xl" />
+      </div>
+
+      <div className="w-full max-w-md relative animate-[fadeInUp_0.5s_ease-out]">
         <div className="text-center mb-6">
           <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-[#facc15] to-[#f59e0b] flex items-center justify-center shadow-lg shadow-[#facc15]/30 mb-3 animate-[bounceIn_0.6s_ease-out]">
             <Shield className="w-8 h-8 text-black" />
           </div>
-          <h1 className="text-2xl font-extrabold text-white">Admin Panel</h1>
-          <p className="text-sm text-white/50 mt-1">Lingohub boshqaruv tizimi</p>
+          <h1 className="text-2xl font-extrabold text-white">{t('admin.title')}</h1>
+          <p className="text-sm text-white/50 mt-1">{t('admin.subtitle')}</p>
         </div>
 
-        <div className="admin-card p-6 md:p-8 shadow-2xl">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="admin-card p-6 md:p-8 shadow-2xl relative overflow-hidden">
+          <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-[#facc15]/[0.06] blur-2xl pointer-events-none" />
+          <form onSubmit={handleSubmit} className="space-y-4 relative">
             <div>
-              <label htmlFor="admin-login" className="label text-xs font-medium text-white/60">Login</label>
+              <label htmlFor="admin-login" className="label text-xs font-medium text-white/60">{t('admin.login')}</label>
               <div className="relative">
                 <UserIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
                 <input
@@ -124,7 +138,7 @@ function LoginScreen({ onSuccess }) {
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Loginni kiriting"
+                  placeholder={t('admin.loginPlaceholder')}
                   className="input input-bordered w-full pl-10 bg-white/[0.03] border-white/10 focus:outline-none focus:border-[#facc15] transition-colors"
                   autoComplete="username"
                   required
@@ -133,7 +147,7 @@ function LoginScreen({ onSuccess }) {
             </div>
 
             <div>
-              <label htmlFor="admin-password" className="label text-xs font-medium text-white/60">Parol</label>
+              <label htmlFor="admin-password" className="label text-xs font-medium text-white/60">{t('admin.password')}</label>
               <div className="relative">
                 <KeyRound className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-white/30" />
                 <input
@@ -141,7 +155,7 @@ function LoginScreen({ onSuccess }) {
                   type={showPass ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Parolni kiriting"
+                  placeholder={t('admin.passwordPlaceholder')}
                   className="input input-bordered w-full pl-10 pr-10 bg-white/[0.03] border-white/10 focus:outline-none focus:border-[#facc15] transition-colors"
                   autoComplete="current-password"
                   required
@@ -164,12 +178,20 @@ function LoginScreen({ onSuccess }) {
 
             <button type="submit" disabled={busy} className="btn btn-primary w-full gap-2 btn-wave border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black hover:brightness-105 disabled:opacity-60">
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
-              {busy ? 'Tekshirilmoqda...' : 'Kirish'}
+              {busy ? t('admin.checking') : t('admin.signIn')}
             </button>
           </form>
 
-          <a href="#/" className="btn btn-ghost btn-sm mt-4 gap-2 text-xs text-white/60">
-            <ArrowLeft className="w-3.5 h-3.5" /> Saytga qaytish
+          {/* Xavfsizlik belgilari */}
+          <div className="flex flex-wrap justify-center gap-2 mt-5 relative">
+            {['🔒', '🛡️', '⚡'].map((e, i) => (
+              <span key={i} className="inline-flex items-center gap-1 text-[10px] text-white/40 bg-white/[0.03] border border-white/10 rounded-full px-2.5 py-1">
+                {e} Server</span>
+            ))}
+          </div>
+
+          <a href="#/" className="btn btn-ghost btn-sm mt-3 gap-2 text-xs text-white/60 w-full">
+            <ArrowLeft className="w-3.5 h-3.5" /> {t('admin.backToSite')}
           </a>
         </div>
       </div>
@@ -178,72 +200,143 @@ function LoginScreen({ onSuccess }) {
 }
 
 // ================= ACCOUNTS TAB =================
-function AccountsTab({ config, onSave }) {
-  const [newUser, setNewUser] = useState({ username: '', name: '' });
+// Yaratilgan hisoblar ENDI HAQIQIY ishlaydi — server'da saqlanadi (Redis /
+// in-memory), darhol login qilish mumkin. Parol faqat server'da turadi.
+function AccountsTab({ config, onSave, session }) {
+  const { t } = useI18n();
+  const token = session?.token || '';
+  const isOwner = session?.role === 'owner';
+  const [newUser, setNewUser] = useState({ username: '', password: '', name: '' });
   const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [serverAccounts, setServerAccounts] = useState(null); // null = serverdan yuklanmagan
+  const [storeMode, setStoreMode] = useState('');
 
-  const addAccount = () => {
-    const username = String(newUser.username || '').trim().toLowerCase();
-    const name = String(newUser.name || '').trim();
-    if (username.length < 2) {
-      setMsg('Login kamida 2 ta belgidan iborat bo\u2018lishi kerak');
-      return;
-    }
-    if (config.accounts.some((a) => a.username?.toLowerCase() === username)) {
-      setMsg('Bu login allaqachon mavjud');
-      return;
-    }
-    // DIQQAT: parol bu yerda saqlanmaydi! Haqiqiy loginlar server'da
-    // sozlanadi (Vercel env: ADMIN_USERNAME / ADMIN_PASSWORD /
-    // ADMIN_EXTRA_ACCOUNTS). Bu ro'yxat faqat panel ichida ko'rsatish uchun.
-    onSave({
-      ...config,
-      accounts: [...config.accounts, { username, name: name || username, role: 'admin' }],
-    });
-    setNewUser({ username: '', name: '' });
-    setMsg('✅ Hisob ro\u2018yxatga qo\u2018shildi');
-    setTimeout(() => setMsg(''), 2500);
+  // Serverdan HAQIQIY hisoblarni yuklaymiz (fallback: localStorage config)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const res = await adminFetchAccounts(token);
+      if (cancelled) return;
+      if (res.ok) {
+        setServerAccounts(res.accounts || []);
+        setStoreMode(res.storeMode || '');
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Ko'rsatiladigan ro'yxat: server yuklangan bo'lsa u, aks holda config
+  const accounts = serverAccounts ?? config.accounts ?? [];
+
+  // Boshqa tablar (CoinsTab) sinxron qolishi uchun config keshi yangilanadi
+  const refreshConfigCache = (list) => {
+    const safe = (list || [])
+      .filter((a) => a && typeof a.username === 'string')
+      .map((a) => ({ username: a.username, name: a.name || a.username, role: a.role || 'admin' }));
+    onSave({ ...config, accounts: safe });
   };
 
-  const removeAccount = (username) => {
-    const account = config.accounts.find((a) => a.username === username);
-    if (account?.role === 'owner') return;
-    onSave({ ...config, accounts: config.accounts.filter((a) => a.username !== username) });
+  const addAccount = async () => {
+    const username = String(newUser.username || '').trim().toLowerCase();
+    const password = String(newUser.password || '');
+    const name = String(newUser.name || '').trim();
+    if (username.length < 2) { setMsg(t('admin.errMinLogin')); return; }
+    if (password.length < 4) { setMsg(t('admin.errMinPass')); return; }
+    if (accounts.some((a) => a.username?.toLowerCase() === username)) { setMsg(t('admin.errExists')); return; }
+    setBusy(true);
+    setMsg('');
+    const res = await adminCreateAccount(token, { username, password, name });
+    setBusy(false);
+    if (res.ok) {
+      setServerAccounts(res.accounts || []);
+      if (res.storeMode) setStoreMode(res.storeMode);
+      refreshConfigCache(res.accounts);
+      setNewUser({ username: '', password: '', name: '' });
+      setMsg(t('admin.added'));
+    } else {
+      setMsg(`❌ ${res.error || 'Xato yuz berdi'}`);
+    }
+    setTimeout(() => setMsg(''), 3500);
+  };
+
+  const removeAccount = async (username) => {
+    const account = accounts.find((a) => a.username === username);
+    if (account?.role === 'owner' || account?.source === 'env') return;
+    setBusy(true);
+    setMsg('');
+    const res = await adminDeleteAccount(token, username);
+    setBusy(false);
+    if (res.ok) {
+      setServerAccounts(res.accounts || []);
+      if (res.storeMode) setStoreMode(res.storeMode);
+      refreshConfigCache(res.accounts);
+      setMsg(t('admin.removed'));
+    } else {
+      setMsg(`❌ ${res.error || 'Xato yuz berdi'}`);
+    }
+    setTimeout(() => setMsg(''), 3000);
   };
 
   return (
     <div className="space-y-4">
-      {/* Add form */}
-      <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4">
-        <h3 className="font-bold text-sm flex items-center gap-2 mb-2 text-white">
-          <UserPlus className="w-4 h-4 text-[#facc15]" /> Yangi hisob qo\u2018shish
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <input
-            value={newUser.username}
-            onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-            placeholder="Login"
-            className="input input-bordered input-sm bg-white/[0.03] border-white/10"
-          />
-          <input
-            value={newUser.name}
-            onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-            placeholder="Ism"
-            className="input input-bordered input-sm bg-white/[0.03] border-white/10"
-          />
+      {/* Saqlash rejimi ko'rsatkichi */}
+      {storeMode && (
+        <div className={`rounded-xl px-4 py-2.5 text-[11px] flex flex-wrap items-center gap-2 border ${
+          storeMode === 'redis'
+            ? 'bg-[#16a34a]/10 border-[#16a34a]/40 text-[#4ade80]'
+            : 'bg-[#f59e0b]/10 border-[#f59e0b]/40 text-[#fbbf24]'
+        }`}>
+          <ServerIcon className="w-3.5 h-3.5 shrink-0" />
+          {storeMode === 'redis' ? t('admin.storeRedis') : t('admin.storeMemory')}
         </div>
-        <div className="flex items-center gap-3 mt-2 flex-wrap">
-          <button onClick={addAccount} className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black">
-            <UserPlus className="w-3.5 h-3.5" /> Qo\u2018shish
-          </button>
-          {msg && <span className="text-xs text-white/70">{msg}</span>}
+      )}
+
+      {/* Add form — faqat egasi uchun */}
+      {isOwner && (
+        <div className="rounded-xl bg-gradient-to-br from-[#facc15]/[0.08] to-transparent border border-white/10 p-4">
+          <h3 className="font-bold text-sm flex items-center gap-2 mb-2 text-white">
+            <UserPlus className="w-4 h-4 text-[#facc15]" /> {t('admin.accountsTitle')}
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <input
+              value={newUser.username}
+              onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+              placeholder={t('admin.usernamePlaceholder')}
+              className="input input-bordered input-sm bg-white/[0.03] border-white/10"
+            />
+            <input
+              type="password"
+              value={newUser.password}
+              onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+              placeholder={t('admin.password')}
+              className="input input-bordered input-sm bg-white/[0.03] border-white/10"
+              autoComplete="new-password"
+            />
+            <input
+              value={newUser.name}
+              onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+              placeholder={t('admin.namePlaceholder')}
+              className="input input-bordered input-sm bg-white/[0.03] border-white/10"
+            />
+          </div>
+          <div className="flex items-center gap-3 mt-2 flex-wrap">
+            <button
+              onClick={addAccount}
+              disabled={busy}
+              className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black disabled:opacity-60"
+            >
+              {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
+              {t('admin.addAccount')}
+            </button>
+            {msg && <span className="text-xs text-white/70">{msg}</span>}
+          </div>
+          <p className="text-[11px] text-white/40 leading-relaxed mt-2">
+            {t('admin.realAccountsNote')}
+          </p>
         </div>
-        <p className="text-[11px] text-white/40 leading-relaxed">
-          💡 Parol bu yerda so\u2018ralmaydi — loginlar server\u2019da tekshiriladi (Vercel env:
-          ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_EXTRA_ACCOUNTS). Bu ro\u2018yxat faqat
-          admin panel ichidagi ko\u2018rinish uchun.
-        </p>
-      </div>
+      )}
 
       {/* Accounts table */}
       <div className="overflow-x-auto rounded-xl border border-white/10">
@@ -251,33 +344,39 @@ function AccountsTab({ config, onSave }) {
           <thead>
             <tr className="bg-white/[0.04] text-xs text-white/60">
               <th className="w-10">#</th>
-              <th>Foydalanuvchi</th>
-              <th>Ism</th>
-              <th>Rol</th>
-              <th className="text-right">Amal</th>
+              <th>{t('admin.username')}</th>
+              <th>{t('admin.name')}</th>
+              <th>{t('admin.role')}</th>
+              <th className="text-right">{t('admin.action')}</th>
             </tr>
           </thead>
           <tbody>
-            {config.accounts.map((u, i) => (
+            {accounts.map((u, i) => (
               <tr key={u.username} className="hover:bg-white/[0.03] transition-colors">
                 <td className="text-xs text-white/40">{i + 1}</td>
                 <td className="font-mono text-xs font-bold text-white">{u.username}</td>
-                <td className="text-xs text-white/70">{u.name}</td>
+                <td className="text-xs text-white/70">
+                  {u.name}
+                  {u.source === 'env' && (
+                    <span className="ml-1.5 text-[9px] uppercase tracking-wide text-white/25">({t('admin.envAccount')})</span>
+                  )}
+                </td>
                 <td>
                   {u.role === 'owner' ? (
-                    <span className="badge badge-warning badge-sm gap-1 border-0"><Crown className="w-3 h-3" /> Egas</span>
+                    <span className="badge badge-warning badge-sm gap-1 border-0"><Crown className="w-3 h-3" /> {t('admin.owner')}</span>
                   ) : (
-                    <span className="badge badge-ghost badge-sm bg-white/[0.06] border-white/10 text-white/70">Admin</span>
+                    <span className="badge badge-ghost badge-sm bg-white/[0.06] border-white/10 text-white/70">{t('admin.adminRole')}</span>
                   )}
                 </td>
                 <td className="text-right">
                   <div className="flex items-center justify-end gap-1">
-                    <CopyButton text={u.username} label="Loginni nusxalash" />
-                    {u.role !== 'owner' && (
+                    <CopyButton text={u.username} label={t('admin.copyLogin')} />
+                    {u.role !== 'owner' && u.source !== 'env' && isOwner && (
                       <button
                         onClick={() => removeAccount(u.username)}
-                        className="btn btn-ghost btn-xs btn-circle text-error tooltip"
-                        data-tip="O\u2018chirish"
+                        disabled={busy}
+                        className="btn btn-ghost btn-xs btn-circle text-error tooltip disabled:opacity-40"
+                        data-tip={t('admin.delete')}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -286,9 +385,18 @@ function AccountsTab({ config, onSave }) {
                 </td>
               </tr>
             ))}
+            {accounts.length === 0 && (
+              <tr>
+                <td colSpan={5} className="text-center text-sm text-white/30 py-6">—</td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
+
+      {!isOwner && (
+        <p className="text-[11px] text-white/40">🔒 {t('admin.onlyOwner')}</p>
+      )}
     </div>
   );
 }
@@ -1266,6 +1374,137 @@ function ServiceStatus() {
   );
 }
 
+// ================= JONLI FAOLIYAT (kim kirganini jonli ko'rsatish) =================
+// Serverdan /api/admin/activity orqali har 15 soniyada o'qiladi:
+//  - bugungi kirishlar soni, jami kirishlar, hozir onlayn adminlar
+//  - so'nggi urinishlar ro'yxati (kim, qachon, muvaffaqiyatlimi, IP)
+// Server bo'lmasa — shu brauzerdagi localStorage log fallback sifatida.
+function ActivitySection({ session, presenceAdmin }) {
+  const { t } = useI18n();
+  const token = session?.token || '';
+  const [activity, setActivity] = useState(null); // { entries, total, today, mode }
+  const [localLog] = useState(() => readJSON(LOG_KEY, []));
+
+  const load = useCallback(async () => {
+    const data = await adminFetchActivity(token);
+    if (data) setActivity(data);
+  }, [token]);
+
+  useEffect(() => {
+    load();
+    const timer = setInterval(load, 15000); // jonli — har 15 soniyada
+    return () => clearInterval(timer);
+  }, [load]);
+
+  const isServer = Boolean(activity);
+  const entries = activity?.entries?.length ? activity.entries : (localLog.length ? localLog : []);
+  const today = isServer ? activity.today : null;
+  const total = isServer ? activity.total : null;
+  const mode = activity?.mode || '';
+
+  const fmtTime = (ts) => {
+    const d = new Date(ts);
+    return d.toLocaleString('uz-UZ', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit',
+    });
+  };
+  const fmtAgo = (ts) => {
+    const diff = Math.max(0, Date.now() - Number(ts));
+    const s = Math.floor(diff / 1000);
+    if (s < 60) return t('admin.secondsAgo', { n: s });
+    const m = Math.floor(s / 60);
+    if (m < 60) return t('admin.minutesAgo', { n: m });
+    return t('admin.hoursAgo', { n: Math.floor(m / 60) });
+  };
+
+  const cards = [
+    { icon: UserClock, label: t('admin.todayLogins'), value: isServer ? today : (localLog.filter((e) => e.ok && new Date(e.time).toDateString() === new Date().toDateString()).length), color: '#4ade80' },
+    { icon: HistoryIcon, label: t('admin.totalLogins'), value: isServer ? total : localLog.length, color: '#60a5fa' },
+    { icon: Users, label: t('admin.onlineAdmins'), value: presenceAdmin, color: '#facc15' },
+  ];
+
+  return (
+    <div className="admin-card p-5 md:p-6 relative overflow-hidden">
+      <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-[#38bdf8]/[0.06] blur-3xl pointer-events-none" />
+      {/* Sarlavha */}
+      <div className="flex flex-wrap items-center gap-3 mb-4 relative">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#38bdf8]/20 to-[#0ea5e9]/[0.06] border border-[#38bdf8]/30 flex items-center justify-center">
+          <UserClock className="w-5 h-5 text-[#38bdf8]" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="font-bold text-sm text-white flex items-center gap-2">
+            {t('admin.activityTitle')}
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold bg-[#16a34a]/15 border border-[#16a34a]/40 text-[#4ade80] rounded-full px-2 py-0.5">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ade80] opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#4ade80]" />
+              </span>
+              LIVE
+            </span>
+          </h3>
+          <p className="text-[11px] text-white/40 mt-0.5">{t('admin.activityDesc')}</p>
+        </div>
+        <span className="ml-auto inline-flex items-center gap-1.5 text-[10px] text-white/35">
+          <ServerIcon className="w-3 h-3" />
+          {mode === 'redis' ? 'Redis' : (isServer ? 'Server' : 'Local')}
+        </span>
+      </div>
+
+      {/* Karta raqamlar */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 relative">
+        {cards.map((c) => {
+          const Icon = c.icon;
+          return (
+            <div key={c.label} className="rounded-xl bg-white/[0.02] border border-white/10 p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0" style={{ boxShadow: `0 0 14px ${c.color}1a` }}>
+                <Icon className="w-4 h-4" style={{ color: c.color }} />
+              </div>
+              <div className="min-w-0">
+                <StatValue value={c.value} />
+                <p className="text-[11px] text-white/60 mt-0.5 truncate">{c.label}</p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* So'nggi urinishlar */}
+      <div className="mt-4 relative">
+        <div className="flex items-center gap-2 mb-2">
+          <HistoryIcon className="w-3.5 h-3.5 text-[#38bdf8]" />
+          <h4 className="text-xs font-bold text-white">{t('admin.recentAttempts')}</h4>
+          <span className="text-[10px] text-white/35 ml-auto">
+            {isServer ? `${t('admin.loginHistory')} · server` : `${t('admin.loginHistory')} · local`}
+          </span>
+        </div>
+        {entries.length === 0 ? (
+          <p className="text-sm text-white/30 text-center py-6">{t('admin.activityEmpty')}</p>
+        ) : (
+          <div className="max-h-72 overflow-y-auto rounded-xl border border-white/10 divide-y divide-white/5 chat-scroll">
+            {entries.slice(0, 30).map((entry, i) => (
+              <div key={i} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2.5 text-xs">
+                <span className={`badge badge-sm gap-1 ${entry.ok ? 'badge-success' : 'badge-error'}`}>
+                  {entry.ok ? t('admin.success') : t('admin.fail')}
+                </span>
+                <span className="font-mono font-bold text-white">{entry.username}</span>
+                {entry.ip && (
+                  <span className="text-[10px] text-white/30 font-mono" title={t('admin.ip')}>
+                    {entry.ip}
+                  </span>
+                )}
+                <span className="text-white/30 ml-auto tabular-nums text-[11px]">
+                  {fmtTime(entry.time)}
+                  <span className="ml-2 text-white/20">({fmtAgo(entry.time)})</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ================= DASHBOARD =================
 function StatValue({ value }) {
   // key o'zgarganda span qayta mount bo'ladi va stat-pop animatsiyasi o'ynaydi
@@ -1277,11 +1516,11 @@ function StatValue({ value }) {
 }
 
 function Dashboard({ session, onLogout }) {
+  const { t } = useI18n();
   const config = useSiteConfig();
   const [presence, setPresence] = useState({ total: 0, site: 0, admin: 0, mode: 'local' });
   const [visits, setVisits] = useState({ total: 0, today: 0, last7d: 0, unique: 0, mode: 'local' });
   const [refreshing, setRefreshing] = useState(false);
-  const [log] = useState(() => readJSON(LOG_KEY, []));
   const [tab, setTab] = useState('hisoblar');
 
   useEffect(() => {
@@ -1311,23 +1550,19 @@ function Dashboard({ session, onLogout }) {
   const liveMode = presence.mode === 'firebase' || visits.mode === 'firebase';
 
   const statCards = [
-    { label: 'Jami tashrif', value: visits.total, icon: Eye, note: 'barcha vaqt davomida', color: '#facc15' },
-    { label: 'Bugun', value: visits.today, icon: Activity, note: '00:00 dan hozirgacha', color: '#4ade80' },
-    { label: '7 kun ichida', value: visits.last7d, icon: Clock, note: 'oxirgi 7 kun', color: '#60a5fa' },
-    { label: 'Unikal tashrif', value: visits.unique, icon: Users, note: 'turli qurilmalar', color: '#c084fc' },
-    { label: 'Tillar soni', value: languages.length, icon: Globe, note: 'platformada mavjud', color: '#f472b6' },
+    { label: t('admin.totalVisits'), value: visits.total, icon: Eye, note: t('admin.noteAllTime'), color: '#facc15' },
+    { label: t('admin.today'), value: visits.today, icon: Activity, note: t('admin.noteToday'), color: '#4ade80' },
+    { label: t('admin.last7d'), value: visits.last7d, icon: Clock, note: t('admin.noteLast7'), color: '#60a5fa' },
+    { label: t('admin.uniqueVisits'), value: visits.unique, icon: Users, note: t('admin.noteUnique'), color: '#c084fc' },
+    { label: t('admin.languageCount'), value: languages.length, icon: Globe, note: t('admin.notePlatform'), color: '#f472b6' },
   ];
 
-  // 5 ta karta — grid 4 ustunli bo'lsa oxirgi karta yolg'iz qoladi;
-  // shuning uchun 8 ta slotli qilib 5+3 yozamiz.
-  // (oddiy yechim: karta o'rniga soat qo'shildi — pastdagi live strip yetarli)
-
   const tabs = [
-    { id: 'hisoblar', label: 'Hisoblar', icon: Users },
-    { id: 'tillar', label: 'Tillar', icon: Coins },
-    { id: 'tanga', label: 'Tanga berish', icon: Gift },
-    { id: 'matnlar', label: 'Sayt matnlari', icon: Type },
-    { id: 'telegram', label: 'Telegram', icon: PaperPlane },
+    { id: 'hisoblar', label: t('admin.tab.accounts'), icon: Users },
+    { id: 'tillar', label: t('admin.tab.languages'), icon: Coins },
+    { id: 'tanga', label: t('admin.tab.coins'), icon: Gift },
+    { id: 'matnlar', label: t('admin.tab.texts'), icon: Type },
+    { id: 'telegram', label: t('admin.tab.telegram'), icon: PaperPlane },
   ];
 
   return (
@@ -1340,7 +1575,7 @@ function Dashboard({ session, onLogout }) {
               <Shield className="w-6 h-6 text-black" />
             </div>
             <div>
-              <h1 className="text-xl font-extrabold text-white tracking-tight">Admin Panel</h1>
+              <h1 className="text-xl font-extrabold text-white tracking-tight">{t('admin.title')}</h1>
               <p className="text-[11px] text-white/45 flex items-center gap-1.5 mt-0.5">
                 <UserIcon className="w-3 h-3" />
                 {isOwner ? 'admin' : session.username} · {session.name || session.username}
@@ -1355,7 +1590,7 @@ function Dashboard({ session, onLogout }) {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ade80] opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4ade80]" />
               </span>
-              Live 30s
+              {t('admin.liveBadge')}
             </span>
 
             {/* Yangilash */}
@@ -1365,7 +1600,7 @@ function Dashboard({ session, onLogout }) {
               className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-semibold text-white/80 hover:bg-white/[0.09] hover:border-white/20 transition-all disabled:opacity-60"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-              Yangilash
+              {t('admin.refresh')}
             </button>
 
             {/* Chiqish */}
@@ -1374,7 +1609,7 @@ function Dashboard({ session, onLogout }) {
               className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-semibold text-white/80 hover:bg-red-500/10 hover:border-red-400/40 hover:text-red-300 transition-all"
             >
               <LogOut className="w-3.5 h-3.5" />
-              Chiqish
+              {t('admin.logout')}
             </button>
 
             {/* Orqaga */}
@@ -1383,7 +1618,7 @@ function Dashboard({ session, onLogout }) {
               className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-semibold text-white/80 hover:bg-white/[0.09] hover:border-white/20 transition-all"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              Orqaga
+              {t('admin.back')}
             </a>
           </div>
         </header>
@@ -1432,20 +1667,20 @@ function Dashboard({ session, onLogout }) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ade80] opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4ade80]" />
             </span>
-            Hozir onlayn:
+            {t('admin.onlineNow')}
             <b className="text-[#4ade80] tabular-nums">{presence.total}</b>
           </span>
           <span className="text-white/20">|</span>
           <span className="text-white/50">
-            Saytda: <b className="text-white tabular-nums">{presence.site}</b>
+            {t('admin.onSite')} <b className="text-white tabular-nums">{presence.site}</b>
           </span>
           <span className="text-white/20">|</span>
           <span className="text-white/50">
-            Admin panelda: <b className="text-white tabular-nums">{presence.admin}</b>
+            {t('admin.inAdminPanel')} <b className="text-white tabular-nums">{presence.admin}</b>
           </span>
           <span className="ml-auto flex items-center gap-1.5 text-white/35 text-[10px]">
             <Radio className="w-3 h-3" />
-            {liveMode ? 'Realtime — barcha qurilmalar (Firebase)' : 'Live — shu brauzer (demo rejim)'}
+            {liveMode ? t('admin.realtimeFirebase') : t('admin.liveDemo')}
           </span>
         </div>
 
@@ -1476,45 +1711,15 @@ function Dashboard({ session, onLogout }) {
 
         {/* Tab content */}
         <div className="admin-card p-5 md:p-6">
-          {tab === 'hisoblar' && <AccountsTab config={config} onSave={saveConfig} />}
+          {tab === 'hisoblar' && <AccountsTab config={config} onSave={saveConfig} session={session} />}
           {tab === 'tillar' && <LanguagesTab />}
           {tab === 'tanga' && <CoinsTab config={config} session={session} />}
           {tab === 'matnlar' && <TextsTab config={config} onSave={saveConfig} />}
           {tab === 'telegram' && <TelegramTab />}
         </div>
 
-        {/* ===== LOGIN LOG ===== */}
-        <div className="admin-card p-5 md:p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 rounded-lg bg-[#38bdf8]/10 flex items-center justify-center">
-              <Clock className="w-4 h-4 text-[#38bdf8]" />
-            </div>
-            <div>
-              <h3 className="font-bold text-sm text-white">Kirish tarixi</h3>
-              <p className="text-[11px] text-white/40">So\u2018nggi urinishlar (oxirgi 100)</p>
-            </div>
-          </div>
-
-          {log.length === 0 ? (
-            <p className="text-sm text-white/30 text-center py-6">Hozircha urinishlar yo\u2018q</p>
-          ) : (
-            <div className="max-h-72 overflow-y-auto rounded-xl border border-white/10 divide-y divide-white/5">
-              {log.slice(0, 30).map((entry, i) => (
-                <div key={i} className="flex items-center gap-3 px-4 py-2.5 text-xs">
-                  <span className={`badge badge-sm gap-1 ${entry.ok ? 'badge-success' : 'badge-error'}`}>
-                    {entry.ok ? '✓ Muvaffaqiyatli' : '✗ Xato'}
-                  </span>
-                  <span className="font-mono font-bold text-white">{entry.username}</span>
-                  <span className="text-white/30 ml-auto tabular-nums">
-                    {new Date(entry.time).toLocaleString('uz-UZ', {
-                      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
-                    })}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* ===== JONLI FAOLIYAT (kim kirgani — live) ===== */}
+        <ActivitySection session={session} presenceAdmin={presence.admin} />
       </div>
     </div>
   );
@@ -1522,6 +1727,7 @@ function Dashboard({ session, onLogout }) {
 
 // ================= MAIN =================
 export default function AdminPanel() {
+  const { t } = useI18n();
   const [session, setSession] = useState(() => readJSON(SESSION_KEY, null));
   // Saqlangan sessiya mavjud bo'lsa — server'da tasdiqlash kerak.
   // Token'siz (eski/soxta) sessiyalar ham tekshiriladi va rad etiladi.
@@ -1562,7 +1768,7 @@ export default function AdminPanel() {
           </div>
           <p className="text-sm font-semibold text-white/80 inline-flex items-center gap-2">
             <Loader2 className="w-4 h-4 animate-spin text-[#facc15]" />
-            Sessiya tekshirilmoqda...
+            {t('admin.sessionChecking')}
           </p>
         </div>
       </div>

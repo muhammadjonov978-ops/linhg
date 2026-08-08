@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
+import { useI18n } from '../i18n';
 import {
   FaHome as Home, FaCommentDots as MessageCircle,
   FaCoins as Coins, FaSignInAlt as LogIn, FaUser as User,
@@ -10,6 +11,7 @@ import {
 } from 'react-icons/fa';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal, { USER_EVENT } from './GoogleAuthModal';
+import LanguageSwitcher from './LanguageSwitcher';
 import Flag from './Flag';
 
 function loadSavedUser() {
@@ -23,6 +25,7 @@ function loadSavedUser() {
 
 export default function Navbar({ onToggleTutor }) {
   const { state, dispatch } = useApp();
+  const { t } = useI18n();
   const [showAuth, setShowAuth] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -62,37 +65,37 @@ export default function Navbar({ onToggleTutor }) {
   const mobileNavItems = [
     {
       key: 'auth',
-      label: savedUser ? (savedUser.givenName || savedUser.name) : 'Kirish',
+      label: savedUser ? (savedUser.givenName || savedUser.name) : t('nav.signIn'),
       onClick: () => { setShowAuth(true); setMobileMenuOpen(false); },
       icon: savedUser ? <User className="w-4 h-4 text-primary" /> : <LogIn className="w-4 h-4 text-primary" />,
     },
     {
       key: 'admin',
-      label: 'Admin',
+      label: t('nav.admin'),
       href: '#/admin',
       icon: <Shield className="w-4 h-4 text-secondary" />,
     },
     {
       key: 'portfolio',
-      label: 'Portfolio',
+      label: t('nav.portfolio'),
       href: '#/portfolio',
       icon: <Briefcase className="w-4 h-4 text-primary" />,
     },
     {
       key: 'shop',
-      label: 'Magazin',
+      label: t('nav.shop'),
       href: '#/shop',
       icon: <Store className="w-4 h-4 text-warning" />,
     },
     {
       key: 'home',
-      label: 'Bosh sahifa',
+      label: t('nav.home'),
       onClick: goHome,
       icon: <Home className="w-4 h-4" />,
     },
     ...(currentLang ? [{
       key: 'tutor',
-      label: 'AI Tutor',
+      label: t('nav.tutor'),
       onClick: () => { onToggleTutor(); setMobileMenuOpen(false); },
       icon: <MessageCircle className={`w-4 h-4 ${state.isTutorOpen ? 'text-primary' : ''}`} />,
     }] : []),
@@ -124,20 +127,20 @@ export default function Navbar({ onToggleTutor }) {
         <div className="flex items-center gap-2 ml-4">
           {/* Streak Display */}
           {state.streak > 0 && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-base-100 border border-base-300 shadow-sm tooltip" data-tip="Kunlik streak">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-base-100 border border-base-300 shadow-sm tooltip" data-tip={t('nav.dailyStreak')}>
               <Flame className="w-4 h-4 text-orange-500" />
               <span className="font-bold text-sm text-orange-500">{state.streak}</span>
             </div>
           )}
 
           {/* Coins Display */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-base-100 border border-base-300 shadow-sm tooltip" data-tip="Tanga balansi">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-base-100 border border-base-300 shadow-sm tooltip" data-tip={t('nav.coinBalance')}>
             <Coins className="w-4 h-4 text-amber-500" />
             <span className="font-bold text-sm text-amber-500">{state.coins}</span>
           </div>
 
           {/* Energy Display */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-base-100 border border-base-300 shadow-sm tooltip" data-tip="Kunlik energiya">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-base-100 border border-base-300 shadow-sm tooltip" data-tip={t('nav.dailyEnergy')}>
             <Bolt className="w-4 h-4 text-yellow-500" />
             <span className="font-bold text-sm text-yellow-600">{state.energy ?? 440}</span>
           </div>
@@ -150,7 +153,7 @@ export default function Navbar({ onToggleTutor }) {
           <button
             onClick={() => setBellOpen(o => !o)}
             className={`btn btn-ghost btn-sm btn-circle tooltip ${bellOpen ? 'bg-primary/20 text-primary' : ''}`}
-            data-tip="Bildirishnomalar"
+            data-tip={t('nav.notifications')}
           >
             <Bell className="w-4 h-4" />
             {claimable.length > 0 && (
@@ -166,14 +169,14 @@ export default function Navbar({ onToggleTutor }) {
               <div className="absolute right-0 top-full mt-2 w-80 max-w-[90vw] bg-base-100 rounded-2xl border border-base-300 shadow-2xl z-50 p-3 animate-[fadeIn_0.2s_ease-out]">
                 <div className="flex items-center justify-between mb-2 px-1">
                   <h3 className="font-bold text-sm flex items-center gap-1.5">
-                    <Bell className="w-4 h-4 text-primary" /> Bildirishnomalar
+                    <Bell className="w-4 h-4 text-primary" /> {t('nav.notifications')}
                   </h3>
                   <button onClick={() => setBellOpen(false)} className="btn btn-ghost btn-xs btn-circle">
                     <X className="w-3 h-3" />
                   </button>
                 </div>
                 {claimable.length === 0 ? (
-                  <p className="text-xs opacity-50 text-center py-4">Hozircha yangi bildirishnomalar yo'q ✨</p>
+                  <p className="text-xs opacity-50 text-center py-4">{t('nav.noNotifications')}</p>
                 ) : (
                   <div className="space-y-2 max-h-72 overflow-y-auto chat-scroll">
                     {claimable.map(a => (
@@ -183,13 +186,13 @@ export default function Navbar({ onToggleTutor }) {
                           <p className="text-xs font-semibold truncate flex items-center gap-1">
                             <Gift className="w-3 h-3 text-warning shrink-0" /> {a.name}
                           </p>
-                          <p className="text-[11px] opacity-50 truncate">+{a.coinReward ?? a.xpReward ?? 0} 🪙 yutuq sovg'asi</p>
+                          <p className="text-[11px] opacity-50 truncate">{t('nav.claimReward', { n: a.coinReward ?? a.xpReward ?? 0 })}</p>
                         </div>
                         <button
                           onClick={() => handleClaim(a)}
                           className="btn btn-xs btn-warning gap-1 btn-wave"
                         >
-                          <Coins className="w-3 h-3" /> Olib olish
+                          <Coins className="w-3 h-3" /> {t('nav.claim')}
                         </button>
                       </div>
                     ))}
@@ -205,7 +208,7 @@ export default function Navbar({ onToggleTutor }) {
           <button
             onClick={() => setShowAuth(true)}
             className="btn btn-ghost btn-sm gap-2 tooltip hidden md:inline-flex"
-            data-tip={savedUser.name || 'Hisob'}
+            data-tip={savedUser.name || t('nav.account')}
           >
             <span className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center bg-primary/20 ring-1 ring-primary/40">
               {savedUser.picture ? (
@@ -220,10 +223,10 @@ export default function Navbar({ onToggleTutor }) {
           <button
             onClick={() => setShowAuth(true)}
             className="btn btn-ghost btn-sm gap-1.5 tooltip hidden md:inline-flex"
-            data-tip="Google bilan kirish"
+            data-tip={t('nav.googleSignIn')}
           >
             <LogIn className="w-4 h-4 text-primary" />
-            <span className="hidden sm:inline text-xs">Kirish</span>
+            <span className="hidden sm:inline text-xs">{t('nav.signIn')}</span>
           </button>
         )}
 
@@ -231,31 +234,36 @@ export default function Navbar({ onToggleTutor }) {
         <a
           href="#/admin"
           className="btn btn-ghost btn-sm gap-1.5 tooltip hidden md:inline-flex"
-          data-tip="Admin panel"
+          data-tip={t('nav.adminPanel')}
         >
           <Shield className="w-4 h-4 text-secondary" />
-          <span className="hidden sm:inline text-xs">Admin</span>
+          <span className="hidden sm:inline text-xs">{t('nav.admin')}</span>
         </a>
 
         {/* Portfolio Button */}
         <a
           href="#/portfolio"
           className="btn btn-ghost btn-sm gap-1.5 tooltip hidden md:inline-flex"
-          data-tip="Portfolio"
+          data-tip={t('nav.portfolio')}
         >
           <Briefcase className="w-4 h-4 text-primary" />
-          <span className="hidden sm:inline text-xs">Portfolio</span>
+          <span className="hidden sm:inline text-xs">{t('nav.portfolio')}</span>
         </a>
 
         {/* Magazin Button */}
         <a
           href="#/shop"
           className="btn btn-ghost btn-sm gap-1.5 tooltip hidden md:inline-flex"
-          data-tip="Qahramon magazini"
+          data-tip={t('nav.heroShop')}
         >
           <Store className="w-4 h-4 text-warning" />
-          <span className="hidden sm:inline text-xs">Magazin</span>
+          <span className="hidden sm:inline text-xs">{t('nav.shop')}</span>
         </a>
+
+        {/* Language Switcher (UZ / RU / ENG) */}
+        <div className="hidden md:block">
+          <LanguageSwitcher />
+        </div>
 
         {/* Theme Picker */}
         <ThemePicker />
@@ -264,7 +272,7 @@ export default function Navbar({ onToggleTutor }) {
           <button
             onClick={onToggleTutor}
             className={`btn btn-ghost btn-sm btn-circle tooltip hidden md:inline-flex ${state.isTutorOpen ? 'bg-primary/20' : ''}`}
-            data-tip="AI Tutor"
+            data-tip={t('nav.tutor')}
           >
             <MessageCircle className={`w-4 h-4 ${state.isTutorOpen ? 'text-primary' : ''}`} />
           </button>
@@ -274,7 +282,7 @@ export default function Navbar({ onToggleTutor }) {
         <button
           onClick={goHome}
           className="btn btn-ghost btn-sm btn-circle tooltip hidden md:inline-flex"
-          data-tip="Bosh sahifa"
+          data-tip={t('nav.home')}
         >
           <Home className="w-4 h-4" />
         </button>
@@ -283,7 +291,7 @@ export default function Navbar({ onToggleTutor }) {
         <button
           onClick={() => setMobileMenuOpen(o => !o)}
           className="btn btn-ghost btn-sm btn-circle md:hidden"
-          title="Menyu"
+          title={t('nav.menu')}
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <MenuIcon className="w-5 h-5" />}
         </button>
@@ -292,6 +300,10 @@ export default function Navbar({ onToggleTutor }) {
       {/* Mobile dropdown menu */}
       {mobileMenuOpen && (
         <div className="absolute top-full left-0 right-0 bg-base-100/95 backdrop-blur-md border-b border-primary/15 shadow-2xl p-3 z-50 md:hidden animate-[fadeIn_0.25s_ease-out]">
+          {/* Mobile language switcher */}
+          <div className="flex items-center justify-center mb-2 pb-2 border-b border-base-300/50">
+            <LanguageSwitcher />
+          </div>
           <div className="grid grid-cols-2 gap-2">
             {mobileNavItems.map(item => (
               <button

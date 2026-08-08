@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
-import { useSiteConfig, getSiteText } from '../data/siteConfig';
+import { useSiteConfig, DEFAULT_CONFIG } from '../data/siteConfig';
+import { useI18n } from '../i18n';
 import {
   FaBookOpen as BookOpen, FaHeadphones as Headphones, FaPencilAlt as Pencil,
   FaMicrophone as Mic, FaArrowRight as ArrowRight, FaChartLine as TrendingUp,
@@ -14,21 +15,21 @@ import StypingAdBanner from '../components/StypingAdBanner';
 import Flag from '../components/Flag';
 
 const features = [
-  { icon: GraduationCap, title: 'Alifbo', desc: "Harflarni o'rganish" },
-  { icon: BookOpen, title: 'Reading', desc: "Matn o'qish va tushunish" },
-  { icon: Headphones, title: 'Listening', desc: 'Tinglab tushunish' },
-  { icon: Pencil, title: 'Writing', desc: 'Yozma mashqlar' },
-  { icon: Mic, title: 'Speaking', desc: 'Talaffuz mashqi' },
+  { icon: GraduationCap, titleKey: 'home.feature.alifbo', descKey: 'home.feature.alifboDesc' },
+  { icon: BookOpen, titleKey: 'home.feature.reading', descKey: 'home.feature.readingDesc' },
+  { icon: Headphones, titleKey: 'home.feature.listening', descKey: 'home.feature.listeningDesc' },
+  { icon: Pencil, titleKey: 'home.feature.writing', descKey: 'home.feature.writingDesc' },
+  { icon: Mic, titleKey: 'home.feature.speaking', descKey: 'home.feature.speakingDesc' },
 ];
 
 // Region filtering groups for 135+ languages
 const REGIONS = [
-  { id: 'all', label: '🌍 Barchasi' },
-  { id: 'popular', label: '🔥 Ommabop' },
-  { id: 'europe', label: '🇪🇺 Yevropa' },
-  { id: 'asia', label: '🌏 Osiyo' },
-  { id: 'africa', label: '🌍 Afrika' },
-  { id: 'americas', label: '🌎 Amerika' },
+  { id: 'all', labelKey: 'home.regions.all' },
+  { id: 'popular', labelKey: 'home.regions.popular' },
+  { id: 'europe', labelKey: 'home.regions.europe' },
+  { id: 'asia', labelKey: 'home.regions.asia' },
+  { id: 'africa', labelKey: 'home.regions.africa' },
+  { id: 'americas', labelKey: 'home.regions.americas' },
 ];
 
 const POPULAR_IDS = new Set([
@@ -72,9 +73,17 @@ const REGION_IDS = {
 
 export default function HomePage() {
   const { state, dispatch } = useApp();
+  const { t } = useI18n();
   const config = useSiteConfig();
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState('all');
+
+  // Admin sozlagan bo'lsa — sozlangan matn, aks holda tanlangan til tarjimasi
+  const heroText = (key, fallback) => {
+    const v = config?.texts?.[key];
+    const def = DEFAULT_CONFIG.texts[key];
+    return v && v !== def ? v : fallback;
+  };
 
   const handleLanguageSelect = (langId) => {
     dispatch({ type: 'SELECT_LANGUAGE', payload: langId });
@@ -125,24 +134,24 @@ export default function HomePage() {
             <div className="flex items-center justify-center gap-3 mb-6">
               <div className="badge badge-primary badge-lg gap-2 px-4 py-3 shadow-lg shadow-primary/20 gold-glow animate-[fadeInUp_0.5s_ease-out]">
                 <Sparkles className="w-4 h-4 animate-coin-spin" />
-                {getSiteText(config, 'heroBadge', 'Interaktiv til o\u2018rganish')}
+                {heroText('heroBadge', t('home.heroBadge'))}
               </div>
             </div>
             <h1 className="text-4xl md:text-7xl font-extrabold mb-4 font-display tracking-tight animate-[fadeInUp_0.6s_ease-out]">
               <span className="gold-text">
-                {getSiteText(config, 'heroTitle', '130+ Tilda Erkin Gaplashing')}
+                {heroText('heroTitle', t('home.heroTitle'))}
               </span>
             </h1>
             <p className="text-lg md:text-xl opacity-70 max-w-2xl mx-auto mb-8 animate-[fadeInUp_0.7s_ease-out]">
-              {getSiteText(config, 'heroSubtitle', "Reading, Listening, Writing va Speaking — 4 ta asosiy ko'nikmani interaktiv mashqlar orqali rivojlantiring")}
+              {heroText('heroSubtitle', t('home.heroSubtitle'))}
             </p>
 
             {/* Stats */}
             <div className="flex flex-wrap justify-center gap-3 mb-6">
               {[
-                { icon: Users, text: "550K+ o'quvchilar", color: '#d4af37' },
-                { icon: Globe, text: `${languages.length}+ xil til`, color: '#facc15' },
-                { icon: Shield, text: '100 ta dars', color: '#d4af37' },
+                { icon: Users, text: t('home.statsLearners'), color: '#d4af37' },
+                { icon: Globe, text: t('home.statsLanguages', { n: languages.length }), color: '#facc15' },
+                { icon: Shield, text: t('home.statsLessons'), color: '#d4af37' },
               ].map((s, i) => (
                 <div
                   key={i}
@@ -166,19 +175,19 @@ export default function HomePage() {
                 {totalCompletedLessons > 0 && (
                   <div className="flex items-center gap-2 bg-success/5 px-4 py-2 rounded-xl border border-success/10">
                     <Trophy className="w-4 h-4 text-success" />
-                    <span className="text-sm">{totalCompletedLessons} ta dars tugallangan</span>
+                    <span className="text-sm">{t('home.completedLessons', { n: totalCompletedLessons })}</span>
                   </div>
                 )}
                 {state.streak > 0 && (
                   <div className="flex items-center gap-2 bg-warning/5 px-4 py-2 rounded-xl border border-warning/10">
                     <Flame className="w-4 h-4 text-warning" />
-                    <span className="text-sm">{state.streak} kun streak</span>
+                    <span className="text-sm">{t('home.streakDays', { n: state.streak })}</span>
                   </div>
                 )}
                 {achievementsUnlocked > 0 && (
                   <div className="flex items-center gap-2 bg-accent/5 px-4 py-2 rounded-xl border border-accent/10">
                     <Award className="w-4 h-4 text-accent" />
-                    <span className="text-sm">{achievementsUnlocked} ta yutuq</span>
+                    <span className="text-sm">{t('home.achievementsCount', { n: achievementsUnlocked })}</span>
                   </div>
                 )}
               </div>
@@ -192,7 +201,7 @@ export default function HomePage() {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder={`${languages.length} tildan qidiring... (masalan: ingliz, koreys)`}
+                  placeholder={t('home.searchPlaceholder', { n: languages.length })}
                   className="input input-bordered w-full pl-12 pr-10 py-3 h-12 rounded-2xl bg-base-100/80 backdrop-blur-sm border-base-300 focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all shadow-lg shadow-black/5"
                 />
                 {search && (
@@ -218,7 +227,7 @@ export default function HomePage() {
                       : 'btn-ghost border border-base-300 hover:border-primary/40'
                   }`}
                 >
-                  {r.label}
+                  {t(r.labelKey)}
                   {r.id !== 'all' && (
                     <span className={`text-[10px] ${region === r.id ? 'opacity-80' : 'opacity-40'}`}>
                       ({regionCounts[r.id]})
@@ -233,13 +242,13 @@ export default function HomePage() {
           {filteredLanguages.length === 0 ? (
             <div className="text-center py-16">
               <div className="text-5xl mb-3">🔍</div>
-              <h3 className="font-bold text-xl mb-1">Hech narsa topilmadi</h3>
-              <p className="text-sm opacity-60 mb-4">"{search}" bo'yicha til topilmadi</p>
+              <h3 className="font-bold text-xl mb-1">{t('home.notFound')}</h3>
+              <p className="text-sm opacity-60 mb-4">{t('home.notFoundDesc', { q: search })}</p>
               <button
                 onClick={() => { setSearch(''); setRegion('all'); }}
                 className="btn btn-primary btn-sm"
               >
-                Filtrni tozalash
+                {t('home.clearFilter')}
               </button>
             </div>
           ) : (
@@ -285,11 +294,11 @@ export default function HomePage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1 text-xs opacity-50">
                           <TrendingUp className="w-3 h-3" />
-                          <span>{completedCount}/{totalLessons} dars</span>
+                          <span>{t('home.lessons', { n: `${completedCount}/${totalLessons}` })}</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-primary">
-                            {completedCount === 0 ? 'Alifbodan boshlang' : 'Davom etish'}
+                            {t(completedCount === 0 ? 'home.startFromAlphabet' : 'home.continue')}
                           </span>
                           <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all text-primary" />
                         </div>
@@ -313,7 +322,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4">
           <h2 className="text-2xl font-bold text-center mb-8">
             <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              {getSiteText(config, 'featureTitle', "5 ta Asosiy Bo'lim")}
+              {heroText('featureTitle', t('home.featureTitle'))}
             </span>
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -326,8 +335,8 @@ export default function HomePage() {
                   <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#facc15]/25 to-[#f59e0b]/10 border border-[#facc15]/25 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
                     <feature.icon className="w-7 h-7 text-[#f5d27a]" />
                   </div>
-                  <h3 className="font-bold">{feature.title}</h3>
-                  <p className="text-xs opacity-60">{feature.desc}</p>
+                  <h3 className="font-bold">{t(feature.titleKey)}</h3>
+                  <p className="text-xs opacity-60">{t(feature.descKey)}</p>
                 </div>
               </div>
             ))}
@@ -337,22 +346,22 @@ export default function HomePage() {
           <div className="mt-12 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
               <Award className="w-6 h-6 text-warning animate-coin-spin" />
-              <h3 className="text-xl font-bold">Yutuqlar va Statistika</h3>
+              <h3 className="text-xl font-bold">{t('home.achievementsTitle')}</h3>
             </div>
             <p className="text-sm opacity-60 mb-6 max-w-lg mx-auto">
-              {getSiteText(config, 'featureDesc', "Mashqlarni bajarib, yutuqlarni oching, tanga yig'ing va boshqa o'quvchilar bilan raqobatlashing!")}
+              {heroText('featureDesc', t('home.featureDesc'))}
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mx-auto">
               {[
-                { icon: '🌱', title: 'Birinchi Qadam', desc: '1-mashq' },
-                { icon: '🔥', title: 'Izchillik', desc: '3 kun streak' },
-                { icon: '👑', title: 'Poliglot', desc: '100 ta dars' },
-                { icon: '🏆', title: 'Tanga Legendasi', desc: '5000 tanga' },
+                { icon: '🌱', titleKey: 'home.ach.firstStep', descKey: 'home.ach.firstStepDesc' },
+                { icon: '🔥', titleKey: 'home.ach.consistency', descKey: 'home.ach.consistencyDesc' },
+                { icon: '👑', titleKey: 'home.ach.polyglot', descKey: 'home.ach.polyglotDesc' },
+                { icon: '🏆', titleKey: 'home.ach.coinLegend', descKey: 'home.ach.coinLegendDesc' },
               ].map((item, i) => (
                 <div key={i} className="glass-panel rounded-xl p-4 glow-hover">
                   <div className="text-2xl mb-1">{item.icon}</div>
-                  <p className="font-bold text-sm">{item.title}</p>
-                  <p className="text-xs opacity-50">{item.desc}</p>
+                  <p className="font-bold text-sm">{t(item.titleKey)}</p>
+                  <p className="text-xs opacity-50">{t(item.descKey)}</p>
                 </div>
               ))}
             </div>
@@ -372,10 +381,10 @@ export default function HomePage() {
             <span className="font-bold">Lingohub</span>
           </div>
           <p className="text-xs opacity-50">
-            {getSiteText(config, 'footerText', "130+ tilda interaktiv o'rganish platformasi. Reading, Listening, Writing, Speaking.")}
+            {heroText('footerText', t('home.footerText'))}
           </p>
           <p className="text-xs opacity-30 mt-2">
-            © 2026 Lingohub. Barcha huquqlar himoyalangan.
+            {t('home.allRights')}
           </p>
         </div>
       </footer>

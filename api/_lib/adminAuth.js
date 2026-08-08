@@ -14,6 +14,7 @@
 // ('shshsh') ishlatiladi — bu sayt o'rnatilishi bilan darhol ishlashi uchun.
 // Haqiqiy foydalanishda Vercel env'lariga kuchli ADMIN_PASSWORD qo'yish tavsiya etiladi.
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { authStoredAccount, publicStoredAccounts } from './adminAccounts.js';
 
 const SESSION_TTL = 12 * 60 * 60 * 1000; // 12 soat
 
@@ -63,8 +64,10 @@ export function parseExtraAccounts() {
     .filter(Boolean);
 }
 
-// Login/parolni tekshiradi — muvaffaqiyat bo'lsa foydalanuvchi obyektini qaytaradi
-export function authenticate(username, password) {
+// Login/parolni tekshiradi — muvaffaqiyat bo'lsa foydalanuvchi obyektini qaytaradi.
+// Endi admin panel'da yaratilgan HAQIQIY hisoblar ham tekshiriladi
+// (api/admin/accounts orqali Redis/in-memory'da saqlanadi).
+export async function authenticate(username, password) {
   if (!isAuthConfigured()) return null;
   const u = String(username || '').trim().toLowerCase();
   const p = String(password || '');
@@ -74,7 +77,39 @@ export function authenticate(username, password) {
   }
   const extra = parseExtraAccounts().find((a) => a.username === u && a.password === p);
   if (extra) return { username: extra.username, name: extra.name, role: 'admin' };
+  // Panelda yaratilgan hisoblar (Redis/in-memory store)
+  try {
+    const stored = await authStoredAccount(u, p);
+    if (stored) return stored;
+  } catch {
+    /* store xatosi — env hisoblar bilan davom etamiz */
+  }
   return null;
+}
+
+// Barcha adminlar ro'yxati (panel uchun) — parollarsiz.
+// Manba: env (egasi + ADMIN_EXTRA_ACCOUNTS) + panelda yaratilgan hisoblar.
+export async function getAllAccounts() {
+  const list = [];
+  if (isAuthConfigured()) {
+    list.push({ username: ownerUsername(), name: ownerName(), role: 'owner', source: 'env' });
+  }
+  parseExtraAccounts().forEach((a) => {
+    list.push({ username: a.username, name: a.name, role: 'admin', source: 'env' });
+  });
+  try {
+    const stored = await publicStoredAccounts();
+    stored.forEach((a) => list.push({ ...a, source: 'store' }));
+  } catch {
+    /* noop */
+  }
+  // Dublikatlarni olib tashlaymiz (env hisoblari ustun turadi)
+  const seen = new Set();
+  return list.filter((a) => {
+    if (seen.has(a.username)) return false;
+    seen.add(a.username);
+    return true;
+  });
 }
 
 // ---------- HMAC-imzolangan token ----------

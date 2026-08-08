@@ -3,6 +3,7 @@
 // Javob: { ok: true, token, user: { username, name, role } }
 //        yoki { ok: false, code: 'not_configured'|'invalid'|'server_error', error }
 import { authenticate, isAuthConfigured, signToken, checkRateLimit, registerFailure, resetFailures, isUsingDefaultPassword } from '../_lib/adminAuth.js';
+import { logAdminAttempt } from '../_lib/activityLog.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -30,9 +31,16 @@ export default async function handler(req, res) {
   }
 
   const { username, password } = req.body || {};
-  const user = authenticate(username, password);
+  const ua = String(req.headers?.['user-agent'] || '');
+  const user = await authenticate(username, password);
+  // Jonli faoliyat logi: kim kirgani (yoki urinib ko'rgani) qayd etiladi.
+  // Fire-and-forget — login tezligini sekinlashtirmaslik uchun.
+  const recordAttempt = (uname, ok) => {
+    logAdminAttempt({ username: uname, ok, ip, ua }).catch(() => {});
+  };
   if (!user) {
     registerFailure(ip);
+    recordAttempt(username, false);
     return res.status(200).json({
       ok: false,
       code: 'invalid',
@@ -41,6 +49,7 @@ export default async function handler(req, res) {
   }
 
   resetFailures(ip);
+  recordAttempt(user.username, true);
   const token = signToken(user);
   // Default parol ishlatilayotgan bo'lsa — panelda ogohlantirish ko'rsatiladi
   const warning = isUsingDefaultPassword()
