@@ -48,7 +48,7 @@ Vercel → Project → Settings → Environment Variables (barcha environment'la
 | `VITE_CLICK_MERCHANT_ID` | (ixtiyoriy) Click ham qo'shmoqchi bo'lsangiz | Ochiq |
 | `VITE_CLICK_SERVICE_ID` | (ixtiyoriy) Click ham qo'shmoqchi bo'lsangiz | Ochiq |
 | `CLICK_SECRET_KEY` | (ixtiyoriy) Click secret key | **MAXFIY** |
-| `ADMIN_PASSWORD` | Admin panel egasi paroli. O'rnatilmagan bo'lsa default `shxsh1010` ishlaydi | **MAXFIY** |
+| `ADMIN_PASSWORD` | Admin panel egasi paroli. **MAJBURIY** — o'rnatilmasa panelga kirish butunlay yopiq | **MAXFIY** |
 | `ADMIN_USERNAME` | (ixtiyoriy) Admin login, default `shxsh` | MAXFIY |
 | `ADMIN_NAME` | (ixtiyoriy) Egasining ismi, default `Shox` | MAXFIY |
 | `ADMIN_TOKEN_SECRET` | (ixtiyoriy) Sessiya token imzosi — bo'sh bo'lsa `ADMIN_PASSWORD` ishlatiladi | MAXFIY |
@@ -142,17 +142,17 @@ Ilgari admin paroli brauzer kodida ochiq saqlanardi (`shox1010`) — buni har ki
 
    | O'zgaruvchi | Qiymat |
    |---|---|
-   | `ADMIN_PASSWORD` | O'zingiz tanlagan kuchli parol (o'rnatilmasa default `shxsh1010`) |
+   | `ADMIN_PASSWORD` | O'zingiz tanlagan kuchli parol (**MAJBURIY** — default parol olib tashlangan!) |
    | `ADMIN_USERNAME` | (ixtiyoriy) Login — default `shxsh` |
    | `ADMIN_NAME` | (ixtiyoriy) Ism — default `Shox` |
    | `ADMIN_TOKEN_SECRET` | (ixtiyoriy) Uzoq tasodifiy satr — sessiya token imzosi |
    | `ADMIN_EXTRA_ACCOUNTS` | (ixtiyoriy) `login:parol:Ism,login2:parol2:Ism2` |
 
 2. Deploy qiling. Endi `#/admin` da **login: `shxsh`** + siz tanlagan parol bilan kiriladi.
-3. `ADMIN_PASSWORD` o'rnatilmagan bo'lsa ham panel ishlaydi — **default parol
-   `shxsh1010`** (login `shxsh`). Panel bunday holatda sariq ogohlantirish
-   ko'rsatadi: "Standart parol ishlatilmoqda". Real xavfsizlik uchun
-   `ADMIN_PASSWORD` ni o'rnatish tavsiya etiladi.
+3. `ADMIN_PASSWORD` o'rnatilmagan bo'lsa panelga kirish **butunlay yopiq**
+   ("Admin panel server'da sozlanmagan" xatosi chiqadi) — bu ataylab qilingan
+   xavfsizlik choralari. `shxsh1010` standart paroli kod'dan **butunlay olib
+   tashlandi** — endi hech kim ochiq default parol bilan kira olmaydi.
 
 Qo'shimcha xavfsizlik choralari (tavsiya):
 

@@ -1,20 +1,17 @@
 // ==== ADMIN AUTH (server-side) ====
-// Admin paroli endi faqat SERVER'da (env o'zgaruvchilarida) saqlanadi —
+// Admin paroli faqat SERVER'da (env o'zgaruvchilarida) saqlanadi —
 // brauzer kodiga hech qachon chiqmaydi.
 //
-// Vercel sozlamalarida (Environment Variables):
+// Vercel sozlamalarida (Environment Variables) MAJBURIY o'rnatilishi kerak:
 //   ADMIN_USERNAME        (ixtiyoriy, default: shxsh)
-//   ADMIN_PASSWORD        (tavsiya — o'rnatilmasa default 'shxsh1010' ishlaydi)
+//   ADMIN_PASSWORD        (MAJBURIY — o'rnatilmasa login butunlay yopiq!)
 //   ADMIN_NAME            (ixtiyoriy, default: Shox)
-//   ADMIN_TOKEN_SECRET    (ixtiyoriy — token imzosi. Bo'sh bo'lsa faol parol ishlatiladi)
+//   ADMIN_TOKEN_SECRET    (ixtiyoriy — token imzosi. Bo'sh bo'lsa ADMIN_PASSWORD ishlatiladi)
 //   ADMIN_EXTRA_ACCOUNTS  (ixtiyoriy: login:parol:Ism,login2:parol2:Ism2)
 //
-// ⚠️ DEFAULT parol ('shxsh1010') repo'da ochiq turgan fallback — qulay boshlash
-// uchun. REAL xavfsizlik uchun Vercel'da ADMIN_PASSWORD o'rnating; panel
-// standart parol ishlatilayotganda ogohlantirish ko'rsatadi.
+// ⚠️ Xavfsizlik: DEFAULT parol olib tashlandi. ADMIN_PASSWORD o'rnatilmagan
+// bo'lsa panelga kirish butunlay yopiq (not_configured xatosi chiqadi).
 import { createHmac, timingSafeEqual } from 'node:crypto';
-
-const DEFAULT_OWNER_PASSWORD = 'shxsh1010';
 
 const SESSION_TTL = 12 * 60 * 60 * 1000; // 12 soat
 
@@ -26,24 +23,21 @@ function ownerUsername() {
 function ownerPassword() {
   return process.env.ADMIN_PASSWORD || '';
 }
-function activePassword() {
-  return ownerPassword() || DEFAULT_OWNER_PASSWORD;
-}
 function ownerName() {
   return (process.env.ADMIN_NAME || 'Shox').trim();
 }
 function tokenSecret() {
-  return process.env.ADMIN_TOKEN_SECRET || activePassword();
+  return process.env.ADMIN_TOKEN_SECRET || ownerPassword();
 }
 
-// Serverda admin auth sozlanganmi? (default parol bilan ham ishlaydi)
+// Serverda admin auth sozlanganmi? (ADMIN_PASSWORD o'rnatilgan bo'lishi shart)
 export function isAuthConfigured() {
-  return Boolean(activePassword());
+  return Boolean(ownerPassword());
 }
 
 // Standart (default) parol ishlatilmoqdami? — panelda ogohlantirish ko'rsatish uchun
 export function isUsingDefaultPassword() {
-  return !ownerPassword();
+  return false;
 }
 
 // Qo'shimcha adminlar: "login:parol:Ism,login2:parol2:Ism2"
@@ -70,7 +64,7 @@ export function authenticate(username, password) {
   const u = String(username || '').trim().toLowerCase();
   const p = String(password || '');
 
-  if (u === ownerUsername() && p === activePassword()) {
+  if (u === ownerUsername() && p === ownerPassword()) {
     return { username: ownerUsername(), name: ownerName(), role: 'owner' };
   }
   const extra = parseExtraAccounts().find((a) => a.username === u && a.password === p);

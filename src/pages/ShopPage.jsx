@@ -126,7 +126,7 @@ export default function ShopPage() {
       equipItem(item);
       return;
     }
-    if (!state.isAdmin && state.coins < item.price) {
+    if (state.coins < item.price) {
       showToast(`Tangalar yetarli emas! Yana ${item.price - state.coins} 🪙 kerak`, 'error');
       return;
     }
@@ -192,13 +192,6 @@ export default function ShopPage() {
             <span className="font-bold text-lg">{state.coins}</span>
             <span className="text-xs opacity-70">🪙 balans</span>
           </div>
-          {/* Admin rejimi — hamma narsa tekin */}
-          {state.isAdmin && (
-            <div className="flex items-center gap-2 badge badge-secondary badge-lg p-3 border-0 shadow-lg shadow-secondary/20">
-              <Sparkles className="w-4 h-4" />
-              <span className="font-bold text-sm">Admin — hamma narsa tekin</span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -332,7 +325,7 @@ export default function ShopPage() {
             {filtered.map(item => {
               const isOwned = owned.has(item.id);
               const isEquipped = equipped[item.category] === item.id;
-              const canAfford = state.isAdmin || state.coins >= item.price;
+              const canAfford = state.coins >= item.price;
               const meta = rarityCard(item);
               const isPreview = previewItemId === item.id;
 

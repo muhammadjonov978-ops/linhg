@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useApp } from '../context/AppContext';
 import { adminLogin, verifyAdminSession, UNIVERSAL_USERNAME, ADMIN_SESSION_KEY as SESSION_KEY } from '../data/adminUsers';
 import { useSiteConfig, saveConfig, getLangPrice } from '../data/siteConfig';
 import { languages } from '../data/languages';
@@ -177,27 +178,29 @@ function LoginScreen({ onSuccess }) {
 
 // ================= ACCOUNTS TAB =================
 function AccountsTab({ config, onSave }) {
-  const [newUser, setNewUser] = useState({ username: '', password: '', name: '' });
+  const [newUser, setNewUser] = useState({ username: '', name: '' });
   const [msg, setMsg] = useState('');
 
   const addAccount = () => {
     const username = String(newUser.username || '').trim().toLowerCase();
-    const password = String(newUser.password || '').trim();
     const name = String(newUser.name || '').trim();
-    if (username.length < 2 || password.length < 2) {
-      setMsg('Login va parol kamida 2 ta belgidan iborat bo\u2018lishi kerak');
+    if (username.length < 2) {
+      setMsg('Login kamida 2 ta belgidan iborat bo\u2018lishi kerak');
       return;
     }
-    if (config.accounts.some((a) => a.username.toLowerCase() === username)) {
+    if (config.accounts.some((a) => a.username?.toLowerCase() === username)) {
       setMsg('Bu login allaqachon mavjud');
       return;
     }
+    // DIQQAT: parol bu yerda saqlanmaydi! Haqiqiy loginlar server'da
+    // sozlanadi (Vercel env: ADMIN_USERNAME / ADMIN_PASSWORD /
+    // ADMIN_EXTRA_ACCOUNTS). Bu ro'yxat faqat panel ichida ko'rsatish uchun.
     onSave({
       ...config,
-      accounts: [...config.accounts, { username, password, name: name || username, role: 'admin' }],
+      accounts: [...config.accounts, { username, name: name || username, role: 'admin' }],
     });
-    setNewUser({ username: '', password: '', name: '' });
-    setMsg('✅ Hisob qo\u2018shildi');
+    setNewUser({ username: '', name: '' });
+    setMsg('✅ Hisob ro\u2018yxatga qo\u2018shildi');
     setTimeout(() => setMsg(''), 2500);
   };
 
@@ -214,17 +217,11 @@ function AccountsTab({ config, onSave }) {
         <h3 className="font-bold text-sm flex items-center gap-2 mb-2 text-white">
           <UserPlus className="w-4 h-4 text-[#facc15]" /> Yangi hisob qo\u2018shish
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           <input
             value={newUser.username}
             onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
             placeholder="Login"
-            className="input input-bordered input-sm bg-white/[0.03] border-white/10"
-          />
-          <input
-            value={newUser.password}
-            onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-            placeholder="Parol"
             className="input input-bordered input-sm bg-white/[0.03] border-white/10"
           />
           <input
@@ -234,12 +231,17 @@ function AccountsTab({ config, onSave }) {
             className="input input-bordered input-sm bg-white/[0.03] border-white/10"
           />
         </div>
-        <div className="flex items-center gap-3 mt-2">
+        <div className="flex items-center gap-3 mt-2 flex-wrap">
           <button onClick={addAccount} className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black">
             <UserPlus className="w-3.5 h-3.5" /> Qo\u2018shish
           </button>
           {msg && <span className="text-xs text-white/70">{msg}</span>}
         </div>
+        <p className="text-[11px] text-white/40 leading-relaxed">
+          💡 Parol bu yerda so\u2018ralmaydi — loginlar server\u2019da tekshiriladi (Vercel env:
+          ADMIN_USERNAME, ADMIN_PASSWORD, ADMIN_EXTRA_ACCOUNTS). Bu ro\u2018yxat faqat
+          admin panel ichidagi ko\u2018rinish uchun.
+        </p>
       </div>
 
       {/* Accounts table */}
@@ -434,6 +436,7 @@ function TextsTab({ config, onSave }) {
 
 // ================= COINS TAB (adminlar bir-biriga cheksiz coin beradi) =================
 function CoinsTab({ config, session }) {
+  const { dispatch } = useApp();
   const [data, setData] = useState({ balances: {}, log: [], mode: 'local' });
   const [target, setTarget] = useState('');
   const [amount, setAmount] = useState('');
@@ -450,7 +453,7 @@ function CoinsTab({ config, session }) {
   const LEGACY_OWNER = 'shox';
   const admins = [
     { username: UNIVERSAL_USERNAME, name: 'Shox', role: 'owner' },
-    ...(config.accounts || []).filter((a) => a.username !== UNIVERSAL_USERNAME && a.username !== LEGACY_OWNER),
+    ...(config.accounts || []).filter((a) => a && typeof a.username === 'string' && a.username !== UNIVERSAL_USERNAME && a.username !== LEGACY_OWNER),
   ];
   // Hozir kirgan admin ro'yxatda bo'lmasa — qo'shamiz (o'ziga berishi uchun)
   if (!admins.some((a) => a.username === SELF)) {
@@ -472,6 +475,10 @@ function CoinsTab({ config, session }) {
     const res = await giveAdminCoins(session?.username || 'admin', username, amt);
     setBusy(false);
     if (res.ok) {
+      // Tanga haqiqiy balansga ham qo'shiladi — navbar/magazinda darhol
+      // ko'rinadi (admin-hamyon + asosiy balans ikkalasi yangilanadi).
+      // Diqqat: Firebase/Redis sozlanmasa bu faqat shu brauzer uchun.
+      dispatch({ type: 'ADD_COINS', payload: amt });
       setMsg(`✅ ${username} ga +${amt.toLocaleString('uz-UZ')} tanga berildi`);
       setAmount('');
     } else {
@@ -492,6 +499,9 @@ function CoinsTab({ config, session }) {
     const res = await giveAdminCoins(SELF, SELF, amt);
     setBusy(false);
     if (res.ok) {
+      // Tanga haqiqiy foydalanuvchi balansiga qo'shiladi — navbar va
+      // magazinda darhol ko'rinadi (admin-hamyon + asosiy balans).
+      dispatch({ type: 'ADD_COINS', payload: amt });
       const newBalance = Number.isFinite(Number(res.balance)) ? Number(res.balance) : null;
       setMsg(
         `✅ Sizga +${amt.toLocaleString('uz-UZ')} tanga berildi` +
@@ -640,7 +650,7 @@ function CoinsTab({ config, session }) {
                 <td>
                   <div className="flex items-center gap-2.5">
                     <span className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-sm font-bold text-[#facc15]">
-                      {(a.name || a.username).charAt(0).toUpperCase()}
+                      {String(a.name || a.username || '?').charAt(0).toUpperCase()}
                     </span>
                     <div className="min-w-0">
                       <p className="font-mono text-xs font-bold text-white flex items-center gap-1.5">

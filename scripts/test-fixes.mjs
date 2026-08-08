@@ -52,19 +52,20 @@ assert.equal(r.body.ok, false, 'soxta sessiya rad etildi');
 console.log('✅ /api/admin/login + /api/admin/verify handlerlar OK');
 
 // ---------- 2) DEFAULT parol rejimi (ADMIN_PASSWORD o'rnatilmagan) ----------
+// Xavfsizlik: default parol olib tashlangan — ADMIN_PASSWORD bo'lmasa
+// auth butunlay YOPIQ bo'ladi (fail-closed), 'shxsh1010' ishlamaydi.
 delete process.env.ADMIN_PASSWORD;
 delete process.env.ADMIN_EXTRA_ACCOUNTS;
 const authDefault = await import('../api/_lib/adminAuth.js?t=4');
-assert.equal(authDefault.isAuthConfigured(), true, 'default parol bilan ham auth ochiq');
-assert.equal(authDefault.isUsingDefaultPassword(), true);
-assert.ok(authDefault.authenticate('shxsh', 'shxsh1010'), 'default parol ishlaydi');
+assert.equal(authDefault.isAuthConfigured(), false, 'ADMIN_PASSWORD yo\'q — auth yopiq (default parol olib tashlangan)');
+assert.equal(authDefault.authenticate('shxsh', 'shxsh1010'), null, 'eski default parol endi ishlamaydi');
 assert.equal(authDefault.authenticate('shxsh', 'xato'), null);
 
 const { default: loginDefault } = await import('../api/admin/login.js?t=5');
 r = await call(loginDefault, { method: 'POST', body: { username: 'shxsh', password: 'shxsh1010' } }, {});
-assert.equal(r.body.ok, true);
-assert.ok(r.body.warning, 'default parol haqida ogohlantirish keladi');
-console.log('✅ Default parol (shxsh/shxsh1010) ishlaydi + ogohlantirish bor');
+assert.equal(r.body.ok, false);
+assert.equal(r.body.code, 'not_configured', 'panelga kirish yopiq — ADMIN_PASSWORD talab qilinadi');
+console.log("✅ ADMIN_PASSWORD yo'q — login yopiq (fail-closed), 'shxsh1010' rad etiladi");
 
 // ---------- 3) PAYME WEBHOOK: fail-closed ----------
 const paymeBody = { jsonrpc: '2.0', id: 1, method: 'CheckPerformTransaction', params: {} };

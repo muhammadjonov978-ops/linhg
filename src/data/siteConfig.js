@@ -8,9 +8,12 @@ import { useSyncExternalStore } from 'react';
 const CONFIG_KEY = 'lingohub_admin_config';
 const listeners = new Set();
 
+// DIQQAT: bu yerda hech qachon PAROL saqlanmaydi! Login/parol faqat
+// server'da tekshiriladi (api/admin/login → ADMIN_PASSWORD env o'zgaruvchisi).
+// localStorage'dagi accounts ro'yxati faqat panel ichida ko'rsatish uchun.
 export const DEFAULT_CONFIG = {
   accounts: [
-    { username: 'shxsh', password: 'shxsh1010', name: 'Shox', role: 'owner' },
+    { username: 'shxsh', name: 'Shox', role: 'owner' },
   ],
   prices: {
     korean: 20000,
@@ -41,16 +44,36 @@ export function loadConfig() {
         const legacyOwner = parsed.accounts.find((a) => a.username === 'shox' && a.role === 'owner');
         if (legacyOwner) {
           parsed.accounts = [
-            { ...legacyOwner, username: 'shxsh', password: 'shxsh1010' },
+            { ...legacyOwner, username: 'shxsh' },
             ...parsed.accounts.filter((a) => a !== legacyOwner),
           ];
         }
       }
-      return {
-        accounts: Array.isArray(parsed.accounts) && parsed.accounts.length ? parsed.accounts : DEFAULT_CONFIG.accounts,
+      // Faqat to'g'ri tuzilgan hisoblar saqlanadi — eski/buzilgan (masalan,
+      // username o'rnida string yoki maydonlari yo'q) yozuvlar panelni qulatmasligi
+      // uchun tashlab yuboriladi. Parollar hech qachon localStorage'ga yozilmaydi.
+      const accounts = Array.isArray(parsed.accounts)
+        ? parsed.accounts
+            .filter((a) => a && typeof a === 'object' && typeof a.username === 'string' && a.username.trim())
+            .map((a) => ({ username: a.username.trim(), name: a.name || a.username, role: a.role || 'admin' }))
+        : [];
+      const result = {
+        accounts: accounts.length ? accounts : DEFAULT_CONFIG.accounts,
         prices: { ...DEFAULT_CONFIG.prices, ...(parsed.prices || {}) },
         texts: { ...DEFAULT_CONFIG.texts, ...(parsed.texts || {}) },
       };
+      // Eski/buzilgan konfiguratsiya (masalan parol saqlangan yoki "xato loginlar"
+      // kiritilgan) bo'lsa — tozalangan versiyani localStorage'ga ham YOZIB QO'YAMIZ.
+      // Shunda 'shxsh1010' kabi parollar foydalanuvchi brauzeridan butunlay yo'qoladi.
+      try {
+        const oldAccounts = JSON.stringify(parsed.accounts || null);
+        if (oldAccounts !== JSON.stringify(result.accounts)) {
+          localStorage.setItem(CONFIG_KEY, JSON.stringify(result));
+        }
+      } catch {
+        /* ignore */
+      }
+      return result;
     }
   } catch {
     /* ignore */
