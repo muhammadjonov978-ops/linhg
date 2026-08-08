@@ -31,13 +31,13 @@ const PORTFOLIO = {
   about: [
     "Men Muhammadjonov Akbarshox — O‘zbekiston, Toshkent shahridan bo‘lgan yosh dasturchiman. Hozir 12 yoshdaman, lekin bu yoshimga qaramay, IT sohasida jiddiy tajribaga ega bo‘ldim. Dasturlashga bo‘lgan qiziqishim menga 100 ga yaqin startap va loyiha saytlarini yaratish imkonini berdi.",
     "Hozirda dasturlash kursining 12-oyini o‘qiyapman va har kuni yangi texnologiyalarni o‘rganishda davom etaman. Asosiy yo‘nalishim — frontend dasturlash: React, JavaScript, HTML/CSS va zamonaviy toolinglar bilan ishlash.",
-    "Eng katta loyiham — Lingohub. Bu 27 tilda interaktiv til o‘rganish platformasi bo‘lib, unda reading, listening, writing va speaking mashqlari, AI-tutor, yutuqlar, statistika va boshqa ko‘plab funksiyalar mavjud. Platformani butunlay o‘zim yaratganman — g‘oyadan tortib, dizayn, dasturlash va joylashgacha.",
+    "Eng katta loyiham — Lingohub. Bu 130+ tilda interaktiv til o‘rganish platformasi bo‘lib, unda reading, listening, writing va speaking mashqlari, AI-tutor, yutuqlar, statistika va boshqa ko‘plab funksiyalar mavjud. Platformani butunlay o‘zim yaratganman — g‘oyadan tortib, dizayn, dasturlash va joylashgacha.",
     "Men oddiy sayt yasab qo‘yadigan dasturchi emasman. Men muammoni tushunib, foydalanuvchiga qulay va chiroyli yechim taklif qiladigan dasturchiman. Har bir loyihada nafaqat texnik sifat, balki dizayn va foydalanuvchi tajribasiga ham katta e'tibor beraman.",
     "Kelajakdagi maqsadim — o‘z IT-kompaniyamni ochish va O‘zbekistondagi yoshlarga dasturlashni o‘rgatish. Men ishonamanki, har qanday yoshdagi inson qattiq mehnat va qiziqish bilan katta natijalarga erisha oladi.",
   ],
   highlights: [
     "100+ yaratilgan startap va loyiha saytlari",
-    "27 tillik Lingohub platformasi asoschisi",
+    "130+ tillik Lingohub platformasi asoschisi",
     "Dasturlash kursining 12-oyi bitiruvchisi",
     "Frontend: React, JavaScript, HTML/CSS, Vite",
     "UI/UX dizayn va performance optimizatsiya",
@@ -46,7 +46,7 @@ const PORTFOLIO = {
   avatar: photo1,
   stats: [
     { icon: Rocket, value: '100+', label: 'Yaratilgan saytlar' },
-    { icon: Briefcase, value: '27', label: 'Til platforma' },
+    { icon: Briefcase, value: '130+', label: 'Til platforma' },
     { icon: GraduationCap, value: '12', label: 'Yosh dasturchi' },
     { icon: Star, value: '100%', label: 'Ishtiyoq va g‘ayrat' },
   ],
@@ -68,8 +68,8 @@ const PORTFOLIO = {
     },
     {
       year: '2026 — Lingohub',
-      title: '27 tillik platforma yaratildi',
-      text: "Eng yirik loyiham — Lingohub ishga tushdi. 27 tilda interaktiv til o‘rganish, AI-tutor, yutuqlar, statistika va ko‘plab funksiyalar. Platformani butunlay o‘zim loyihaladim va dasturladim.",
+      title: '130+ tillik platforma yaratildi',
+      text: "Eng yirik loyiham — Lingohub ishga tushdi. 130+ tilda interaktiv til o‘rganish, AI-tutor, yutuqlar, statistika va ko‘plab funksiyalar. Platformani butunlay o‘zim loyihaladim va dasturladim.",
     },
     {
       year: '2026 — Bugun',
@@ -79,7 +79,7 @@ const PORTFOLIO = {
   ],
   achievements: [
     { icon: Award, title: '100+ loyiha', text: 'Yuzdan ortiq startap va loyiha saytlari yaratilgan' },
-    { icon: Trophy, title: 'Lingohub asoschisi', text: '27 tilda ishlaydigan to‘liq platforma yaratgan' },
+    { icon: Trophy, title: 'Lingohub asoschisi', text: '130+ tilda ishlaydigan to‘liq platforma yaratgan' },
     { icon: Medal, title: 'Kurs bitiruvchisi', text: 'Dasturlash kursining 12-oyi (eng yuqori bosqich)' },
     { icon: Users, title: 'Minglab foydalanuvchi', text: 'Lingohub orqali til o‘rganayotganlar soni oshmoqda' },
   ],
@@ -120,7 +120,7 @@ const PORTFOLIO = {
   projects: [
     {
       title: 'Lingohub',
-      desc: "27 tilda interaktiv o'rganish platformasi — reading, listening, writing va speaking mashqlari, AI-tutor, yutuqlar, statistika, streak kalendar va ko'plab funksiyalar. Sayt butunlay o'zim tomonimdan yaratilgan: dizayn, dasturlash, backend va SEO.",
+      desc: "130+ tilda interaktiv o'rganish platformasi — reading, listening, writing va speaking mashqlari, AI-tutor, yutuqlar, statistika, streak kalendar va ko'plab funksiyalar. Sayt butunlay o'zim tomonimdan yaratilgan: dizayn, dasturlash, backend va SEO.",
       tags: ['React', 'Vite', 'Firebase', 'AI', 'SEO'],
       featured: true,
       url: 'https://lingohub.uz',
@@ -132,7 +132,7 @@ const PORTFOLIO = {
     },
     {
       title: 'Til o‘rganish interaktiv modullar',
-      desc: "Lingohub doirasida 27 til uchun alifbo, reading, listening, writing va speaking modullari. Har bir modul o'yinlashtirilgan va foydalanuvchini motivatsiya qiladigan tizimga ega.",
+      desc: "Lingohub doirasida 130+ til uchun alifbo, reading, listening, writing va speaking modullari. Har bir modul o'yinlashtirilgan va foydalanuvchini motivatsiya qiladigan tizimga ega.",
       tags: ['React', 'Audio', 'AI', 'Gamification'],
     },
   ],

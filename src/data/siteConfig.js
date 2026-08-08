@@ -1,7 +1,6 @@
 // ==== ADMIN-EDITABLE SITE CONFIG ====
 // Admin panel orqali o'zgartiriladigan sozlamalar (localStorage'da saqlanadi):
 //  - accounts: admin hisoblar ro'yxati
-//  - prices:   tillar narxlari (so'm)
 //  - texts:    sayt matnlari
 import { useSyncExternalStore } from 'react';
 
@@ -15,21 +14,13 @@ export const DEFAULT_CONFIG = {
   accounts: [
     { username: 'shxsh', name: 'Shox', role: 'owner' },
   ],
-  prices: {
-    korean: 20000,
-    japanese: 20000,
-    chinese: 20000,
-    arabic: 20000,
-    hindi: 20000,
-    hebrew: 20000,
-  },
   texts: {
     heroBadge: 'Interaktiv til o\u2018rganish',
-    heroTitle: '27 Tilda Erkin Gaplashing',
+    heroTitle: '130+ Tilda Erkin Gaplashing',
     heroSubtitle: "Reading, Listening, Writing va Speaking \u2014 4 ta asosiy ko'nikmani interaktiv mashqlar orqali rivojlantiring",
     featureTitle: "5 ta Asosiy Bo'lim",
     featureDesc: "Mashqlarni bajarib, yutuqlarni oching, tanga yig'ing va boshqa o'quvchilar bilan raqobatlashing!",
-    footerText: "27 tilda interaktiv o'rganish platformasi. Reading, Listening, Writing, Speaking.",
+    footerText: "130+ tilda interaktiv o'rganish platformasi. Reading, Listening, Writing, Speaking.",
   },
 };
 
@@ -59,7 +50,6 @@ export function loadConfig() {
         : [];
       const result = {
         accounts: accounts.length ? accounts : DEFAULT_CONFIG.accounts,
-        prices: { ...DEFAULT_CONFIG.prices, ...(parsed.prices || {}) },
         texts: { ...DEFAULT_CONFIG.texts, ...(parsed.texts || {}) },
       };
       // Eski/buzilgan konfiguratsiya (masalan parol saqlangan yoki "xato loginlar"
@@ -116,12 +106,6 @@ if (typeof window !== 'undefined') {
 
 export function useSiteConfig() {
   return useSyncExternalStore(subscribeConfig, getSnapshot);
-}
-
-// Til narxi: admin sozlagan bo'lsa o'sha, aks holda dastlabki narx
-export function getLangPrice(config, lang) {
-  const p = config?.prices?.[lang?.id];
-  return typeof p === 'number' ? p : (lang?.price ?? 0);
 }
 
 export function getSiteText(config, key, fallback = '') {

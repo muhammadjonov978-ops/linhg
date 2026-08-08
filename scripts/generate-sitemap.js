@@ -1,6 +1,6 @@
 // sitemap.xml generator — lingohub.uz
 // Usage: node scripts/generate-sitemap.js
-// Builds sitemap.xml with all 27 language pages + 4 level pages per language
+// Builds sitemap.xml with all language pages + 4 level pages per language
 // and saves it into the 'public' folder.
 
 import fs from 'node:fs';
@@ -10,7 +10,7 @@ import path from 'node:path';
 const DOMAIN = 'https://lingohub.uz';
 const SITEMAP_NAME = 'sitemap.xml';
 
-// 4 levels per language (matching nextjs/src/data/languages.ts)
+// 4 levels per language
 const LEVELS = ['beginner', 'elementary', 'pre-intermediate', 'advanced'];
 
 // ===== LANGUAGE DISCOVERY =====

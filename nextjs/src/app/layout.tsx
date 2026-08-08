@@ -4,8 +4,8 @@ import { Providers } from "./providers";
 import AppLayout from "./app-layout";
 
 export const metadata: Metadata = {
-  title: "Lingohub - 27 Tilda Til O'rganing",
-  description: "Lingohub - Interaktiv 27 tilda til o'rganish platformasi. Reading, Listening, Writing, Speaking.",
+  title: "Lingohub - 130+ Tilda Til O'rganing",
+  description: "Lingohub - Interaktiv 130+ tilda til o'rganish platformasi. Reading, Listening, Writing, Speaking.",
   icons: {
     icon: [
       { url: "/logo.png", type: "image/png", sizes: "1024x1024" },

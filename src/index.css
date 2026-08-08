@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@500;700&family=Great+Vibes&family=Playfair+Display:wght@600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Great+Vibes&family=Playfair+Display:wght@600;700;800;900&display=swap');
 @import "tailwindcss";
 @plugin "daisyui" {
   themes: all;
@@ -41,9 +41,20 @@
   --noise: 0;
 }
 
-/* Playfair Display — sarlavhalar uchun hashamatli shrift */
+/* Outfit — asosiy UI shrifti; Playfair Display — hashamatli sarlavhalar uchun */
 @theme {
+  --font-sans: "Outfit", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-display: "Playfair Display", "Georgia", serif;
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 .font-display {
@@ -58,6 +69,24 @@
   background-clip: text;
   color: transparent;
   animation: gold-shine 4s linear infinite;
+}
+
+/* Sarlavhalar uchun biroz kengroq harf oralig'i */
+h1, h2, h3 {
+  letter-spacing: -0.01em;
+}
+
+/* Button hover micro-interactions */
+.btn {
+  transition: transform 0.18s ease, box-shadow 0.25s ease, filter 0.2s ease;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-primary, .btn-warning, .btn-success {
+  font-weight: 600;
 }
 
 @keyframes gold-shine {
@@ -499,6 +528,7 @@
 .admin-shell {
   min-height: 100vh;
   color: #e7e7ea;
+  font-family: var(--font-sans);
   background:
     radial-gradient(900px 500px at 92% -10%, rgba(250, 204, 21, 0.07), transparent 55%),
     radial-gradient(700px 420px at -10% 30%, rgba(96, 165, 250, 0.05), transparent 55%),

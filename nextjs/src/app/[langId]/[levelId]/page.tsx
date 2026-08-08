@@ -86,7 +86,7 @@ export default function LevelPage({ params }: { params: Promise<{ langId: string
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-2xl font-bold">{currentLevel.name}</h1>
-                <span className={`badge badge-sm ${currentLevel.isPremium ? 'badge-warning' : 'badge-primary'}`}>
+                <span className="badge badge-sm badge-primary">
                   {currentLevel.code}
                 </span>
               </div>

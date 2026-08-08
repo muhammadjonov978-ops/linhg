@@ -49,7 +49,7 @@ export default function HomePage() {
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold mb-4">
               <span className="bg-gradient-to-r from-primary via-purple-500 to-secondary bg-clip-text text-transparent">
-                7 Tilda Erkin Gaplashing
+                130+ Tilda Erkin Gaplashing
               </span>
             </h1>
             <p className="text-lg md:text-xl opacity-70 max-w-2xl mx-auto mb-8">
@@ -64,7 +64,7 @@ export default function HomePage() {
               </div>
               <div className="flex items-center gap-2">
                 <Star className="w-5 h-5 text-warning" />
-                <span className="font-bold">7 xil til</span>
+                <span className="font-bold">130+ xil til</span>
               </div>
               <div className="flex items-center gap-2">
                 <Shield className="w-5 h-5 text-success" />

@@ -8,7 +8,6 @@ import {
   FaVolumeUp as Volume2, FaSync as RefreshCw, FaBookOpen as BookOpen,
   FaGraduationCap as GraduationCap, FaVolumeMute as VolumeX, FaCoins as Coins,
 } from 'react-icons/fa';
-import CoinRewardBanner from '../components/CoinRewardBanner';
 
 export default function LevelPage({ onBack }) {
   const { state, dispatch, getLessonProgress } = useApp();
@@ -261,11 +260,6 @@ export default function LevelPage({ onBack }) {
 
       {/* Lesson content */}
       <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* 5000 tanga — 2 ta pullik til banneri */}
-        <div className="mb-6">
-          <CoinRewardBanner />
-        </div>
-
         {/* Lesson header */}
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">{lesson.icon}</div>

@@ -1,4 +1,4 @@
-# Lingohub.uz — 27 Tilda Bepul Til O'rganish
+# Lingohub.uz — 130+ Tilda Bepul Til O'rganish
 
 React + Vite asosida qurilgan interaktiv til o'rganish platformasi.
 

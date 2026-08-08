@@ -8,9 +8,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   Lock, ChevronRight, Trophy, CheckCircle,
-  Crown, ArrowLeft, TrendingUp, CreditCard
+  ArrowLeft, TrendingUp
 } from 'lucide-react';
-import PaywallModal from '../../components/PaywallModal';
 import DailyChallenge from '../../components/DailyChallenge';
 import AchievementsPanel from '../../components/AchievementsPanel';
 import StatsDashboard from '../../components/StatsDashboard';
@@ -20,7 +19,6 @@ export default function LanguageDashboardPage({ params }: { params: Promise<{ la
   const { langId } = use(params);
   const { state, dispatch, isLevelUnlocked, isLevelAvailable, getLevelProgress } = useApp();
   const router = useRouter();
-  const [showPaywall, setShowPaywall] = useState(false);
 
   // Sync state with URL params
   useEffect(() => {
@@ -41,25 +39,11 @@ export default function LanguageDashboardPage({ params }: { params: Promise<{ la
     );
   }
 
-  // Paid language gate
-  const isLangPaid = !!currentLang.price;
-  const isLangUnlocked = !isLangPaid || (state.unlockedLanguages || {})[currentLang.id];
-
   const handleLevelClick = (levelId: string) => {
-    if (levelId === 'advanced' && !state.isPremium) {
-      setShowPaywall(true);
-      return;
-    }
     if (isLevelUnlocked(langId, levelId)) {
       dispatch({ type: 'SET_CURRENT_LEVEL', payload: levelId });
       router.push(`/${langId}/${levelId}`);
     }
-  };
-
-  const handleUnlockPremium = () => {
-    dispatch({ type: 'UNLOCK_PREMIUM' });
-    dispatch({ type: 'SET_CURRENT_LEVEL', payload: 'advanced' });
-    router.push(`/${langId}/advanced`);
   };
 
   const totalProgress = levels.reduce((acc, level) => {
@@ -126,31 +110,6 @@ export default function LanguageDashboardPage({ params }: { params: Promise<{ la
         </div>
       </div>
 
-      {isLangPaid && !isLangUnlocked ? (
-        <div className="max-w-6xl mx-auto px-4 py-10">
-          <div className="card bg-base-100 border-2 border-warning/40 max-w-lg mx-auto text-center">
-            <div className="card-body items-center py-10">
-              <div className="w-20 h-20 rounded-full bg-warning/10 flex items-center justify-center mb-4">
-                <Lock className="w-10 h-10 text-warning" />
-              </div>
-              <h2 className="text-2xl font-bold mb-2">{currentLang.flag} {currentLang.name} qulflangan</h2>
-              <p className="text-sm opacity-60 mb-6 max-w-xs">
-                Bu til pullik kurs. Karta bilan to'lab, barcha darajalarga cheksiz kirishni oching.
-              </p>
-              <div className="text-3xl font-extrabold text-warning mb-6">
-                {(currentLang.price || 20000).toLocaleString('uz-UZ')} so'm
-              </div>
-              <button
-                onClick={() => setShowPaywall(true)}
-                className="btn btn-primary btn-lg gap-2"
-              >
-                <CreditCard className="w-5 h-5" />
-                Karta bilan ochish
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : (
       <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Levels */}
@@ -175,7 +134,7 @@ export default function LanguageDashboardPage({ params }: { params: Promise<{ la
                   <button
                     key={level.id}
                     onClick={() => handleLevelClick(level.id)}
-                    disabled={isLocked && !(level.id === 'advanced' && !state.isPremium)}
+                    disabled={isLocked}
                     className={`card bg-base-100 border-2 transition-all duration-300 group text-left
                       ${isLocked ? 'opacity-50 cursor-not-allowed border-base-300' : 'hover:border-primary/50 hover:shadow-lg hover:-translate-y-0.5 cursor-pointer border-base-300'}
                       ${progress.completed ? 'border-success/50 bg-success/5' : ''}
@@ -186,7 +145,7 @@ export default function LanguageDashboardPage({ params }: { params: Promise<{ la
                     <div className="card-body p-5">
                       <div className="flex items-center gap-4">
                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0
-                          ${isLocked ? 'bg-base-300' : progress.completed ? 'bg-success/20' : level.isPremium ? 'bg-warning/10' : 'bg-primary/10'}
+                          ${isLocked ? 'bg-base-300' : progress.completed ? 'bg-success/20' : 'bg-primary/10'}
                         `}>
                           {isLocked ? <Lock className="w-6 h-6 opacity-50" /> : level.icon}
                         </div>
@@ -194,19 +153,9 @@ export default function LanguageDashboardPage({ params }: { params: Promise<{ la
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center flex-wrap gap-2">
                             <h3 className="font-bold text-lg">{level.name}</h3>
-                            <span className={`badge badge-sm ${level.isPremium ? 'badge-warning' : 'badge-ghost'}`}>
+                            <span className="badge badge-sm badge-ghost">
                               {level.code}
                             </span>
-                            {level.isPremium && !state.isPremium && (
-                              <span className="badge badge-warning badge-sm gap-1">
-                                <Crown className="w-3 h-3" /> Pro
-                              </span>
-                            )}
-                            {level.isPremium && state.isPremium && (
-                              <span className="badge badge-success badge-sm gap-1">
-                                <Crown className="w-3 h-3" /> Ochilgan
-                              </span>
-                            )}
                             {progress.completed && (
                               <CheckCircle className="w-4 h-4 text-success" />
                             )}
@@ -268,21 +217,6 @@ export default function LanguageDashboardPage({ params }: { params: Promise<{ la
           </div>
         </div>
       </div>
-      )}
-
-      <PaywallModal
-        isOpen={showPaywall}
-        lang={isLangPaid ? currentLang : null}
-        onClose={() => setShowPaywall(false)}
-        onUnlock={() => {
-          if (isLangPaid) {
-            dispatch({ type: 'UNLOCK_LANGUAGE', payload: currentLang.id });
-          } else {
-            handleUnlockPremium();
-          }
-          setShowPaywall(false);
-        }}
-      />
     </div>
   );
 }

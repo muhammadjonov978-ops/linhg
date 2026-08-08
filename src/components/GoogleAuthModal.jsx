@@ -1,9 +1,14 @@
 import { useState, useEffect } from 'react';
-import { HAS_FIREBASE, signInWithGoogle, signOutGoogle } from '../firebase';
+import {
+  HAS_FIREBASE, signInWithGoogle, signOutGoogle,
+  registerWithEmail, loginWithEmail, sendPasswordReset,
+} from '../firebase';
 import { FcGoogle } from 'react-icons/fc';
 import {
   FaTimes as X, FaSignOutAlt as LogOut, FaUser as User,
   FaSignInAlt as LogIn, FaCheckCircle as CheckCircle, FaMagic as Sparkles,
+  FaEnvelope as Envelope, FaLock as Lock, FaUserPlus as UserPlus,
+  FaSpinner as Loader2,
 } from 'react-icons/fa';
 
 const USER_STORAGE_KEY = 'lingohub_user';
@@ -34,14 +39,35 @@ function saveUser(u) {
   }
 }
 
-// Haqiqiy Google orqali kirish (Firebase). Firebase sozlanmagan bo'lsa
-// oddiy ism bilan kirish taklif qilinadi.
+function firebaseErrorText(code) {
+  const map = {
+    'auth/email-already-in-use': 'Bu email allaqachon ro\'yxatdan o\'tgan. Kirish tugmasini bosing.',
+    'auth/invalid-email': 'Email manzili noto\'g\'ri.',
+    'auth/weak-password': 'Parol juda qisqa — kamida 6 ta belgi.',
+    'auth/user-not-found': 'Bunday foydalanuvchi topilmadi. Avval ro\'yxatdan o\'ting.',
+    'auth/wrong-password': 'Parol noto\'g\'ri.',
+    'auth/invalid-credential': 'Email yoki parol noto\'g\'ri.',
+    'auth/too-many-requests': 'Juda ko\'p urinish. Iltimos, birozdan keyin qayta urinib ko\'ring.',
+    'auth/network-request-failed': 'Tarmoq xatosi. Internetni tekshiring.',
+    'auth/popup-closed-by-user': 'Google oynasi yopildi. Qayta urinib ko\'ring.',
+  };
+  return map[code] || `Xatolik yuz berdi: ${code || 'noma\'lum'}`;
+}
+
+/**
+ * Ro'yxatdan o'tish / kirish — faqat Google yoki email+parol orqali.
+ * Hech qanday demo (ism bilan kirish) rejimi yo'q.
+ */
 export default function GoogleAuthModal({ isOpen, onClose }) {
   const [user, setUser] = useState(loadSavedUser);
+  const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
-  const [googleBusy, setGoogleBusy] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   // Escape tugmasi — modalni yopadi
   useEffect(() => {
@@ -54,6 +80,17 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+
+  const finishLogin = (profile) => {
+    saveUser(profile);
+    setUser(profile);
+    setError('');
+    setSaved(true);
+    setTimeout(() => {
+      setSaved(false);
+      onClose();
+    }, 900);
+  };
 
   const signOut = async () => {
     setUser(null);
@@ -68,50 +105,79 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
 
   const handleGoogleSignIn = async () => {
     setError('');
-    setGoogleBusy(true);
+    setBusy(true);
     try {
       const profile = await signInWithGoogle();
       if (!profile) {
-        setError("Google ulanishi sozlanmagan. .env faylga Firebase kalitlarini qo'shing yoki ism bilan kiring.");
+        setError("Google ulanishi sozlanmagan. .env faylga Firebase kalitlarini qo'shing yoki email bilan ro'yxatdan o'ting.");
         return;
       }
-      saveUser(profile);
-      setUser(profile);
-      setSaved(true);
-      setTimeout(() => {
-        setSaved(false);
-        onClose();
-      }, 900);
+      finishLogin(profile);
     } catch (e) {
-      setError(`Google orqali kirish amalga oshmadi: ${e?.message || 'xato'}`);
+      setError(firebaseErrorText(e?.code || e?.message));
     } finally {
-      setGoogleBusy(false);
+      setBusy(false);
     }
   };
 
-  const handleSignIn = (e) => {
+  const handleEmailSubmit = async (e) => {
     e.preventDefault();
-    const clean = String(name || '').trim();
-    if (clean.length < 2) {
-      setError('Iltimos, ismingizni kiriting (kamida 2 ta harf)');
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (!cleanEmail || !String(password || '')) {
+      setError('Email va parolni kiriting.');
       return;
     }
-    const profile = {
-      sub: `local-${Date.now()}`,
-      name: clean,
-      givenName: clean,
-      picture: '',
-      isGoogle: false,
-    };
-    saveUser(profile);
-    setUser(profile);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError('Email manzili noto\'g\'ri formatda.');
+      return;
+    }
+    if (mode === 'register' && String(password).length < 6) {
+      setError('Parol kamida 6 ta belgidan iborat bo\'lishi kerak.');
+      return;
+    }
+    if (mode === 'register' && String(name || '').trim().length < 2) {
+      setError('Ismingizni kiriting (kamida 2 ta harf).');
+      return;
+    }
+
     setError('');
-    setSaved(true);
-    setName('');
-    setTimeout(() => {
-      setSaved(false);
-      onClose();
-    }, 900);
+    setBusy(true);
+    try {
+      const profile = mode === 'register'
+        ? await registerWithEmail(String(name || '').trim(), cleanEmail, String(password))
+        : await loginWithEmail(cleanEmail, String(password));
+      if (!profile) {
+        setError('Email tizimi sozlanmagan. .env faylga Firebase kalitlarini qo\'shing yoki Google bilan kiring.');
+        return;
+      }
+      finishLogin(profile);
+    } catch (e) {
+      setError(firebaseErrorText(e?.code));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setError('Avval email manzilingizni kiriting.');
+      return;
+    }
+    setError('');
+    setBusy(true);
+    try {
+      const ok = await sendPasswordReset(cleanEmail);
+      if (!ok) {
+        setError('Parolni tiklash sozlanmagan. .env faylga Firebase kalitlarini qo\'shing yoki Google bilan kiring.');
+        return;
+      }
+      setResetSent(true);
+    } catch (e) {
+      setError(firebaseErrorText(e?.code));
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -142,7 +208,7 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
             <div className="badge badge-success badge-sm gap-1 mb-6 mt-2">
               <CheckCircle className="w-3 h-3" /> Tizimga kirdingiz
             </div>
-            {user.isGoogle && user.email && (
+            {user.email && (
               <p className="text-xs opacity-50 -mt-4 mb-4">{user.email}</p>
             )}
             <div className="flex gap-2 justify-center">
@@ -153,30 +219,48 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
             </div>
           </div>
         ) : (
-          /* ---------- SIGN IN ---------- */
+          /* ---------- SIGN IN / REGISTER ---------- */
           <div className="p-8">
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center">
                 <User className="w-8 h-8 text-primary" />
               </div>
             </div>
-            <h2 className="text-2xl font-bold text-center mb-2 font-display">Hisobga kirish</h2>
+            <h2 className="text-2xl font-bold text-center mb-2 font-display">
+              {mode === 'register' ? 'Ro\'yxatdan o\'tish' : 'Hisobga kirish'}
+            </h2>
             <p className="text-sm opacity-60 text-center mb-6">
-              Google akkauntingiz bilan kiring — taraqqiyotingiz qurilmalar o'rtasida saqlanadi
+              Google yoki email orqali kiring — taraqqiyotingiz saqlanadi
             </p>
+
+            {/* Mode tabs */}
+            <div className="tabs tabs-boxed justify-center mb-6 bg-base-200/70">
+              <button
+                onClick={() => { setMode('login'); setError(''); }}
+                className={`tab tab-sm ${mode === 'login' ? 'tab-active' : ''}`}
+              >
+                <LogIn className="w-3.5 h-3.5 mr-1" /> Kirish
+              </button>
+              <button
+                onClick={() => { setMode('register'); setError(''); }}
+                className={`tab tab-sm ${mode === 'register' ? 'tab-active' : ''}`}
+              >
+                <UserPlus className="w-3.5 h-3.5 mr-1" /> Ro'yxatdan o'tish
+              </button>
+            </div>
 
             {/* GOOGLE SIGN-IN (haqiqiy) */}
             <button
               onClick={handleGoogleSignIn}
-              disabled={googleBusy}
+              disabled={busy}
               className="btn btn-outline w-full gap-3 border-base-300 hover:border-primary hover:bg-primary/10 transition-all mb-4"
             >
-              {googleBusy ? (
+              {busy ? (
                 <span className="loading loading-spinner loading-sm" />
               ) : (
                 <FcGoogle className="w-5 h-5" />
               )}
-              Google bilan ro'yxatdan o'tish
+              Google bilan {mode === 'register' ? 'ro\'yxatdan o\'tish' : 'kirish'}
             </button>
 
             <div className="flex items-center gap-3 mb-4 opacity-40 text-xs">
@@ -185,18 +269,58 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
               <span className="flex-1 h-px bg-base-300" />
             </div>
 
-            <form onSubmit={handleSignIn} className="space-y-4">
+            <form onSubmit={handleEmailSubmit} className="space-y-4">
+              {mode === 'register' && (
+                <div className="relative">
+                  <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 opacity-40" />
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => { setName(e.target.value); setError(''); }}
+                    placeholder="Ismingiz"
+                    autoFocus
+                    className="input input-bordered w-full pl-10 focus:outline-none focus:border-primary transition-colors"
+                  />
+                </div>
+              )}
+
               <div className="relative">
-                <User className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 opacity-40" />
+                <Envelope className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 opacity-40" />
                 <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => { setName(e.target.value); setError(''); }}
-                  placeholder="Ismingizni kiriting"
-                  autoFocus
+                  type="email"
+                  value={email}
+                  onChange={(e) => { setEmail(e.target.value); setError(''); setResetSent(false); }}
+                  placeholder="Email manzilingiz"
+                  autoFocus={mode === 'login'}
+                  autoComplete="email"
                   className="input input-bordered w-full pl-10 focus:outline-none focus:border-primary transition-colors"
                 />
               </div>
+
+              <div className="relative">
+                <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 opacity-40" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
+                  placeholder={mode === 'register' ? 'Parol (kamida 6 belgi)' : 'Parolingiz'}
+                  autoComplete={mode === 'register' ? 'new-password' : 'current-password'}
+                  className="input input-bordered w-full pl-10 focus:outline-none focus:border-primary transition-colors"
+                />
+              </div>
+
+              {mode === 'login' && (
+                <div className="flex justify-end -mt-1">
+                  <button
+                    type="button"
+                    onClick={handleResetPassword}
+                    disabled={busy}
+                    className="text-[11px] text-primary hover:underline transition-colors"
+                  >
+                    Parolni unutdingizmi?
+                  </button>
+                </div>
+              )}
 
               {error && (
                 <div className="alert alert-error text-sm py-2.5 animate-[fadeIn_0.3s_ease-out]">
@@ -204,21 +328,31 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
                 </div>
               )}
 
+              {resetSent && (
+                <div className="alert alert-success text-sm py-2.5 animate-[fadeIn_0.3s_ease-out]">
+                  <span>✅ Parolni tiklash havolasi emailingizga yuborildi.</span>
+                </div>
+              )}
+
               <button
                 type="submit"
-                disabled={String(name || '').trim().length < 2}
+                disabled={busy}
                 className="btn btn-primary w-full gap-2 btn-wave border-0"
               >
-                <LogIn className="w-4 h-4" />
-                Kirish
+                {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+                  mode === 'register' ? <UserPlus className="w-4 h-4" /> : <LogIn className="w-4 h-4" />
+                )}
+                {busy
+                  ? (mode === 'register' ? 'Ro\'yxatdan o\'tkazilmoqda...' : 'Kirilmoqda...')
+                  : (mode === 'register' ? 'Ro\'yxatdan o\'tish' : 'Kirish')}
               </button>
             </form>
 
             <div className="flex items-center justify-center gap-1.5 mt-4 text-[11px] opacity-50">
               <Sparkles className="w-3 h-3 text-warning" />
               {HAS_FIREBASE
-                ? 'Progress brauzerda saqlanadi'
-                : "Google tugmasi uchun .env faylga Firebase kalitlari kerak — hozircha ism bilan kiring"}
+                ? 'Progress brauzeringizda saqlanadi'
+                : "Google/email uchun .env faylga Firebase kalitlari kerak — .env.example ga qarang"}
             </div>
           </div>
         )}

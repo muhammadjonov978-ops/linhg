@@ -161,7 +161,7 @@ export default function StatsDashboard() {
                 {levels.map(level => {
                   const score = stats.levelScores[level.id] || 0;
                   const barWidth = score > 0 ? `${score}%` : '0%';
-                  const color = level.isPremium ? 'warning' : 'primary';
+                  const color = 'primary';
                   return (
                     <div key={level.id} className="flex items-center gap-2">
                       <span className="text-xs w-24 truncate">{level.icon} {level.name}</span>

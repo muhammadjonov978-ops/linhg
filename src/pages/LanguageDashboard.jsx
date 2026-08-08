@@ -1,16 +1,13 @@
 import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages, getLessons, getLanguageStats } from '../data/languages';
-import { useSiteConfig, getLangPrice } from '../data/siteConfig';
 import {
   FaLock as Lock, FaChevronRight as ChevronRight, FaCheckCircle as CheckCircle,
   FaArrowLeft as ArrowLeft, FaChartLine as TrendingUp, FaMagic as Sparkles,
   FaBullseye as Target, FaBookOpen as BookOpen, FaHeadphones as Headphones,
   FaPencilAlt as Pencil, FaMicrophone as Mic, FaChevronLeft as ChevronLeft,
   FaGraduationCap as GraduationCap, FaCoins as Coins, FaCrown as Crown,
-  FaCreditCard as CreditCard,
 } from 'react-icons/fa';
-import PaywallModal from '../components/PaywallModal';
 import DailyChallenge from '../components/DailyChallenge';
 import AchievementsPanel from '../components/AchievementsPanel';
 import StatsDashboard from '../components/StatsDashboard';
@@ -31,8 +28,6 @@ const skillFilters = [
 
 export default function LanguageDashboard({ onSelectLevel }) {
   const { state, dispatch } = useApp();
-  const config = useSiteConfig();
-  const [showPaywall, setShowPaywall] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [showCompleted, setShowCompleted] = useState(true);
@@ -61,10 +56,6 @@ export default function LanguageDashboard({ onSelectLevel }) {
   }, [allLessons, activeFilter, showCompleted, state.selectedLanguage, state.progress]);
 
   if (!currentLang) return null;
-
-  // Paid language gate: if this language costs money and isn't unlocked, show a lock screen
-  const isLangPaid = getLangPrice(config, currentLang) > 0;
-  const isLangUnlocked = !isLangPaid || (state.unlockedLanguages || {})[currentLang.id];
 
   // Pagination
   const totalPages = Math.ceil(filteredLessons.length / LESSONS_PER_PAGE);
@@ -153,33 +144,6 @@ export default function LanguageDashboard({ onSelectLevel }) {
         </div>
       </div>
 
-      {isLangPaid && !isLangUnlocked && (
-        <div className="max-w-6xl mx-auto px-4 py-10">
-          <div className="card bg-base-100 border-2 border-warning/40 max-w-lg mx-auto text-center">
-            <div className="card-body items-center py-10">
-              <div className="w-20 h-20 rounded-full bg-warning/10 flex items-center justify-center mb-4">
-                <Lock className="w-10 h-10 text-warning" />
-              </div>
-              <h2 className="text-2xl font-bold mb-2">{currentLang.flag} {currentLang.name} qulflangan</h2>
-              <p className="text-sm opacity-60 mb-6 max-w-xs">
-                Bu til pullik kurs. Karta bilan to'lab, barcha 100 darsga cheksiz kirishni oching.
-              </p>
-              <div className="text-3xl font-extrabold text-warning mb-6">
-                {getLangPrice(config, currentLang).toLocaleString('uz-UZ')} so'm
-              </div>
-              <button
-                onClick={() => setShowPaywall(true)}
-                className="btn btn-primary btn-lg gap-2"
-              >
-                <CreditCard className="w-5 h-5" />
-                Karta bilan ochish
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {(!isLangPaid || isLangUnlocked) && (
       <div className="max-w-6xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Lessons */}
@@ -379,14 +343,6 @@ export default function LanguageDashboard({ onSelectLevel }) {
           </div>
         </div>
       </div>
-      )}
-
-      {/* Paywall Modal — supports both premium and paid language modes (haqiqiy to'lov) */}
-      <PaywallModal
-        isOpen={showPaywall}
-        lang={isLangPaid ? currentLang : null}
-        onClose={() => setShowPaywall(false)}
-      />
     </div>
   );
 }

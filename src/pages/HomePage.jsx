@@ -1,16 +1,15 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
-import { useSiteConfig, getSiteText, getLangPrice } from '../data/siteConfig';
+import { useSiteConfig, getSiteText } from '../data/siteConfig';
 import {
   FaBookOpen as BookOpen, FaHeadphones as Headphones, FaPencilAlt as Pencil,
   FaMicrophone as Mic, FaArrowRight as ArrowRight, FaChartLine as TrendingUp,
-  FaAward as Award, FaStar as Star, FaUsers as Users, FaMagic as Sparkles,
+  FaAward as Award, FaUsers as Users, FaMagic as Sparkles,
   FaCoins as Coins, FaShieldAlt as Shield, FaTrophy as Trophy, FaFire as Flame,
-  FaGraduationCap as GraduationCap, FaLock as Lock, FaCreditCard as CreditCard,
-  FaCheckCircle as CheckCircle,
+  FaGraduationCap as GraduationCap, FaSearch as Search, FaTimes as X,
+  FaGlobe as Globe,
 } from 'react-icons/fa';
-import PaywallModal from '../components/PaywallModal';
 import StypingAdBanner from '../components/StypingAdBanner';
 
 const features = [
@@ -21,24 +20,93 @@ const features = [
   { icon: Mic, title: 'Speaking', desc: 'Talaffuz mashqi' },
 ];
 
+// Region filtering groups for 135+ languages
+const REGIONS = [
+  { id: 'all', label: '🌍 Barchasi' },
+  { id: 'popular', label: '🔥 Ommabop' },
+  { id: 'europe', label: '🇪🇺 Yevropa' },
+  { id: 'asia', label: '🌏 Osiyo' },
+  { id: 'africa', label: '🌍 Afrika' },
+  { id: 'americas', label: '🌎 Amerika' },
+];
+
+const POPULAR_IDS = new Set([
+  'english', 'spanish', 'french', 'german', 'russian', 'uzbek',
+  'korean', 'japanese', 'chinese', 'arabic', 'hindi', 'turkish',
+  'italian', 'portuguese', 'persian', 'urdu', 'indonesian',
+]);
+
+const REGION_IDS = {
+  europe: new Set([
+    'english', 'spanish', 'french', 'german', 'italian', 'portuguese', 'russian',
+    'polish', 'swedish', 'norwegian', 'danish', 'finnish', 'greek', 'romanian',
+    'czech', 'ukrainian', 'dutch', 'hungarian', 'croatian', 'serbian', 'bosnian',
+    'slovenian', 'slovak', 'estonian', 'latvian', 'lithuanian', 'icelandic',
+    'irish', 'maltese', 'albanian', 'macedonian', 'belarusian', 'bulgarian',
+    'welsh', 'scottish', 'basque', 'catalan', 'galician', 'occitan', 'breton',
+    'corsican', 'frisian', 'luxembourgish', 'feroese', 'sami', 'sorbian',
+    'romani', 'latin', 'esperanto', 'zazaki',
+  ]),
+  asia: new Set([
+    'korean', 'japanese', 'chinese', 'arabic', 'hindi', 'turkish', 'thai',
+    'vietnamese', 'indonesian', 'hebrew', 'uzbek', 'kazakh', 'kyrgyz', 'tajik',
+    'turkmen', 'azerbaijani', 'armenian', 'georgian', 'urdu', 'bengali',
+    'punjabi', 'marathi', 'tamil', 'telugu', 'kannada', 'malayalam', 'gujarati',
+    'odia', 'nepali', 'sinhala', 'burmese', 'khmer', 'lao', 'malay', 'filipino',
+    'mongolian', 'persian', 'pashto', 'kurdish', 'uyghur', 'cantonese',
+    'taiwanese', 'kashmiri', 'sindhi', 'assamese', 'divehi', 'tibetan',
+    'tamazight', 'konkani', 'manipuri', 'balochi', 'ainu',
+  ]),
+  africa: new Set([
+    'swahili', 'amharic', 'somali', 'hausa', 'yoruba', 'igbo', 'zulu', 'xhosa',
+    'afrikaans', 'shona', 'kinyarwanda', 'malagasy', 'wolof', 'twi', 'bambara',
+    'tigrinya', 'oromo',
+  ]),
+  americas: new Set([
+    'quechua', 'guarani', 'aymara', 'haitian', 'inuktitut', 'navajo',
+    'hawaiian', 'mapudungun', 'jamaican', 'cree', 'nahuatl', 'maori',
+    'samoan', 'tongan', 'fijian', 'tahitian',
+  ]),
+};
+
 export default function HomePage() {
   const { state, dispatch } = useApp();
   const config = useSiteConfig();
-  const [payingLang, setPayingLang] = useState(null);
+  const [search, setSearch] = useState('');
+  const [region, setRegion] = useState('all');
 
   const handleLanguageSelect = (langId) => {
-    const lang = languages.find(l => l.id === langId);
-    // Paid language: open payment modal unless already unlocked
-    if (getLangPrice(config, lang) > 0 && !(state.unlockedLanguages || {})[langId]) {
-      setPayingLang(lang);
-      return;
-    }
     dispatch({ type: 'SELECT_LANGUAGE', payload: langId });
   };
 
   // Calculate total stats
   const totalCompletedLessons = Object.values(state.progress).filter(p => p.completed).length;
   const achievementsUnlocked = state.achievements?.filter(a => a.unlocked)?.length || 0;
+
+  // Filter languages by search + region
+  const filteredLanguages = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return languages.filter(lang => {
+      if (region === 'popular' && !POPULAR_IDS.has(lang.id)) return false;
+      if (region === 'europe' && !REGION_IDS.europe.has(lang.id)) return false;
+      if (region === 'asia' && !REGION_IDS.asia.has(lang.id)) return false;
+      if (region === 'africa' && !REGION_IDS.africa.has(lang.id)) return false;
+      if (region === 'americas' && !REGION_IDS.americas.has(lang.id)) return false;
+      if (q) {
+        const hay = `${lang.name} ${lang.description} ${lang.id}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [search, region]);
+
+  const regionCounts = {
+    popular: POPULAR_IDS.size,
+    europe: REGION_IDS.europe.size,
+    asia: REGION_IDS.asia.size,
+    africa: REGION_IDS.africa.size,
+    americas: REGION_IDS.americas.size,
+  };
 
   return (
     <div>
@@ -51,17 +119,17 @@ export default function HomePage() {
           <div className="absolute bottom-20 right-1/3 text-5xl animate-float" style={{ animationDelay: '0.5s' }}>✨</div>
         </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 py-12 md:py-20">
+        <div className="relative max-w-6xl mx-auto px-4 py-12 md:py-16">
           <div className="text-center mb-10">
             <div className="flex items-center justify-center gap-3 mb-6">
-              <div className="badge badge-primary badge-lg gap-2 px-4 py-3">
+              <div className="badge badge-primary badge-lg gap-2 px-4 py-3 shadow-lg shadow-primary/20">
                 <Sparkles className="w-4 h-4" />
                 {getSiteText(config, 'heroBadge', 'Interaktiv til o\u2018rganish')}
               </div>
             </div>
             <h1 className="text-4xl md:text-6xl font-extrabold mb-4 font-display">
               <span className="gold-text">
-                {getSiteText(config, 'heroTitle', '27 Tilda Erkin Gaplashing')}
+                {getSiteText(config, 'heroTitle', '130+ Tilda Erkin Gaplashing')}
               </span>
             </h1>
             <p className="text-lg md:text-xl opacity-70 max-w-2xl mx-auto mb-8">
@@ -69,19 +137,20 @@ export default function HomePage() {
             </p>
 
             {/* Stats */}
-            <div className="flex flex-wrap justify-center gap-6 mb-6">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-[#d4af37]" />
-                <span className="font-bold">550K+ o'quvchilar</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Star className="w-5 h-5 text-[#facc15]" />
-                <span className="font-bold">27 xil til</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Shield className="w-5 h-5 text-[#d4af37]" />
-                <span className="font-bold">100 ta dars</span>
-              </div>
+            <div className="flex flex-wrap justify-center gap-3 mb-6">
+              {[
+                { icon: Users, text: "550K+ o'quvchilar", color: '#d4af37' },
+                { icon: Globe, text: `${languages.length}+ xil til`, color: '#facc15' },
+                { icon: Shield, text: '100 ta dars', color: '#d4af37' },
+              ].map((s, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-base-100/70 border border-base-300/70 backdrop-blur-sm shadow-sm hover:border-primary/40 transition-all duration-300"
+                >
+                  <s.icon className="w-4 h-4" style={{ color: s.color }} />
+                  <span className="font-bold text-sm">{s.text}</span>
+                </div>
+              ))}
             </div>
 
             {/* User's personal stats if active */}
@@ -113,85 +182,123 @@ export default function HomePage() {
                 )}
               </div>
             )}
+
+            {/* Search bar */}
+            <div className="max-w-xl mx-auto mb-5">
+              <div className="relative">
+                <Search className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 opacity-40" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={`${languages.length} tildan qidiring... (masalan: ingliz, koreys)`}
+                  className="input input-bordered w-full pl-12 pr-10 py-3 h-12 rounded-2xl bg-base-100/80 backdrop-blur-sm border-base-300 focus:border-primary/60 focus:ring-2 focus:ring-primary/20 transition-all shadow-lg shadow-black/5"
+                />
+                {search && (
+                  <button
+                    onClick={() => setSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 btn btn-ghost btn-xs btn-circle"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Region filters */}
+            <div className="flex flex-wrap justify-center gap-2 mb-4">
+              {REGIONS.map(r => (
+                <button
+                  key={r.id}
+                  onClick={() => setRegion(r.id)}
+                  className={`btn btn-xs rounded-full gap-1.5 px-3.5 transition-all duration-300 ${
+                    region === r.id
+                      ? 'btn-primary text-white shadow-md shadow-primary/20'
+                      : 'btn-ghost border border-base-300 hover:border-primary/40'
+                  }`}
+                >
+                  {r.label}
+                  {r.id !== 'all' && (
+                    <span className={`text-[10px] ${region === r.id ? 'opacity-80' : 'opacity-40'}`}>
+                      ({regionCounts[r.id]})
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Language Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {languages.map((lang, index) => {
-              // Count completed lessons for this language
-              const langLessonKeys = Object.keys(state.progress).filter(k =>
-                k.startsWith(`${lang.id}-lesson-`) && state.progress[k]?.completed
-              );
-              const completedCount = langLessonKeys.length;
-              const totalLessons = 100;
-              const isPaid = getLangPrice(config, lang) > 0;
-              const isUnlocked = !isPaid || (state.unlockedLanguages || {})[lang.id];
+          {filteredLanguages.length === 0 ? (
+            <div className="text-center py-16">
+              <div className="text-5xl mb-3">🔍</div>
+              <h3 className="font-bold text-xl mb-1">Hech narsa topilmadi</h3>
+              <p className="text-sm opacity-60 mb-4">"{search}" bo'yicha til topilmadi</p>
+              <button
+                onClick={() => { setSearch(''); setRegion('all'); }}
+                className="btn btn-primary btn-sm"
+              >
+                Filtrni tozalash
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredLanguages.map((lang, index) => {
+                // Count completed lessons for this language
+                const langLessonKeys = Object.keys(state.progress).filter(k =>
+                  k.startsWith(`${lang.id}-lesson-`) && state.progress[k]?.completed
+                );
+                const completedCount = langLessonKeys.length;
+                const totalLessons = 100;
 
-              return (
-                <button
-                  key={lang.id}
-                  onClick={() => handleLanguageSelect(lang.id)}
-                  className="card bg-base-100 border border-base-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 group text-left animate-[fadeIn_0.5s_ease-out]"
-                  style={{ animationDelay: `${index * 80}ms` }}
-                >
-                  <div className="card-body p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-4xl">{lang.flag}</span>
-                      {isPaid && !isUnlocked ? (
-                        <span className="badge badge-warning badge-sm gap-1">
-                          <Lock className="w-3 h-3" /> {getLangPrice(config, lang).toLocaleString('uz-UZ')} so'm
-                        </span>
-                      ) : (
+                return (
+                  <button
+                    key={lang.id}
+                    onClick={() => handleLanguageSelect(lang.id)}
+                    className="card bg-base-100 border border-base-300 hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300 group text-left animate-[fadeIn_0.5s_ease-out] card-shine"
+                    style={{ animationDelay: `${Math.min(index, 20) * 30}ms` }}
+                  >
+                    <div className="card-body p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-4xl drop-shadow-sm">{lang.flag}</span>
                         <span className="badge badge-ghost badge-sm">
                           {Math.round((completedCount / totalLessons) * 100)}%
                         </span>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h2 className="text-lg font-bold">{lang.name}</h2>
-                      {isPaid && isUnlocked && (
-                        <CheckCircle className="w-4 h-4 text-success" />
-                      )}
-                      {isPaid && !isUnlocked && (
-                        <Lock className="w-3.5 h-3.5 opacity-40" />
-                      )}
-                    </div>
-                    <p className="text-xs opacity-60 mb-3">{lang.description}</p>
-                    {isPaid && !isUnlocked && (
-                      <div className="flex items-center gap-1 text-[11px] text-warning font-medium mb-2">
-                        <CreditCard className="w-3 h-3" />
-                        Karta bilan oching
                       </div>
-                    )}
-                    
-                    {/* Progress bar */}
-                    <div className="w-full h-1.5 bg-base-200 rounded-full overflow-hidden mb-2">
-                      <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          completedCount > 0 ? 'bg-gradient-to-r from-primary to-secondary' : 'bg-base-300'
-                        }`}
-                        style={{ width: `${(completedCount / totalLessons) * 100}%` }}
-                      />
-                    </div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h2 className="text-lg font-bold">{lang.name}</h2>
+                      </div>
+                      <p className="text-xs opacity-60 mb-3">{lang.description}</p>
 
-                    {/* Stats */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 text-xs opacity-50">
-                        <TrendingUp className="w-3 h-3" />
-                        <span>{completedCount}/{totalLessons} dars</span>
+                      {/* Progress bar */}
+                      <div className="w-full h-1.5 bg-base-200 rounded-full overflow-hidden mb-2">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            completedCount > 0 ? 'bg-gradient-to-r from-primary to-secondary' : 'bg-base-300'
+                          }`}
+                          style={{ width: `${(completedCount / totalLessons) * 100}%` }}
+                        />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-primary">
-                          {completedCount === 0 ? 'Alifbodan boshlang' : 'Davom etish'}
-                        </span>
-                        <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all text-primary" />
+
+                      {/* Stats */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1 text-xs opacity-50">
+                          <TrendingUp className="w-3 h-3" />
+                          <span>{completedCount}/{totalLessons} dars</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-primary">
+                            {completedCount === 0 ? 'Alifbodan boshlang' : 'Davom etish'}
+                          </span>
+                          <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all text-primary" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* STyping.uz reklama paneli */}
           <div className="mt-8">
@@ -252,15 +359,6 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Payment modal for paid languages — haqiqiy to'lov (Payme/Click) */}
-      {payingLang && (
-        <PaywallModal
-          isOpen={!!payingLang}
-          lang={payingLang}
-          onClose={() => setPayingLang(null)}
-        />
-      )}
-
       {/* Footer */}
       <footer className="bg-base-300/30 py-8 mt-8">
         <div className="max-w-6xl mx-auto px-4 text-center">
@@ -273,7 +371,7 @@ export default function HomePage() {
             <span className="font-bold">Lingohub</span>
           </div>
           <p className="text-xs opacity-50">
-            {getSiteText(config, 'footerText', "27 tilda interaktiv o'rganish platformasi. Reading, Listening, Writing, Speaking.")}
+            {getSiteText(config, 'footerText', "130+ tilda interaktiv o'rganish platformasi. Reading, Listening, Writing, Speaking.")}
           </p>
           <p className="text-xs opacity-30 mt-2">
             © 2026 Lingohub. Barcha huquqlar himoyalangan.

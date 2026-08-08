@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { adminLogin, verifyAdminSession, UNIVERSAL_USERNAME, ADMIN_SESSION_KEY as SESSION_KEY } from '../data/adminUsers';
-import { useSiteConfig, saveConfig, getLangPrice } from '../data/siteConfig';
+import { useSiteConfig, saveConfig } from '../data/siteConfig';
 import { languages } from '../data/languages';
 import { subscribeAdminCoins, giveAdminCoins, MAX_LOG } from '../lib/adminCoins';
 import {
@@ -14,12 +14,12 @@ import {
   FaCopy as Copy, FaCheck as Check, FaHeartbeat as Activity, FaUsers as Users,
   FaBroadcastTower as Radio, FaClock as Clock, FaCrown as Crown,
   FaUserPlus as UserPlus, FaTrash as Trash2, FaCoins as Coins, FaFont as Type,
-  FaSave as Save, FaUndo as RotateCcw, FaSync as RefreshCw, FaSearch as Search,
+  FaSave as Save, FaSync as RefreshCw, FaSearch as Search,
   FaUpload as Upload, FaLink as Link2, FaTimes as X, FaChevronRight as ChevronRight,
   FaFileExcel as FileSpreadsheet, FaChartLine as TrendingUp,
   FaMousePointer as MousePointerClick, FaChartBar as BarChart3,
   FaGift as Gift, FaSpinner as Loader2, FaInfinity as InfinityIcon,
-  FaExclamationTriangle as AlertIcon,
+  FaExclamationTriangle as AlertIcon, FaGlobe as Globe,
 } from 'react-icons/fa';
 
 const LOG_KEY = 'lingohub_admin_log';
@@ -292,99 +292,69 @@ function AccountsTab({ config, onSave }) {
   );
 }
 
-// ================= PRICES TAB =================
-function PricesTab({ config, onSave }) {
-  const [prices, setPrices] = useState(() => {
-    const map = {};
-    languages.forEach((l) => { map[l.id] = getLangPrice(config, l); });
-    return map;
+// ================= LANGUAGES TAB =================
+// Barcha tillar BEPUL — narxlar olib tashlangan. Bu tab saytda mavjud tillar
+// haqida umumiy ma'lumotni ko'rsatadi.
+function LanguagesTab() {
+  const { state } = useApp();
+
+  // Har bir til uchun taraqqiyot
+  const langStats = languages.map((l) => {
+    const keys = Object.keys(state.progress).filter((k) =>
+      k.startsWith(`${l.id}-lesson-`) && state.progress[k]?.completed
+    );
+    return { lang: l, completed: keys.length };
   });
-  const [msg, setMsg] = useState('');
-  // Server'dagi QAT'IY narxlar (api/_lib/prices.js) — farq bo'lsa ogohlantiramiz
-  const [serverPrices, setServerPrices] = useState(null);
 
-  useEffect(() => {
-    fetch('/api/prices')
-      .then((r) => r.json())
-      .then((d) => { if (d?.ok) setServerPrices(d.prices); })
-      .catch(() => { /* server narxlari olinmasa ogohlantirish ko'rsatilmaydi */ });
-  }, []);
-
-  const save = () => {
-    onSave({ ...config, prices });
-    setMsg('✅ Narxlar saqlandi');
-    setTimeout(() => setMsg(''), 2500);
-  };
-
-  const reset = () => {
-    const map = {};
-    languages.forEach((l) => { map[l.id] = l.price || 0; });
-    setPrices(map);
-  };
-
-  // Panel narxi bilan server narxi farq qiladigan tillar
-  const mismatches = serverPrices
-    ? languages.filter((l) => {
-        const sp = serverPrices[l.id];
-        return typeof sp === 'number' && sp !== (prices[l.id] ?? 0);
-      })
-    : [];
+  const totalCompleted = langStats.reduce((s, x) => s + x.completed, 0);
+  const activeLearners = languages.reduce((s, l) => s + (l.totalLearners || 0), 0);
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-white/50">Har bir til uchun narxni kiriting (0 — bepul). Diqqat: to\u2018lov miqdori server\u2019dagi qat\u2019iy narxlar bilan tekshiriladi — bu yerda o\u2018zgargan narx faqat saytda ko\u2018rinadi.</p>
-        <div className="flex gap-2">
-          <button onClick={reset} className="btn btn-ghost btn-xs gap-1.5 text-white/60">
-            <RotateCcw className="w-3 h-3" /> Tiklash
-          </button>
-          <button onClick={save} className="btn btn-primary btn-xs gap-1.5 border-0 bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black">
-            <Save className="w-3.5 h-3.5" /> Saqlash
-          </button>
+      {/* Summary strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="rounded-xl bg-[#facc15]/10 border border-[#facc15]/25 p-4">
+          <p className="text-2xl font-extrabold text-white tabular-nums">{languages.length}</p>
+          <p className="text-[10px] text-white/40 mt-1">Jami tillar</p>
+        </div>
+        <div className="rounded-xl bg-[#4ade80]/10 border border-[#4ade80]/25 p-4">
+          <p className="text-2xl font-extrabold text-white tabular-nums">{totalCompleted}</p>
+          <p className="text-[10px] text-white/40 mt-1">Bajarilgan darslar</p>
+        </div>
+        <div className="rounded-xl bg-[#60a5fa]/10 border border-[#60a5fa]/25 p-4">
+          <p className="text-2xl font-extrabold text-white tabular-nums">{(activeLearners / 1000).toFixed(0)}K+</p>
+          <p className="text-[10px] text-white/40 mt-1">O'quvchilar</p>
+        </div>
+        <div className="rounded-xl bg-white/[0.03] border border-white/10 p-4">
+          <p className="text-2xl font-extrabold text-white tabular-nums">100%</p>
+          <p className="text-[10px] text-white/40 mt-1">Bepul — hammasi ochiq</p>
         </div>
       </div>
 
-      {mismatches.length > 0 && (
-        <div className="rounded-xl px-4 py-3 text-xs bg-amber-500/10 border border-amber-500/40 text-[#fbbf24] flex items-start gap-2.5">
-          <AlertIcon className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>
-            <b>Diqqat:</b> {mismatches.length} ta til narxi server bilan mos emas. To\u2018lov server\u2019dagi qat\u2019iy narxlar
-            (api/_lib/prices.js) bo\u2018yicha tekshiriladi — serverda ham yangilanmasa, shu tillar uchun to\u2018lov
-            “Til narxi noto\u2018g\u2018ri” deb rad etiladi.
-          </span>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-        {languages.map((l) => {
-          const sp = serverPrices?.[l.id];
-          const differs = typeof sp === 'number' && sp !== (prices[l.id] ?? 0);
-          return (
-          <div key={l.id} className={`relative rounded-xl border p-3 flex items-center gap-2 ${differs ? 'border-amber-500/50 bg-amber-500/[0.06]' : 'bg-white/[0.02] border-white/10'}`}>
-            <span className="text-2xl">{l.flag}</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold truncate text-white">{l.name}</p>
-              <input
-                type="number"
-                min="0"
-                step="1000"
-                value={prices[l.id] ?? 0}
-                onChange={(e) => setPrices({ ...prices, [l.id]: Math.max(0, Number(e.target.value) || 0) })}
-                className="input input-bordered input-xs w-full mt-1 bg-white/[0.03] border-white/10"
+      {/* Languages grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+        {langStats.map(({ lang, completed }) => (
+          <div
+            key={lang.id}
+            className="rounded-xl border border-white/10 bg-white/[0.02] p-3 hover:border-[#facc15]/40 hover:bg-white/[0.04] transition-all duration-200"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{lang.flag}</span>
+              <div className="min-w-0">
+                <p className="text-xs font-bold truncate text-white">{lang.name}</p>
+                <p className="text-[10px] text-white/40 truncate">{(lang.totalLearners || 0).toLocaleString('uz-UZ')} o'quvchi</p>
+              </div>
+            </div>
+            <div className="mt-2 h-1 bg-white/[0.06] rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-[#facc15] to-[#f59e0b] rounded-full transition-all duration-500"
+                style={{ width: `${Math.min(100, Math.round((completed / 100) * 100))}%` }}
               />
             </div>
-            <Coins className="w-3.5 h-3.5 text-[#facc15] shrink-0" />
-            {differs && (
-              <span className="absolute -top-2 -right-2 badge badge-warning badge-xs border-0 font-bold shadow-lg">
-                Server: {sp.toLocaleString('uz-UZ')}
-              </span>
-            )}
+            <p className="text-[10px] text-white/35 mt-1.5">{completed}/100 dars</p>
           </div>
-          );
-        })}
+        ))}
       </div>
-
-      {msg && <div className="text-xs font-medium text-success">{msg}</div>}
     </div>
   );
 }
@@ -404,11 +374,11 @@ function TextsTab({ config, onSave }) {
 
   const fields = [
     { key: 'heroBadge', label: 'Yuqori yorliq (badge)', hint: 'Misol: Interaktiv til o\u2018rganish' },
-    { key: 'heroTitle', label: 'Bosh sarlavha', hint: 'Misol: 27 Tilda Erkin Gaplashing' },
+    { key: 'heroTitle', label: 'Bosh sarlavha', hint: 'Misol: 130+ Tilda Erkin Gaplashing' },
     { key: 'heroSubtitle', label: 'Ostki matn', hint: 'Bosh sahifa ta\u2019rifi' },
     { key: 'featureTitle', label: 'Bo\u2018limlar sarlavhasi', hint: 'Misol: 5 ta Asosiy Bo\u2018lim' },
     { key: 'featureDesc', label: 'Yutuqlar matni', hint: 'Mashqlar va yutuqlar haqida matn' },
-    { key: 'footerText', label: 'Sayt pastki matni (footer)', hint: 'Misol: 27 tilda interaktiv...' },
+    { key: 'footerText', label: 'Sayt pastki matni (footer)', hint: 'Misol: 130+ tilda interaktiv...' },
   ];
 
   return (
@@ -1196,11 +1166,16 @@ function Dashboard({ session, onLogout }) {
     { label: 'Bugun', value: visits.today, icon: Activity, note: '00:00 dan hozirgacha', color: '#4ade80' },
     { label: '7 kun ichida', value: visits.last7d, icon: Clock, note: 'oxirgi 7 kun', color: '#60a5fa' },
     { label: 'Unikal tashrif', value: visits.unique, icon: Users, note: 'turli qurilmalar', color: '#c084fc' },
+    { label: 'Tillar soni', value: languages.length, icon: Globe, note: 'platformada mavjud', color: '#f472b6' },
   ];
+
+  // 5 ta karta — grid 4 ustunli bo'lsa oxirgi karta yolg'iz qoladi;
+  // shuning uchun 8 ta slotli qilib 5+3 yozamiz.
+  // (oddiy yechim: karta o'rniga soat qo'shildi — pastdagi live strip yetarli)
 
   const tabs = [
     { id: 'hisoblar', label: 'Hisoblar', icon: Users },
-    { id: 'tillar', label: 'Til narxlari', icon: Coins },
+    { id: 'tillar', label: 'Tillar', icon: Coins },
     { id: 'tanga', label: 'Tanga berish', icon: Gift },
     { id: 'matnlar', label: 'Sayt matnlari', icon: Type },
   ];
@@ -1277,7 +1252,7 @@ function Dashboard({ session, onLogout }) {
         )}
 
         {/* ===== STAT CARDS ===== */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {statCards.map((card, i) => {
             const Icon = card.icon;
             return (
@@ -1352,7 +1327,7 @@ function Dashboard({ session, onLogout }) {
         {/* Tab content */}
         <div className="admin-card p-5 md:p-6">
           {tab === 'hisoblar' && <AccountsTab config={config} onSave={saveConfig} />}
-          {tab === 'tillar' && <PricesTab config={config} onSave={saveConfig} />}
+          {tab === 'tillar' && <LanguagesTab />}
           {tab === 'tanga' && <CoinsTab config={config} session={session} />}
           {tab === 'matnlar' && <TextsTab config={config} onSave={saveConfig} />}
         </div>

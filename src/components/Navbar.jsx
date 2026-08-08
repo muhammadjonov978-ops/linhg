@@ -6,11 +6,10 @@ import {
   FaCoins as Coins, FaSignInAlt as LogIn, FaUser as User,
   FaShieldAlt as Shield, FaBriefcase as Briefcase, FaStore as Store,
   FaBars as MenuIcon, FaTimes as X, FaFire as Flame, FaBolt as Bolt,
-  FaBell as Bell, FaCrown as Crown, FaGift as Gift,
+  FaBell as Bell, FaGift as Gift,
 } from 'react-icons/fa';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal, { USER_EVENT } from './GoogleAuthModal';
-import PaywallModal from './PaywallModal';
 
 function loadSavedUser() {
   try {
@@ -24,7 +23,6 @@ function loadSavedUser() {
 export default function Navbar({ onToggleTutor }) {
   const { state, dispatch } = useApp();
   const [showAuth, setShowAuth] = useState(false);
-  const [showPremium, setShowPremium] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [savedUser, setSavedUser] = useState(loadSavedUser);
@@ -66,12 +64,6 @@ export default function Navbar({ onToggleTutor }) {
       label: savedUser ? (savedUser.givenName || savedUser.name) : 'Kirish',
       onClick: () => { setShowAuth(true); setMobileMenuOpen(false); },
       icon: savedUser ? <User className="w-4 h-4 text-primary" /> : <LogIn className="w-4 h-4 text-primary" />,
-    },
-    {
-      key: 'premium',
-      label: 'Obuna bo\'ling',
-      onClick: () => { setShowPremium(true); setMobileMenuOpen(false); },
-      icon: <Crown className="w-4 h-4 text-secondary" />,
     },
     {
       key: 'admin',
@@ -152,15 +144,6 @@ export default function Navbar({ onToggleTutor }) {
       </div>
 
       <div className="navbar-end gap-1">
-        {/* Obuna bo'ling (gradient tugma) */}
-        <button
-          onClick={() => setShowPremium(true)}
-          className="btn btn-sm rounded-full border-0 text-white bg-gradient-to-r from-purple-600 via-blue-500 to-cyan-400 shadow-md shadow-purple-500/25 gap-1.5 hidden lg:inline-flex hover:brightness-110 transition-all duration-300"
-        >
-          <Crown className="w-3.5 h-3.5" />
-          <span className="text-xs font-semibold">Obuna bo'ling</span>
-        </button>
-
         {/* Bildirishnoma qo'ng'irog'i */}
         <div className="relative hidden md:block">
           <button
@@ -331,12 +314,6 @@ export default function Navbar({ onToggleTutor }) {
 
       {/* Google auth modal */}
       <GoogleAuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
-
-      {/* Obuna (Pro Level) modali — haqiqiy to'lov (Payme/Click) */}
-      <PaywallModal
-        isOpen={showPremium}
-        onClose={() => setShowPremium(false)}
-      />
     </nav>
   );
 }
