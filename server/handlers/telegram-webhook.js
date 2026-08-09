@@ -8,7 +8,7 @@
 //   /help  — barcha buyruqlar ro'yxati
 //   /stats — sayt statistikasi
 //   /site  — sayt manzili
-import { telegramApi, rememberChat, notifyTelegram, escapeHtml, telegramConfigured, botToken } from '../lib/telegram.js';
+import { telegramApi, rememberChat, escapeHtml, telegramConfigured, storeVerifyCode } from '../lib/telegram.js';
 import { redis } from '../lib/redis.js';
 
 const SITE_URL = process.env.VITE_SITE_URL || 'https://lingohub.uz';
@@ -78,12 +78,27 @@ async function statsMessage() {
   return lines.join('\n');
 }
 
-async function handleCommand(chatId, text) {
+async function handleCommand(chatId, msg, text) {
   const cmd = String(text || '').split(' ')[0].toLowerCase();
 
+  if (cmd === '/start') {
+    const arg = String(text || '').split(/\s+/)[1] || '';
+    // Sayt shlyuzi: foydalanuvchi /start verify_<kod> yuborgan — obunani tasdiqlaymiz
+    if (arg.startsWith('verify_')) {
+      const code = arg.slice('verify_'.length);
+      const from = (msg && msg.from) || {};
+      await storeVerifyCode(code, from.id, from.username, from.first_name);
+      return telegramApi('sendMessage', {
+        chat_id: chatId,
+        text: `✅ <b>Tasdiqlandi!</b> 👋\n\nEndi saytga qayting va "Tasdiqlash" tugmasini qayta bosing — obunangiz tekshiriladi.`,
+        parse_mode: 'HTML',
+        reply_markup: { inline_keyboard: [[{ text: '🌐 Saytga qaytish', url: SITE_URL }]] },
+      });
+    }
+    return telegramApi('sendMessage', { chat_id: chatId, text: welcomeMessage(), reply_markup: KEYBOARD });
+  }
+
   switch (cmd) {
-    case '/start':
-      return telegramApi('sendMessage', { chat_id: chatId, text: welcomeMessage(), reply_markup: KEYBOARD });
     case '/help':
       return telegramApi('sendMessage', { chat_id: chatId, text: helpMessage() });
     case '/stats':
@@ -152,7 +167,7 @@ export default async function handler(req, res) {
       const text = msg.text || '';
 
       // Hozircha barcha matnli xabarlar buyruq sifatida qabul qilinadi
-      await handleCommand(chatId, text);
+      await handleCommand(chatId, msg, text);
       return res.status(200).json({ ok: true });
     }
 

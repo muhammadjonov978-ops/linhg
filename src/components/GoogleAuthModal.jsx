@@ -250,11 +250,11 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
               </button>
             </div>
 
-            {/* GOOGLE SIGN-IN (haqiqiy) */}
+            {/* GOOGLE SIGN-IN (haqiqiy) — asosiy usul */}
             <button
               onClick={handleGoogleSignIn}
               disabled={busy}
-              className="btn btn-outline w-full gap-3 border-base-300 hover:border-primary hover:bg-primary/10 transition-all mb-4"
+              className="btn w-full gap-3 border-0 bg-gradient-to-r from-[#4285F4] to-[#1a73E8] text-white hover:brightness-110 shadow-lg shadow-[#4285F4]/25 transition-all mb-2 h-12 rounded-2xl font-bold"
             >
               {busy ? (
                 <span className="loading loading-spinner loading-sm" />
@@ -263,6 +263,9 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
               )}
               Google bilan {mode === 'register' ? 'ro\'yxatdan o\'tish' : 'kirish'}
             </button>
+            <p className="text-center text-[10px] opacity-40 mb-4 -mt-1">
+              Haqiqiy Google hisobingiz bilan — demo emas
+            </p>
 
             <div className="flex items-center gap-3 mb-4 opacity-40 text-xs">
               <span className="flex-1 h-px bg-base-300" />
@@ -352,7 +355,7 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
             <div className="flex items-center justify-center gap-1.5 mt-4 text-[11px] opacity-50">
               <Sparkles className="w-3 h-3 text-warning" />
               {HAS_FIREBASE
-                ? 'Progress brauzeringizda saqlanadi'
+                ? "Hisobingiz Firebase'da — istalgan qurilmada davom eting"
                 : "Google/email uchun .env faylga Firebase kalitlari kerak — .env.example ga qarang"}
             </div>
           </div>

@@ -63,14 +63,64 @@ body {
 
 /* ==== Yangilangan premium dizayn: global fon, scrollbar, selection ==== */
 
-/* Sahifa orqa foni — yumshoq ko'k-qora + oltin aurora */
+/* Sahifa orqa foni — yumshoq ko'k-qora + oltin aurora (mavzuga mos rang) */
 body {
   background:
     radial-gradient(1100px 600px at 85% -10%, rgba(250, 204, 21, 0.08), transparent 55%),
     radial-gradient(900px 520px at -12% 20%, rgba(96, 165, 250, 0.07), transparent 55%),
     radial-gradient(800px 500px at 50% 115%, rgba(167, 139, 250, 0.06), transparent 55%),
-    oklch(0.14 0.012 262);
+    var(--color-base-200, oklch(0.185 0.014 262));
   background-attachment: fixed;
+}
+
+/* ==== GLOBAL ANIMATSIYALI FON (butun sayt) ====
+   body::before — harakatlanuvchi aurora, body::after — yulduzlar. */
+body::before {
+  content: '';
+  position: fixed;
+  inset: -25%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 45% at 22% 28%, rgba(250, 204, 21, 0.14), transparent 60%),
+    radial-gradient(34% 42% at 78% 22%, rgba(96, 165, 250, 0.12), transparent 60%),
+    radial-gradient(40% 48% at 60% 82%, rgba(167, 139, 250, 0.11), transparent 62%),
+    radial-gradient(30% 36% at 92% 64%, rgba(52, 211, 153, 0.09), transparent 60%);
+  filter: blur(36px);
+  animation: aurora-drift 18s ease-in-out infinite alternate;
+}
+
+/* Yulduzlar — takrorlanuvchi nuqtalar, sekin suzadi */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.55;
+  background-image:
+    radial-gradient(1.5px 1.5px at 40px 60px, rgba(255, 255, 255, 0.55), transparent 100%),
+    radial-gradient(1px 1px at 130px 180px, rgba(255, 255, 255, 0.4), transparent 100%),
+    radial-gradient(1.5px 1.5px at 220px 90px, rgba(250, 204, 21, 0.5), transparent 100%),
+    radial-gradient(1px 1px at 300px 240px, rgba(255, 255, 255, 0.35), transparent 100%),
+    radial-gradient(1.5px 1.5px at 90px 320px, rgba(250, 204, 21, 0.4), transparent 100%),
+    radial-gradient(1px 1px at 260px 380px, rgba(255, 255, 255, 0.3), transparent 100%),
+    radial-gradient(1.5px 1.5px at 360px 140px, rgba(147, 197, 253, 0.45), transparent 100%),
+    radial-gradient(1px 1px at 60px 430px, rgba(255, 255, 255, 0.3), transparent 100%),
+    radial-gradient(1.5px 1.5px at 420px 300px, rgba(250, 204, 21, 0.35), transparent 100%);
+  background-size: 460px 460px;
+  animation: stars-drift 90s linear infinite;
+}
+
+@keyframes stars-drift {
+  0% { background-position: 0 0; }
+  100% { background-position: 460px 460px; }
+}
+
+/* Animatsion fon o'chirilganda (html.animated-bg-off) */
+html.animated-bg-off body::before,
+html.animated-bg-off body::after {
+  display: none;
 }
 
 ::selection {
@@ -732,4 +782,78 @@ h1, h2, h3 {
   h1 {
     overflow-wrap: break-word;
   }
+}
+
+/* ============================================================
+   OBUNA SHLYUZI (SubscriptionGate)
+   ============================================================ */
+.gate-root {
+  background: #0a0a0d;
+}
+
+.gate-bg {
+  background:
+    radial-gradient(45% 50% at 18% 20%, rgba(250, 204, 21, 0.18), transparent 60%),
+    radial-gradient(40% 45% at 82% 25%, rgba(56, 189, 248, 0.16), transparent 60%),
+    radial-gradient(45% 55% at 55% 85%, rgba(167, 139, 250, 0.15), transparent 62%),
+    radial-gradient(35% 40% at 92% 70%, rgba(52, 211, 153, 0.1), transparent 60%);
+  filter: blur(34px);
+  animation: aurora-drift 18s ease-in-out infinite alternate;
+}
+
+.gate-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, black 20%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, black 20%, transparent 80%);
+}
+
+.gate-star {
+  color: rgba(250, 204, 21, 0.85);
+  text-shadow: 0 0 14px rgba(250, 204, 21, 0.55);
+  animation: gate-twinkle 3.2s ease-in-out infinite;
+}
+
+@keyframes gate-twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.8); }
+  50% { opacity: 0.95; transform: scale(1.2); }
+}
+
+.gate-card {
+  background: linear-gradient(180deg, rgba(24, 24, 30, 0.78), rgba(14, 14, 19, 0.82));
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(212, 175, 55, 0.12), 0 0 60px rgba(212, 175, 55, 0.07);
+}
+
+/* ============================================================
+   ADMIN PANEL — orqa fon blur + harakatlanuvchi aurora
+   ============================================================ */
+.admin-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.admin-shell::before {
+  content: '';
+  position: fixed;
+  inset: -25%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 42% at 20% 25%, rgba(250, 204, 21, 0.14), transparent 60%),
+    radial-gradient(34% 40% at 80% 20%, rgba(96, 165, 250, 0.12), transparent 60%),
+    radial-gradient(40% 46% at 55% 85%, rgba(167, 139, 250, 0.13), transparent 62%),
+    radial-gradient(28% 34% at 90% 60%, rgba(52, 211, 153, 0.1), transparent 60%);
+  filter: blur(56px);
+  animation: aurora-drift 24s ease-in-out infinite alternate;
+}
+
+.admin-card {
+  background: linear-gradient(180deg, rgba(26, 26, 30, 0.55), rgba(21, 21, 24, 0.6));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }

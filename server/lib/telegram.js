@@ -74,6 +74,70 @@ export async function getChats() {
   return chats;
 }
 
+// ---------- Obuna tekshiruvi (sayt shlyuzi) ----------
+// Saytga kirishdan oldin foydalanuvchi botga /start verify_<kod> yuboradi.
+// Webhook o'sha koddan Telegram user ID ni eslab qoladi, so'ng sayt
+// getChatMember orqali kanal a'zoligini HAQIQIY tekshiradi.
+const VERIFY_TTL_MS = 10 * 60 * 1000; // 10 daqiqa
+let memoryVerify = new Map();
+
+function verifyKey(code) {
+  return `tg:verify:${code}`;
+}
+
+export async function storeVerifyCode(code, userId, username, firstName) {
+  const payload = {
+    userId: String(userId),
+    username: String(username || ''),
+    firstName: String(firstName || ''),
+    at: Date.now(),
+  };
+  memoryVerify.set(code, payload);
+  // Eski (muddati o'tgan) kodlarni tozalaymiz
+  const now = Date.now();
+  for (const [k, v] of memoryVerify) {
+    if (now - (v.at || 0) > VERIFY_TTL_MS) memoryVerify.delete(k);
+  }
+  if (redis) {
+    try {
+      await redis.set(verifyKey(code), JSON.stringify(payload), { ex: 600 });
+    } catch { /* noop */ }
+  }
+}
+
+export async function resolveVerifyCode(code) {
+  const mem = memoryVerify.get(code);
+  if (mem && Date.now() - (mem.at || 0) <= VERIFY_TTL_MS) return mem;
+  if (redis) {
+    try {
+      const raw = await redis.get(verifyKey(code));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        memoryVerify.set(code, parsed);
+        return parsed;
+      }
+    } catch { /* noop */ }
+  }
+  return null;
+}
+
+// Foydalanuvchi (Telegram ID) kanal a'zomi? Bot kanalga ADMIN bo'lishi kerak.
+// Natija: { ok, member, status } | { ok:false, error }
+export async function getChatMember(chatId, userId) {
+  const data = await telegramApi('getChatMember', {
+    chat_id: chatId,
+    user_id: String(userId),
+  });
+  if (!data) return { ok: false, error: 'network' };
+  if (data.ok) {
+    const status = data.result?.status;
+    const member = ['creator', 'administrator', 'member', 'restricted'].includes(status);
+    return { ok: true, member, status: status || 'unknown' };
+  }
+  // 400/403 — bot kanalga admin qo'shilmagan yoki kanal topilmadi
+  return { ok: false, member: false, error: data.description || 'telegram_error' };
+}
+
 // ---------- Xabar yuborish ----------
 // Barcha ma'lum chatlarga xabar yuboradi. Egasi ham (TELEGRAM_CHAT_ID) kiradi.
 export async function notifyTelegram(text, extra = {}) {

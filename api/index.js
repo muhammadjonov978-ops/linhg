@@ -27,6 +27,7 @@ import paymeWebhook from '../server/handlers/payme-webhook.js';
 import telegramInfo from '../server/handlers/telegram-info.js';
 import telegramSend from '../server/handlers/telegram-send.js';
 import telegramWebhook from '../server/handlers/telegram-webhook.js';
+import telegramVerify from '../server/handlers/telegram-verify.js';
 import paymentCreate from '../server/handlers/payment-create.js';
 import paymentStatus from '../server/handlers/payment-status.js';
 import prices from '../server/handlers/prices.js';
@@ -45,6 +46,8 @@ const routes = [
   { path: '/telegram/info', method: 'GET', handler: telegramInfo },
   { path: '/telegram/send', method: 'POST', handler: telegramSend },
   { path: '/telegram/webhook', method: 'POST', handler: telegramWebhook },
+  { path: '/telegram/verify', method: 'POST', handler: telegramVerify },
+  { path: '/telegram/verify/status', method: 'GET', handler: telegramVerify },
   { path: '/payment/create', method: 'POST', handler: paymentCreate },
   { path: '/payment/status', method: 'GET', handler: paymentStatus },
   { path: '/prices', method: 'GET', handler: prices },

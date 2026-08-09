@@ -2,15 +2,28 @@ import { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { THEMES } from '../data/themes';
 import { FaPalette as Palette, FaCheck as Check, FaRandom as Shuffle, FaSearch as Search } from 'react-icons/fa';
+import { LuSparkles, LuSnowflake } from 'react-icons/lu';
 
 export default function ThemePicker() {
   const { state, dispatch } = useApp();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState('all'); // 'all' | 'light' | 'dark'
   const [search, setSearch] = useState('');
+  const [animatedBg, setAnimatedBg] = useState(() => {
+    try { return localStorage.getItem('lingohub_animated_bg') !== 'off'; } catch { return true; }
+  });
   const panelRef = useRef(null);
 
   const currentTheme = THEMES.find(t => t.id === state.theme) || THEMES[0];
+
+  const toggleAnimatedBg = () => {
+    const next = !animatedBg;
+    setAnimatedBg(next);
+    try {
+      localStorage.setItem('lingohub_animated_bg', next ? 'on' : 'off');
+      document.documentElement.classList.toggle('animated-bg-off', !next);
+    } catch { /* noop */ }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -67,6 +80,36 @@ export default function ThemePicker() {
               <Shuffle className="w-3 h-3" /> Tasodifiy
             </button>
           </div>
+
+          {/* Animatsion fon tugmasi */}
+          <button
+            onClick={toggleAnimatedBg}
+            className={`w-full flex items-center gap-2.5 rounded-xl border px-3 py-2 mb-3 transition-all duration-200 group ${
+              animatedBg
+                ? 'border-primary/40 bg-primary/10'
+                : 'border-base-300 bg-base-200/50 hover:border-base-content/30'
+            }`}
+            title="Saytning animatsion orqa fonini yogish/o'chirish"
+          >
+            <span className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${animatedBg ? 'bg-primary/20 text-primary' : 'bg-base-300/60 text-base-content/50'}`}>
+              {animatedBg ? <LuSparkles className="w-4.5 h-4.5" /> : <LuSnowflake className="w-4.5 h-4.5" />}
+            </span>
+            <span className="flex-1 text-left">
+              <span className="block text-xs font-bold">Animatsion fon</span>
+              <span className="block text-[10px] opacity-50">Aurora + yulduzlar orqa fon</span>
+            </span>
+            <span
+              className={`relative w-9 h-5 rounded-full transition-colors duration-300 ${
+                animatedBg ? 'bg-primary' : 'bg-base-300'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-300 ${
+                  animatedBg ? 'left-[18px]' : 'left-0.5'
+                }`}
+              />
+            </span>
+          </button>
 
           {/* Current theme indicator */}
           <div className="flex items-center gap-2 mb-3 p-2 rounded-xl bg-base-200">

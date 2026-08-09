@@ -18,14 +18,27 @@ import ShopPage from './pages/ShopPage';
 import LiveVisitorsBadge from './components/LiveVisitorsBadge';
 import { startPresence, stopPresence } from './utils/presence';
 import { startVisitsTracking } from './utils/visits';
+import SubscriptionGate from './components/SubscriptionGate';
+import { hasGatePassed, isAdminLoggedIn } from './lib/gate';
 import {
   FaCommentDots as MessageCircle, FaTimes as X, FaMagic as Sparkles,
   FaColumns as PanelRightOpen, FaBars as MenuIcon,
 } from 'react-icons/fa';
 
+// Saytning animatsion orqa foni (body::before/::after CSS orqali) — yogish/o'chirish
+const ANIMATED_BG_KEY = 'lingohub_animated_bg';
+function applyAnimatedBg() {
+  try {
+    const enabled = localStorage.getItem(ANIMATED_BG_KEY) !== 'off';
+    document.documentElement.classList.toggle('animated-bg-off', !enabled);
+  } catch { /* noop */ }
+}
+
 function AppContent() {
   const { state, dispatch } = useApp();
   const [showSidebar, setShowSidebar] = useState(false);
+  // Obuna shlyuzi — saytga kirishdan oldin kanallarga obuna talab qilinadi
+  const [gatePassed, setGatePassed] = useState(() => hasGatePassed() || isAdminLoggedIn());
 
   // AI Tutor ochiq-yopiq holati faqat context'da saqlanadi (state.isTutorOpen).
   // Ilgari local state ham bor edi — AITutor ichidagi X tugmasi bosilganda
@@ -47,10 +60,24 @@ function AppContent() {
     return () => stopPresence();
   }, []);
 
+  // Animatsion fonni qo'llash (sozlamalar o'zgarganda ham sinxronlash)
+  useEffect(() => {
+    applyAnimatedBg();
+    const onStorage = (e) => {
+      if (e.key === ANIMATED_BG_KEY) applyAnimatedBg();
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
-  // Admin panel route
+  // Admin panel route — shlyuzdan mustaqil (o'z login tizimiga ega)
   if (hash.startsWith('#/admin')) {
     return <AdminPanel />;
+  }
+
+  // Obuna shlyuzi — kanallarga obuna bo'lmaganlar uchun sayt bloklanadi
+  if (!gatePassed) {
+    return <SubscriptionGate onPass={() => setGatePassed(true)} />;
   }
 
   // Portfolio route (shown inside the app shell with the navbar)
@@ -77,7 +104,7 @@ function AppContent() {
   const showHome = !state.selectedLanguage;
 
   return (
-    <div className="h-dvh w-full bg-base-200 transition-colors duration-300 flex flex-col">
+    <div className="h-dvh w-full transition-colors duration-300 flex flex-col relative">
       <Navbar onToggleTutor={handleToggleTutor} />
 
       <div className="flex flex-1 overflow-hidden">
