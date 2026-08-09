@@ -24,7 +24,7 @@ export default function LanguageSwitcher({ size = 'md' }) {
             aria-pressed={active}
             className={`inline-flex items-center gap-1 rounded-full font-bold uppercase tracking-wide transition-all duration-200 ${sizeCls} ${
               active
-                ? 'bg-gradient-to-r from-[#facc15] to-[#f59e0b] text-black shadow-md shadow-[#facc15]/25 scale-105'
+                ? 'bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white shadow-md shadow-[#3b82f6]/25 scale-105'
                 : 'text-base-content/60 hover:text-base-content hover:bg-base-200/70'
             }`}
           >

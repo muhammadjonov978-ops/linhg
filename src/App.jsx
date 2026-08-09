@@ -19,7 +19,7 @@ import LiveVisitorsBadge from './components/LiveVisitorsBadge';
 import { startPresence, stopPresence } from './utils/presence';
 import { startVisitsTracking } from './utils/visits';
 import SubscriptionGate from './components/SubscriptionGate';
-import { hasGatePassed, isAdminLoggedIn } from './lib/gate';
+import { hasGatePassed } from './lib/gate';
 import {
   FaCommentDots as MessageCircle, FaTimes as X, FaMagic as Sparkles,
   FaColumns as PanelRightOpen, FaBars as MenuIcon,
@@ -37,8 +37,9 @@ function applyAnimatedBg() {
 function AppContent() {
   const { state, dispatch } = useApp();
   const [showSidebar, setShowSidebar] = useState(false);
-  // Obuna shlyuzi — saytga kirishdan oldin kanallarga obuna talab qilinadi
-  const [gatePassed, setGatePassed] = useState(() => hasGatePassed() || isAdminLoggedIn());
+  // Obuna shlyuzi — saytga kirishdan oldin kanallarga obuna talab qilinadi.
+  // Adminlar ham ko'radi — o'z tugmasi bilan 1 bosishda o'tadi.
+  const [gatePassed, setGatePassed] = useState(() => hasGatePassed());
 
   // AI Tutor ochiq-yopiq holati faqat context'da saqlanadi (state.isTutorOpen).
   // Ilgari local state ham bor edi — AITutor ichidagi X tugmasi bosilganda

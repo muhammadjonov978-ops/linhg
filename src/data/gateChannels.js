@@ -1,17 +1,8 @@
 // ==== OBUNA SHLYUZI — kanallar ro'yxati ====
 // Saytga kirishdan oldin foydalanuvchi shu kanallarga obuna bo'lishi kerak.
-// Telegram kanali BOT orqali haqiqiy tekshiriladi (getChatMember),
-// Instagram profilari uchun esa rasmiy API yo'q — "Obuna bo'ldim ✓" tugmasi.
+// Instagram profilari uchun rasmiy obuna tekshiruv API si yo'q —
+// shuning uchun "Obuna bo'ldim ✓" tugmasi orqali tasdiqlanadi.
 export const GATE_CHANNELS = [
-  {
-    id: 'telegram_khoja_akbar',
-    type: 'telegram',
-    brand: 'telegram',
-    name: '@khoja_akbar',
-    label: 'Telegram kanal',
-    url: 'https://t.me/khoja_akbar',
-    tgChannel: 'khoja_akbar', // getChatMember uchun kanal username
-  },
   {
     id: 'instagram_ai_videochi_uz',
     type: 'instagram',

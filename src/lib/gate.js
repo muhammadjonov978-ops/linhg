@@ -60,29 +60,5 @@ export function saveSessionVerified(verified) {
   }
 }
 
-// ---- Telegram haqiqiy tekshiruv ----
-// 1) Bot holati + kod olish (POST /api/telegram/verify)
-export async function telegramVerifyStart(channel) {
-  try {
-    const res = await fetch('/api/telegram/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ channel: channel || 'khoja_akbar' }),
-    });
-    return await res.json().catch(() => null);
-  } catch {
-    return { ok: false, error: 'network' };
-  }
-}
-
-// 2) Kod holatini so'rash (GET /api/telegram/verify/status?code=...)
-export async function telegramVerifyStatus(code, channel) {
-  try {
-    const res = await fetch(
-      `/api/telegram/verify/status?code=${encodeURIComponent(code)}&channel=${encodeURIComponent(channel || 'khoja_akbar')}`,
-    );
-    return await res.json().catch(() => null);
-  } catch {
-    return { ok: false, error: 'network' };
-  }
-}
+// (Ilgari Telegram orqali haqiqiy tekshiruv shu yerda edi — hozircha
+// faqat Instagram obunasi so'raladi, shuning uchun bu funksiyalar olib tashlandi.)

@@ -110,7 +110,7 @@ export default function Navbar({ onToggleTutor }) {
             alt="Lingohub"
             className="w-9 h-9 rounded-lg object-cover shadow-sm ring-1 ring-primary/40 gold-glow"
           />
-          <span className="font-bold bg-gradient-to-r from-[#f5d27a] via-[#d4af37] to-[#fff3c4] bg-clip-text text-transparent hidden sm:inline font-display">
+          <span className="font-bold bg-gradient-to-r from-[#93c5fd] via-[#3b82f6] to-[#dbeafe] bg-clip-text text-transparent hidden sm:inline font-display">
             Lingohub
           </span>
         </a>

@@ -197,7 +197,7 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
         {user ? (
           /* ---------- LOGGED IN PROFILE ---------- */
           <div className="p-8 text-center">
-            <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-[#d4af37] to-[#b8860b] flex items-center justify-center text-3xl font-bold text-black mb-4 overflow-hidden shadow-lg gold-glow">
+            <div className="mx-auto w-20 h-20 rounded-full bg-gradient-to-br from-[#3b82f6] to-[#1d4ed8] flex items-center justify-center text-3xl font-bold text-white mb-4 overflow-hidden shadow-lg gold-glow">
               {user.picture ? (
                 <img src={user.picture} alt={user.name} className="w-full h-full object-cover" />
               ) : (
@@ -236,9 +236,9 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
 
             {!HAS_FIREBASE ? (
               /* Firebase sozlanmaganda — xato emas, chiroyli bildirishnoma */
-              <div className="rounded-2xl border border-[#facc15]/25 bg-[#facc15]/[0.07] p-5 text-center animate-[fadeIn_0.3s_ease-out]">
-                <div className="w-14 h-14 rounded-2xl bg-[#facc15]/15 border border-[#facc15]/25 flex items-center justify-center mx-auto mb-3">
-                  <Lock className="w-7 h-7 text-[#facc15]" />
+              <div className="rounded-2xl border border-[#3b82f6]/25 bg-[#3b82f6]/[0.07] p-5 text-center animate-[fadeIn_0.3s_ease-out]">
+                <div className="w-14 h-14 rounded-2xl bg-[#3b82f6]/15 border border-[#3b82f6]/25 flex items-center justify-center mx-auto mb-3">
+                  <Lock className="w-7 h-7 text-[#3b82f6]" />
                 </div>
                 <p className="font-bold text-sm mb-1.5">Kirish tez orada ishga tushadi</p>
                 <p className="text-xs opacity-60 leading-relaxed">

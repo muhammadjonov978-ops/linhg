@@ -149,9 +149,9 @@ export default function HomePage() {
             {/* Stats */}
             <div className="flex flex-wrap justify-center gap-3 mb-6">
               {[
-                { icon: Users, text: t('home.statsLearners'), color: '#d4af37' },
-                { icon: Globe, text: t('home.statsLanguages', { n: languages.length }), color: '#facc15' },
-                { icon: Shield, text: t('home.statsLessons'), color: '#d4af37' },
+                { icon: Users, text: t('home.statsLearners'), color: '#3b82f6' },
+                { icon: Globe, text: t('home.statsLanguages', { n: languages.length }), color: '#3b82f6' },
+                { icon: Shield, text: t('home.statsLessons'), color: '#3b82f6' },
               ].map((s, i) => (
                 <div
                   key={i}
@@ -332,8 +332,8 @@ export default function HomePage() {
                 className="card glass-panel glow-hover group"
               >
                 <div className="card-body items-center text-center p-6">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#facc15]/25 to-[#f59e0b]/10 border border-[#facc15]/25 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
-                    <feature.icon className="w-7 h-7 text-[#f5d27a]" />
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#3b82f6]/25 to-[#2563eb]/10 border border-[#3b82f6]/25 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
+                    <feature.icon className="w-7 h-7 text-[#93c5fd]" />
                   </div>
                   <h3 className="font-bold">{t(feature.titleKey)}</h3>
                   <p className="text-xs opacity-60">{t(feature.descKey)}</p>

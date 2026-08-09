@@ -176,7 +176,7 @@ export default function ShopPage() {
       {/* Sarlavha */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-300 to-amber-600 flex items-center justify-center text-2xl shadow-lg shadow-amber-500/25 gold-glow">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-2xl shadow-lg shadow-blue-500/25 gold-glow">
             <ShoppingBag className="w-6 h-6 text-amber-950" />
           </div>
           <div>
@@ -423,7 +423,7 @@ function ConfettiBurst() {
     Array.from({ length: 24 }, (_, i) => ({
       left: Math.random() * 100,
       delay: Math.random() * 0.4,
-      color: ['#fbbf24', '#f472b6', '#22d55e', '#38bdf8', '#a78bfa', '#f87171'][i % 6],
+      color: ['#7dd3fc', '#f472b6', '#22d55e', '#38bdf8', '#a78bfa', '#f87171'][i % 6],
       dur: 2.2 + Math.random() * 1.2,
     }))
   , []);

@@ -322,7 +322,7 @@ function OutfitLayer({ item }) {
       details = (
         <g>
           <rect x="72" y="148" width="56" height="9" fill="#1c1917" />
-          <rect x="90" y="146" width="20" height="13" rx="2" fill="#facc15" />
+          <rect x="90" y="146" width="20" height="13" rx="2" fill="#3b82f6" />
           <circle cx="100" cy="152" r="3" fill="#1c1917" />
           <circle cx="96" cy="152" r="3" fill="#1c1917" />
           <circle cx="104" cy="152" r="3" fill="#1c1917" />
@@ -358,7 +358,7 @@ function OutfitLayer({ item }) {
           <circle cx="100" cy="160" r="3" fill="#3b82f6" />
           <circle cx="106" cy="154" r="3" fill="#22c55e" />
           <rect x="72" y="168" width="56" height="7" rx="3" fill={a} />
-          <circle cx="100" cy="171.5" r="2.5" fill="#facc15" />
+          <circle cx="100" cy="171.5" r="2.5" fill="#3b82f6" />
         </g>
       );
       break;
