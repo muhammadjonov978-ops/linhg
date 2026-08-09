@@ -234,6 +234,23 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
               Google yoki email orqali kiring — taraqqiyotingiz saqlanadi
             </p>
 
+            {!HAS_FIREBASE ? (
+              /* Firebase sozlanmaganda — xato emas, chiroyli bildirishnoma */
+              <div className="rounded-2xl border border-[#facc15]/25 bg-[#facc15]/[0.07] p-5 text-center animate-[fadeIn_0.3s_ease-out]">
+                <div className="w-14 h-14 rounded-2xl bg-[#facc15]/15 border border-[#facc15]/25 flex items-center justify-center mx-auto mb-3">
+                  <Lock className="w-7 h-7 text-[#facc15]" />
+                </div>
+                <p className="font-bold text-sm mb-1.5">Kirish tez orada ishga tushadi</p>
+                <p className="text-xs opacity-60 leading-relaxed">
+                  Saytdan bepul foydalanish mumkin — taraqqiyotingiz brauzerda saqlanadi.
+                  Google orqali kirish sozlangach yoqiladi.
+                </p>
+                <button onClick={onClose} className="btn btn-sm btn-primary gap-1.5 mt-4">
+                  <Sparkles className="w-3.5 h-3.5" /> Saytga qaytish
+                </button>
+              </div>
+            ) : (
+              <>
             {/* Mode tabs */}
             <div className="tabs tabs-boxed justify-center mb-6 bg-base-200/70">
               <button
@@ -354,10 +371,10 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
 
             <div className="flex items-center justify-center gap-1.5 mt-4 text-[11px] opacity-50">
               <Sparkles className="w-3 h-3 text-warning" />
-              {HAS_FIREBASE
-                ? "Hisobingiz Firebase'da — istalgan qurilmada davom eting"
-                : "Google/email uchun .env faylga Firebase kalitlari kerak — .env.example ga qarang"}
+              Hisobingiz Firebase'da — istalgan qurilmada davom eting
             </div>
+              </>
+            )}
           </div>
         )}
 
