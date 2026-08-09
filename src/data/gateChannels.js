@@ -21,9 +21,8 @@ export const GATE_CHANNELS = [
   },
 ];
 
-// Shlyuzdan o'tish saqlanadigan kalitlar
+// Shlyuzdan o'tish saqlanadigan kalit — sessionStorage'da (har yangi oynada
+// sayt yana obuna so'raydi). Egasining talabi: obuna bo'lmasa kirish taqiqlansin.
 export const GATE_STORAGE_KEY = 'lingohub_gate_pass';
-// Sessiya ichida tasdiqlangan kanallar (sahifa yangilanganda yo'qolmasligi uchun)
+// Shlyuz oynasi ichida tasdiqlangan kanallar (sahifa yangilanganda yo'qolmasligi uchun)
 export const GATE_SESSION_KEY = 'lingohub_gate_session';
-// Bir marta tasdiqlagandan keyin shu muddatgacha qayta so'ralmaydi (7 kun)
-export const GATE_PASS_TTL = 7 * 24 * 60 * 60 * 1000;

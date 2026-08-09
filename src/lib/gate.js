@@ -1,8 +1,12 @@
 // ==== OBUNA SHLYUZI — yordamchi funksiyalar ====
-import { GATE_STORAGE_KEY, GATE_PASS_TTL } from '../data/gateChannels';
+// DIQQAT: shlyuzdan o'tish SESSIYAda saqlanadi (sessionStorage) — ya'ni sayt
+// har yangi oynada ochilganda yana obuna so'raladi. Bu egasining talabi:
+// kanallarga obuna bo'lmasa saytga kirish taqiqlansin (har kirishda tekshiriladi).
+import { GATE_STORAGE_KEY } from '../data/gateChannels';
 import { ADMIN_SESSION_KEY } from '../data/adminUsers';
 
-// Admin panelga kirganmi? (sessiya tokeni bor) — adminlar obunasiz kiradi
+// Admin panelga kirganmi? (sessiya tokeni bor) — adminlar ham shlyuzni ko'radi,
+// lekin "Admin sifatida kirish" tugmasi bilan 1 bosishda o'tadi.
 export function isAdminLoggedIn() {
   try {
     const raw = localStorage.getItem(ADMIN_SESSION_KEY);
@@ -14,26 +18,23 @@ export function isAdminLoggedIn() {
   }
 }
 
+// Shlyuzdan o'tilganmi? — faqat shu sessiya ichida eslab qolinadi
 export function loadGatePass() {
   try {
-    const raw = localStorage.getItem(GATE_STORAGE_KEY);
+    const raw = sessionStorage.getItem(GATE_STORAGE_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
   }
 }
 
-// Shlyuzdan o'tilganmi? (TTL ichida qayta so'ralmaydi)
 export function hasGatePassed() {
-  const pass = loadGatePass();
-  if (!pass || !pass.passedAt) return false;
-  if (Date.now() - Number(pass.passedAt) > GATE_PASS_TTL) return false;
-  return true;
+  return Boolean(loadGatePass()?.passedAt);
 }
 
 export function markGatePassed(channels = {}) {
   try {
-    localStorage.setItem(
+    sessionStorage.setItem(
       GATE_STORAGE_KEY,
       JSON.stringify({ passedAt: Date.now(), channels }),
     );
@@ -42,7 +43,7 @@ export function markGatePassed(channels = {}) {
   }
 }
 
-// ---- Sessiya ichida tasdiqlangan kanallar ----
+// ---- Shlyuz oynasi ichida tasdiqlangan kanallar ----
 export function loadSessionVerified() {
   try {
     const raw = sessionStorage.getItem('lingohub_gate_session');
