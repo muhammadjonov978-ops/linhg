@@ -1,7 +1,9 @@
-import { createContext, useContext, useReducer, useEffect, useCallback } from 'react';
+import { createContext, useContext, useReducer, useEffect, useCallback, useRef } from 'react';
 import { checkNewAchievements, calculateStats } from '../data/achievements';
 import { isThemeId, DEFAULT_THEME } from '../data/themes';
 import { getShopItem, DEFAULT_OWNED, DEFAULT_EQUIPPED } from '../data/shop';
+import { pushToCloud, pullFromCloud, mergeState } from '../lib/cloudSync';
+import { markInviteeCompleted } from '../lib/referral';
 
 const AppContext = createContext();
 
@@ -91,6 +93,7 @@ function migrateSaved(parsed) {
     inventory: shop.inventory,
     equipped: shop.equipped,
     energy: typeof parsed.energy === 'number' ? parsed.energy : MAX_ENERGY,
+    level: parsed.level || null,
   };
 }
 
@@ -132,6 +135,7 @@ function loadInitialState() {
       inventory: shop.inventory,
       equipped: shop.equipped,
       energy: MAX_ENERGY,
+      level: legacy.level || null,
     };
   }
 
@@ -155,6 +159,7 @@ function loadInitialState() {
     inventory: DEFAULT_OWNED,
     equipped: DEFAULT_EQUIPPED,
     energy: MAX_ENERGY,
+    level: null,
   };
 }
 
@@ -282,6 +287,25 @@ function appReducer(state, action) {
     case 'SET_THEME':
       return { ...state, theme: action.payload };
 
+    case 'SET_LEVEL':
+      return { ...state, level: action.payload };
+
+    // Grammatika darsi tugaganda: `${langId}-grammar-${grammarId}` kalitida
+    // saqlanadi (odatiy darslar bilan aralashmaydi).
+    case 'COMPLETE_GRAMMAR_LESSON': {
+      const { langId, grammarId, score } = action.payload;
+      const key = `${langId}-grammar-${grammarId}`;
+      const existing = state.progress[key] || {};
+      const bestScore = Math.max(existing.score || 0, score);
+      return {
+        ...state,
+        progress: {
+          ...state.progress,
+          [key]: { score: bestScore, completed: score >= 60, timestamp: Date.now() },
+        },
+      };
+    }
+
     case 'TOGGLE_THEME':
       return { ...state, theme: state.theme === 'light' ? 'dark' : 'light' };
 
@@ -299,6 +323,7 @@ function appReducer(state, action) {
         inventory: DEFAULT_OWNED,
         equipped: DEFAULT_EQUIPPED,
         energy: MAX_ENERGY,
+        level: null,
       };
 
     case 'RESET_STREAK':
@@ -306,6 +331,12 @@ function appReducer(state, action) {
       // aks holda 48 soatlik streak tekshiruvli effect cheksiz takrorlanardi.
       if (state.streak === 0) return state;
       return { ...state, streak: 0 };
+
+    case 'MERGE_CLOUD': {
+      // Bulutdan yuklangan ma'lumotni mahalliy bilan birlashtirish
+      const merged = mergeState(state, action.payload);
+      return { ...merged, mergedFromCloud: true };
+    }
 
     default:
       return state;
@@ -336,6 +367,7 @@ export function AppProvider({ children }) {
         inventory: state.inventory,
         equipped: state.equipped,
         energy: state.energy,
+        level: state.level,
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
     } catch (e) {
@@ -346,7 +378,7 @@ export function AppProvider({ children }) {
     state.isPremium, state.unlockedLanguages, state.coins, state.streak, state.lastActive,
     state.achievements, state.dailyChallenges, state.theme,
     state.mistakesReviewed, state.perfectWeeks, state.courseRewards,
-    state.inventory, state.equipped, state.energy,
+    state.inventory, state.equipped, state.energy, state.level,
   ]);
 
   // Check streak and update achievements
@@ -380,6 +412,75 @@ export function AppProvider({ children }) {
     const html = document.documentElement;
     html.setAttribute('data-theme', isThemeId(state.theme) ? state.theme : DEFAULT_THEME);
   }, [state.theme]);
+
+  // Taklif qilingan foydalanuvchi birinchi darsni tugatganda — inviter mukofoti
+  // uchun bulutga belgi qo'yiladi (har qurilmada bir marta).
+  useEffect(() => {
+    try {
+      if (localStorage.getItem('lingohub_ref_completed_synced')) return;
+      const inviter = localStorage.getItem('lingohub_ref_inviter');
+      if (!inviter) return;
+      const hasCompleted = Object.values(state.progress || {}).some((p) => p && p.completed);
+      if (!hasCompleted) return;
+      localStorage.setItem('lingohub_ref_completed_synced', '1');
+      markInviteeCompleted(inviter);
+    } catch {
+      /* ignore */
+    }
+  }, [state.progress]);
+
+  // ===== BULUTLI SINXRONLASH (Firebase) =====
+  // Kirgan foydalanuvchida taraqqiyotni bulutga yozadi (debounced — 2.5s)
+  // va boshqa qurilmada davom etganda bulutdan o'qiydi (merge qiladi).
+  const cloudTimer = useRef(null);
+  const pullDone = useRef(false);
+
+  // Bulutdan o'qish (faqat bir marta — sahifa ochilganda)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await pullFromCloud();
+        if (cancelled || !res.ok || !res.data) return;
+        dispatch({ type: 'MERGE_CLOUD', payload: res.data });
+      } catch {
+        /* ignore */
+      } finally {
+        // Pull tugadi (muvaffaqiyatli yoki yo'q) — endi push xavfsiz
+        pullDone.current = true;
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // State o'zgarganda bulutga yozish (debounced)
+  useEffect(() => {
+    // Dastlabki pull tugamaguncha yozmaymiz — aks holda bo'sh/mahalliy holat
+    // bulutdagi ma'lumotni ustiga yozib qo'yishi mumkin edi.
+    const check = () => {
+      try {
+        const user = JSON.parse(localStorage.getItem('lingohub_user') || 'null');
+        return Boolean(user?.sub);
+      } catch {
+        return false;
+      }
+    };
+
+    if (cloudTimer.current) clearTimeout(cloudTimer.current);
+    const attempt = () => {
+      if (!check()) return;
+      // Pull hali tugamagan bo'lsa — qisqa vaqtdan keyin qayta urinamiz
+      if (!pullDone.current) {
+        cloudTimer.current = setTimeout(attempt, 800);
+        return;
+      }
+      pushToCloud(state);
+    };
+    cloudTimer.current = setTimeout(attempt, 2500);
+    return () => {
+      if (cloudTimer.current) clearTimeout(cloudTimer.current);
+    };
+  }, [state]);
 
   const getLessonProgress = useCallback((langId, lessonNumber) => {
     const key = `${langId}-lesson-${lessonNumber}`;

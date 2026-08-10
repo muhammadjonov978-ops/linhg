@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getSpeechLang } from '../utils/speech';
+import { calculateAccuracy, scoreFeedback } from '../lib/pronunciation';
 import { FaMicrophone as Mic, FaMicrophoneSlash as MicOff, FaVolumeUp as Volume2, FaCheckCircle as CheckCircle, FaTimesCircle as XCircle, FaArrowRight as ArrowRight, FaUndo as RotateCcw } from 'react-icons/fa';
 
 export default function SpeakingSection({ exercises, langId, levelId: _levelId, onComplete }) {
@@ -110,36 +111,8 @@ export default function SpeakingSection({ exercises, langId, levelId: _levelId, 
     if (!recognitionResult.trim()) return;
 
     setIsProcessing(true);
-    const spoken = recognitionResult.trim().toLowerCase();
-    const target = currentItem.toLowerCase();
-
-    // Calculate similarity (simple word matching + character comparison)
-    const spokenWords = spoken.split(/\s+/);
-    const targetWords = target.split(/\s+/);
-
-    let matchCount = 0;
-    targetWords.forEach(tw => {
-      const cleanTw = tw.replace(/[^a-z0-9]/g, '');
-      spokenWords.forEach(sw => {
-        const cleanSw = sw.replace(/[^a-z0-9]/g, '');
-        if (cleanSw === cleanTw || cleanSw.includes(cleanTw) || cleanTw.includes(cleanSw)) {
-          matchCount++;
-        }
-      });
-    });
-
-    const wordAccuracy = targetWords.length > 0 ? Math.round((matchCount / targetWords.length) * 100) : 0;
-
-    // Also check character-level similarity for more accurate scoring
-    let charMatchCount = 0;
-    const minLen = Math.min(spoken.length, target.length);
-    for (let i = 0; i < minLen; i++) {
-      if (spoken[i] === target[i]) charMatchCount++;
-    }
-    const charAccuracy = target.length > 0 ? Math.round((charMatchCount / target.length) * 100) : 0;
-
-    // Combine both metrics
-    const finalAccuracy = Math.round((wordAccuracy + charAccuracy) / 2);
+    // Levenshtein + so'z mosligi asosidagi aniq baholash (lib/pronunciation.js)
+    const finalAccuracy = calculateAccuracy(recognitionResult.trim(), currentItem);
 
     setResults(prev => ({
       ...prev,
@@ -335,8 +308,8 @@ export default function SpeakingSection({ exercises, langId, levelId: _levelId, 
           <div className={`card ${score >= 80 ? 'bg-success/10 border-success' : score >= 50 ? 'bg-warning/10 border-warning' : 'bg-error/10 border-error'} border shadow-sm`}>
             <div className="card-body text-center py-8">
               <div className="text-5xl font-bold mb-2">{score}%</div>
-              <p className="text-sm opacity-70">
-                {score >= 80 ? '🎉 Ajoyib talaffuz!' : score >= 50 ? '👍 Yaxshi, lekin yaxshilash mumkin' : '🔄 Ko\'proq mashq qiling!'}
+              <p className={`text-sm font-medium ${scoreFeedback(score).color}`}>
+                {scoreFeedback(score).emoji} {scoreFeedback(score).label}
               </p>
               <p className="text-xs opacity-50 mt-2">
                 {score >= 60 ? '🏆 Siz bu mashqdan o\'tdingiz!' : '💪 Yana urinib ko\'ring!'}

@@ -8,12 +8,24 @@ import {
   FaBullseye as Target, FaBookOpen as BookOpen, FaHeadphones as Headphones,
   FaPencilAlt as Pencil, FaMicrophone as Mic, FaChevronLeft as ChevronLeft,
   FaGraduationCap as GraduationCap, FaCoins as Coins, FaCrown as Crown,
+  FaMedal as Medal, FaTrophy as Trophy,
 } from 'react-icons/fa';
 import DailyChallenge from '../components/DailyChallenge';
 import AchievementsPanel from '../components/AchievementsPanel';
 import StatsDashboard from '../components/StatsDashboard';
 import StreakCalendar from '../components/StreakCalendar';
+import CertificateModal from '../components/CertificateModal';
 import Flag from '../components/Flag';
+import { getCefrInfo } from '../lib/placement';
+
+function loadSavedUser() {
+  try {
+    const raw = localStorage.getItem('lingohub_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
 
 const LESSONS_PER_PAGE = 20;
 
@@ -34,6 +46,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
   const [activeFilter, setActiveFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [showCompleted, setShowCompleted] = useState(true);
+  const [certificateOpen, setCertificateOpen] = useState(false);
 
   const currentLang = languages.find(l => l.id === state.selectedLanguage);
 
@@ -107,11 +120,33 @@ export default function LanguageDashboard({ onSelectLevel }) {
                 <p className="opacity-60">{currentLang.description}</p>
               </div>
             </div>
-            <div className="flex flex-wrap gap-2 md:ml-auto">
-              <div className="flex items-center gap-1 badge badge-primary badge-lg p-3">
-                <Coins className="w-4 h-4" />
-                <span className="font-bold">{state.coins} 🪙</span>
+          <div className="flex flex-wrap gap-2 md:ml-auto">
+            {/* CEFR daraja belgisi (placement testdan keyin) */}
+            {state.level && (
+              <div
+                className="badge badge-accent badge-lg p-3 tooltip cursor-help"
+                data-tip={getCefrInfo(state.level).description}
+              >
+                {getCefrInfo(state.level).icon} {state.level} · {getCefrInfo(state.level).label}
               </div>
+            )}
+            {!state.level && (
+              <a href="#/placement" className="btn btn-sm btn-outline gap-1.5 border-primary/40 text-primary hover:bg-primary/10">
+                <Target className="w-4 h-4" /> Daraja testi
+              </a>
+            )}
+            {stats.percentage >= 100 && (
+              <button
+                onClick={() => setCertificateOpen(true)}
+                className="btn btn-sm gap-1.5 border-0 bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/25 hover:brightness-110 animate-pulse"
+              >
+                <Medal className="w-4 h-4" /> Sertifikat
+              </button>
+            )}
+            <div className="flex items-center gap-1 badge badge-primary badge-lg p-3">
+              <Coins className="w-4 h-4" />
+              <span className="font-bold">{state.coins} 🪙</span>
+            </div>
               <div className="badge badge-secondary badge-lg p-3">
                 <TrendingUp className="w-4 h-4" />
                 {stats.completed}/{stats.total}
@@ -341,9 +376,34 @@ export default function LanguageDashboard({ onSelectLevel }) {
             <AchievementsPanel limit={4} />
             <StatsDashboard />
             <StreakCalendar />
+
+            {/* Til tugallanganda sertifikat olish karta */}
+            {stats.percentage >= 100 && (
+              <div className="card bg-gradient-to-br from-amber-400/10 to-orange-500/10 border border-amber-400/30 p-5 text-center">
+                <Trophy className="w-8 h-8 text-amber-400 mx-auto mb-2" />
+                <h3 className="font-bold text-sm mb-1">Tabriklaymiz! 🎉</h3>
+                <p className="text-xs opacity-60 mb-3">Bu tilni to'liq tugatdingiz — sertifikatingizni oling!</p>
+                <button
+                  onClick={() => setCertificateOpen(true)}
+                  className="btn btn-sm btn-warning gap-1.5 btn-wave"
+                >
+                  <Medal className="w-4 h-4" /> Sertifikat olish
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Sertifikat modal */}
+      {certificateOpen && (
+        <CertificateModal
+          userName={loadSavedUser()?.name || 'O\'quvchi'}
+          lang={currentLang}
+          percent={stats.percentage}
+          onClose={() => setCertificateOpen(false)}
+        />
+      )}
     </div>
   );
 }

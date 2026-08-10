@@ -5,6 +5,7 @@ import { getSpeechLang } from '../utils/speech';
 import {
   FaPaperPlane as Send, FaRobot as Bot, FaUser as User, FaMicrophone as Mic,
   FaMicrophoneSlash as MicOff, FaVolumeUp as Volume2, FaTimes as X, FaSpinner as Loader2,
+  FaHeadphones as Headphones,
 } from 'react-icons/fa';
 
 const AI_RESPONSES = {
@@ -90,6 +91,14 @@ export default function AITutor() {
   const recognitionRef = useRef(null);
   const chatContainerRef = useRef(null);
   const [speakingId, setSpeakingId] = useState(null);
+  // Ovozli rejim: yoqilgan bo'lsa AI javoblari avtomatik o'qib eshittiriladi
+  const [voiceMode, setVoiceMode] = useState(() => {
+    try {
+      return localStorage.getItem('lingohub_tutor_voice') === 'on';
+    } catch {
+      return false;
+    }
+  });
 
   const currentLang = languages.find(l => l.id === state.selectedLanguage);
   const selectedLangId = state.selectedLanguage;
@@ -113,6 +122,33 @@ export default function AITutor() {
     }
   }, [selectedLangId, state.tutorMessages.length, dispatch]);
 
+  const speakTextAuto = (text, id) => {
+    if (!text || !voiceMode) return;
+    speakText(text, id);
+  };
+
+  // Haqiqiy AI serverga so'rov yuboradi; muvaffaqiyatsiz bo'lsa —
+  // tayyor (rule-based) javoblar ishlatiladi (fallback).
+  const fetchAIReply = async (userMessage, history) => {
+    try {
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: history,
+          language: currentLang?.name || 'English',
+          uiLang: 'uz',
+        }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (!data.ok || !data.reply) return null;
+      return data.reply;
+    } catch {
+      return null;
+    }
+  };
+
   const handleSend = async () => {
     if (!input.trim()) return;
 
@@ -121,12 +157,38 @@ export default function AITutor() {
     setInput('');
     setIsTyping(true);
 
-    // Simulate AI thinking
-    await new Promise(r => setTimeout(r, 1000 + Math.random() * 1500));
+    // So'nggi 12 xabarni kontekst sifatida yuboramiz
+    const history = [...state.tutorMessages, userMsg]
+      .slice(-12)
+      .map((m) => ({ role: m.isAI ? 'assistant' : 'user', content: m.text }));
 
-    const aiResponse = generateAIResponse(userMsg.text, currentLang);
-    dispatch({ type: 'ADD_TUTOR_MESSAGE', payload: { ...aiResponse, timestamp: Date.now() } });
+    const aiReply = await fetchAIReply(userMsg.text, history);
+
+    if (aiReply) {
+      dispatch({ type: 'ADD_TUTOR_MESSAGE', payload: { text: aiReply, isAI: true, timestamp: Date.now() } });
+      if (voiceMode) speakTextAuto(aiReply, `auto-${Date.now()}`);
+    } else {
+      // Fallback: server sozlanmagan / xato — tayyor javoblar
+      await new Promise((r) => setTimeout(r, 900 + Math.random() * 700));
+      const aiResponse = generateAIResponse(userMsg.text, currentLang);
+      dispatch({ type: 'ADD_TUTOR_MESSAGE', payload: { ...aiResponse, timestamp: Date.now() } });
+      if (voiceMode) speakTextAuto(aiResponse.text, `auto-${Date.now()}`);
+    }
     setIsTyping(false);
+  };
+
+  const toggleVoiceMode = () => {
+    const next = !voiceMode;
+    setVoiceMode(next);
+    try {
+      localStorage.setItem('lingohub_tutor_voice', next ? 'on' : 'off');
+    } catch { /* ignore */ }
+    if (next) {
+      speakText(
+        "Ovozli rejim yoqildi! Endi AI javoblarini avtomatik eshitasiz.",
+        'voice-on'
+      );
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -213,9 +275,25 @@ export default function AITutor() {
               <p className="text-xs text-white/70">
                 {currentLang?.flag} {currentLang?.name || 'Language'} Assistant
               </p>
+              <div className="mt-0.5">
+                <span className="badge badge-xs bg-white/20 border-0 text-[9px]">
+                  {navigator?.onLine ? '⚡ AI' : '📴 Offline'}
+                </span>
+              </div>
             </div>
           </div>
           <div className="flex gap-1">
+            {/* Ovozli rejim toggle */}
+            <button
+              onClick={toggleVoiceMode}
+              className={`btn btn-ghost btn-xs btn-circle text-white relative ${voiceMode ? 'bg-white/25' : ''}`}
+              title={voiceMode ? "Ovozli rejim: yoqilgan" : "Ovozli rejim: o'chiq"}
+            >
+              <Headphones className={`w-4 h-4 ${voiceMode ? 'animate-pulse' : 'opacity-70'}`} />
+              {voiceMode && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-green-400 animate-ping" />
+              )}
+            </button>
             <button
               onClick={() => speakText(
                 "Hello! I'm your AI tutor. Ask me anything about the language!",

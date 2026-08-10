@@ -5,11 +5,22 @@ import {
   FaChartBar as BarChart3, FaBookOpen as BookOpen, FaHeadphones as Headphones,
   FaPencilAlt as Pencil, FaMicrophone as Mic, FaClock as Clock, FaFire as Flame,
   FaStar as Star, FaHeartbeat as Activity, FaGraduationCap as GraduationCap,
+  FaShareAlt as ShareAlt, FaCheckCircle as CheckCircle,
 } from 'react-icons/fa';
+import { copyToClipboard } from '../lib/share';
 
 export default function StatsDashboard() {
   const { state } = useApp();
   const [activeStat, setActiveStat] = useState('overview');
+  const [shared, setShared] = useState(false);
+
+  const handleShare = async () => {
+    const text = `📊 Lingohub statistika: ${state.streak}-kun streak, ${state.coins} tanga! 130+ til bepul — qo'shiling!`;
+    const url = typeof window !== 'undefined' ? window.location.origin : 'https://lingohub.uz';
+    const ok = await copyToClipboard(`${text} ${url}/#/`);
+    setShared(ok);
+    setTimeout(() => setShared(false), 2500);
+  };
 
   const currentLang = languages.find(l => l.id === state.selectedLanguage);
 
@@ -92,6 +103,14 @@ export default function StatsDashboard() {
             </div>
             <h3 className="font-bold text-sm">Statistika</h3>
           </div>
+          <button
+            onClick={handleShare}
+            className="btn btn-ghost btn-xs btn-circle tooltip"
+            data-tip="Natijangizni ulashing"
+            title="Natijangizni ulashing"
+          >
+            {shared ? <CheckCircle className="w-3.5 h-3.5 text-success" /> : <ShareAlt className="w-3.5 h-3.5 opacity-60" />}
+          </button>
         </div>
 
         {/* Tabs */}

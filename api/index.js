@@ -32,6 +32,9 @@ import paymentCreate from '../server/handlers/payment-create.js';
 import paymentStatus from '../server/handlers/payment-status.js';
 import prices from '../server/handlers/prices.js';
 import health from '../server/handlers/health.js';
+import aiChat from '../server/handlers/ai-chat.js';
+import pushSubscribe from '../server/handlers/push-subscribe.js';
+import pushSend from '../server/handlers/push-send.js';
 
 // Route jadvali: yo'l → handler.
 // `method` ko'rsatilgan bo'lsa router tekshiradi; ko'rsatilmagan bo'lsa
@@ -52,6 +55,9 @@ const routes = [
   { path: '/payment/status', method: 'GET', handler: paymentStatus },
   { path: '/prices', method: 'GET', handler: prices },
   { path: '/health', method: 'GET', handler: health },
+  { path: '/ai/chat', method: 'POST', handler: aiChat },
+  { path: '/push/subscribe', method: 'POST', handler: pushSubscribe },
+  { path: '/push/send', method: 'POST', handler: pushSend },
 ];
 
 export default async function handler(req, res) {

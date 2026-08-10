@@ -41,6 +41,9 @@ Vercel → Project → Settings → Environment Variables (barcha environment'la
 | `PAYME_KEY` | Payme kabineti → Xizmat kaliti (0-bosqich) | **MAXFIY** |
 | `PAYME_ACCOUNT_FIELD` | Odatiy: `order_id` — o'zgartirmang | MAXFIY |
 | `VITE_SITE_URL` | `https://lingohub.uz` | Ochiq |
+| `OPENAI_API_KEY` | [platform.openai.com](https://platform.openai.com/api-keys) → API key (AI Tutor uchun) | **MAXFIY** |
+| `VITE_VAPID_PUBLIC_KEY` | `npx web-push generate-vapid-keys` (push uchun) | Ochiq |
+| `VAPID_PRIVATE_KEY` | xuddi shu buyruqdan (push uchun) | **MAXFIY** |
 | `UPSTASH_REDIS_REST_URL` | [console.upstash.com](https://console.upstash.com) → Database → REST API (bepul) | MAXFIY |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash → REST API | **MAXFIY** |
 | `PREMIUM_MONTHLY_PRICE` | Pro obuna oylik narxi (so'm). Default `49000` — `src/config.js` bilan bir xil bo'lishi shart | MAXFIY |
@@ -181,6 +184,89 @@ Admin paneldagi **Jonli faoliyat** bo'limi har 15 soniyada server'dan o'qib tura
 bugungi kirishlar soni, jami kirishlar, hozir onlayn adminlar va so'nggi kirish
 urinishlari (kim, qachon, muvaffaqiyatlimi, IP). Server mavjud bo'lmasa,
 shu brauzerdagi lokal log ko'rsatiladi.
+
+## Yangi funksiyalar (2026 avgust)
+
+### 🧠 Flashcard (Spaced Repetition)
+`#/flashcards` — darslardan avtomatik yaratilgan so'z kartalari. Leitner
+quti tizimi: bilganingiz sari takrorlash oralig'i oshadi (1 kun → 15 kun).
+Taraqqiyot har til uchun localStorage'da saqlanadi.
+
+### 🏆 Reyting jadvali
+`#/leaderboard` — global TOP-10 + podium. Firebase kalitlari sozlangan
+bo'lsa reyting barcha o'quvchilar o'rtasida umumiy va onlayn sinxronlanadi
+(`leaderboard/` tuguni). Sozlanmagan bo'lsa demo rejim ishlaydi.
+
+### 🤖 Haqiqiy AI Tutor
+`/api/ai/chat` — OpenAI (gpt-4o-mini) orqali jonli suhbat. Kalit faqat
+serverda: Vercel'ga `OPENAI_API_KEY` qo'shing. Sozlanmagan bo'lsa AI Tutor
+eski tayyor javoblarga (fallback) ishlaydi — sayt buzilmaydi.
+
+### 📜 Sertifikat
+Tilni 100% tugatganda — `Sertifikat` tugmasi chiqadi. Canvas orqali
+chiroyli sertifikat chizilib, PNG sifatida yuklab olinadi / chop etiladi.
+
+### 🎙️ Talaffuzni baholash (yaxshilangan)
+Speaking mashqlarida Levenshtein masofasi + so'z mosligi asosida aniqroq
+baholash (`src/lib/pronunciation.js`).
+
+### ☁️ Bulutli sinxronlash
+Google/email orqali kirgan foydalanuvchida taraqqiyot Firebase Realtime
+Database'da saqlanadi (`users/{uid}/data`) — boshqa qurilmada davom etish
+mumkin. Merge qoidalari: har dars uchun eng yaxshi ball, tangalar maksimum,
+yutuqlar birlashtiriladi.
+
+### 🔔 Push-notifikatsiya + PWA
+- `public/sw.js` — offline rejim + push qabul qilish
+- Sayt telefonga o'rnatilishi mumkin (manifest bor)
+- Kunlik streak eslatmasi (Notification API)
+- Web Push: Vercel'ga VAPID kalitlar qo'shilsa `/api/push/subscribe` +
+  `/api/push/send` ishlaydi (Redis'da obunalar saqlanadi)
+
+### 📊 Haftalik hisobot
+`#/report` — so'nggi 7 kundagi darslar, faol kunlar, tangalar, yutuqlar
+charti. Telegram/WhatsApp'da ulashish tugmalari bilan.
+
+## Yana yangi funksiyalar (2026 avgust)
+
+### 🎯 Daraja testi (placement test)
+`#/placement` — 15 savollik test foydalanuvchining CEFR darajasini (A1–C1)
+aniklaydi (`state.level`). Savollar shu tilning o'z darslaridan avtomatik
+yasaladi — barcha 130+ til uchun ishlaydi. Birinchi marta topshirilganda
++50 tanga bonus. Natija Language Dashboard'da badge sifatida ko'rinadi.
+
+### 📐 Grammatika bo'limi
+`#/grammar` — har bir til uchun grammatika darslari: qoida (o'zbekcha izoh),
+misollar (TTS bilan tinglash mumkin) va mini-test. Progress
+`${langId}-grammar-${id}` da saqlanadi, har muvaffaqiyatli mavzu uchun
++20 tanga. Hozircha mavjud tillar: English, Русский, 한국어, العربية,
+Español, Français, Deutsch, O'zbekcha.
+
+### 📋 Kunlik va haftalik missiyalar
+`#/missions` — tanga yig'ish uchun kunlik (6 ta) va haftalik (6 ta) vazifalar.
+Kunlik har kuni, haftalik har dushanba yangilanadi.
+
+### 📖 Lug'at (dictionary)
+`#/dictionary` — darslardan avtomatik yig'ilgan so'zlar bo'yicha qidiruv.
+Istalgan tilni tanlab, so'z yoki o'zbekcha ma'nosi bo'yicha izlash, TTS bilan
+tinglash mumkin.
+
+### 🎁 Do'st taklif qilish (referral)
+`#/referral` — shaxsiy taklif havolasi (`/?ref=KOD#/`). Havola orqali kelgan
+foydalanuvchi +50 tanga oladi; hisob yaratib birinchi darsni tugatganda
+inviterga +30 tanga (Firebase'da `referrals/{kod}/` orqali kuzatiladi).
+
+### 🗂️ Flashcard Anki eksporti
+Flashcard sahifasida "Anki" tugmasi — kartalar Anki'ga import qilish mumkin
+bo'lgan TSV (`.txt`) yoki CSV formatida yuklab olinadi.
+
+### 📲 Progressni ulashish
+Sertifikat, haftalik hisobot va statistika — Telegram / WhatsApp / X da
+ulashish tugmalari qo'shildi.
+
+### 🎧 AI Tutor ovozli rejimi
+AI Tutor boshida 🎧 tugma — yoqilganda AI javoblari avtomatik o'qib
+eshittiriladi (speechSynthesis). Mikrofon bilan gapirish avvalgidek ishlaydi.
 
 ### Sayt tillari (UZ / RU / ENG)
 

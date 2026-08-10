@@ -19,7 +19,17 @@ import LiveVisitorsBadge from './components/LiveVisitorsBadge';
 import { startPresence, stopPresence } from './utils/presence';
 import { startVisitsTracking } from './utils/visits';
 import SubscriptionGate from './components/SubscriptionGate';
+import Leaderboard from './components/Leaderboard';
+import Flashcards from './components/Flashcards';
+import WeeklyReport from './components/WeeklyReport';
+import PlacementTest from './pages/PlacementTest';
+import GrammarPage from './pages/GrammarPage';
+import DictionaryPage from './pages/DictionaryPage';
+import MissionsPage from './pages/MissionsPage';
+import ReferralPage from './pages/ReferralPage';
 import { hasGatePassed } from './lib/gate';
+import { registerServiceWorker, maybeShowDailyReminder } from './lib/notifications';
+import { claimInviteBonus, syncInviteToCloud } from './lib/referral';
 import {
   FaCommentDots as MessageCircle, FaTimes as X, FaMagic as Sparkles,
   FaColumns as PanelRightOpen, FaBars as MenuIcon,
@@ -58,7 +68,25 @@ function AppContent() {
   useEffect(() => {
     startPresence('site');
     startVisitsTracking();
+    // PWA service worker ro'yxatdan o'tkazish (offline + push)
+    registerServiceWorker();
     return () => stopPresence();
+  }, []);
+
+  // Kunlik eslatma: bugun dars qilinmagan bo'lsa — streak ogohlantirishi
+  useEffect(() => {
+    const studiedToday = Object.values(state.progress).some(
+      (p) => p.timestamp && Date.now() - p.timestamp < 86400000
+    );
+    const timer = setTimeout(() => {
+      maybeShowDailyReminder({
+        streak: state.streak,
+        studiedToday,
+        todayLabel: new Date().toLocaleDateString('uz-UZ', { weekday: 'long' }),
+      });
+    }, 8000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Animatsion fonni qo'llash (sozlamalar o'zgarganda ham sinxronlash)
@@ -69,6 +97,22 @@ function AppContent() {
     };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  // Taklif (referral) bonusi: ?ref=CODE bilan kelganda +50 tanga (bir marta)
+  useEffect(() => {
+    const { granted, inviterCode } = claimInviteBonus();
+    if (granted) {
+      dispatch({ type: 'ADD_COINS', payload: 50 });
+      if (inviterCode) syncInviteToCloud(inviterCode);
+      // Toast ko'rsatish
+      const toast = document.createElement('div');
+      toast.className = 'fixed top-20 right-4 z-[200] px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-sm font-bold shadow-2xl animate-[fadeInUp_0.4s_ease-out]';
+      toast.textContent = '🎉 Do\'stingiz taklifi uchun +50 tanga!';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Admin panel route — shlyuzdan mustaqil (o'z login tizimiga ega)
@@ -86,6 +130,25 @@ function AppContent() {
 
   // Magazin route (shop — qahramon kiyimlari, tanga bilan xarid)
   const showShop = hash.startsWith('#/shop');
+
+  // Yangi route'lar
+  const showLeaderboard = hash.startsWith('#/leaderboard');
+  const showFlashcards = hash.startsWith('#/flashcards');
+  const showReport = hash.startsWith('#/report');
+  const showPlacement = hash.startsWith('#/placement');
+  const showGrammar = hash.startsWith('#/grammar');
+  const showDictionary = hash.startsWith('#/dictionary');
+  const showMissions = hash.startsWith('#/missions');
+  const showReferral = hash.startsWith('#/referral');
+
+  // Barcha to'liq sahifa route'lari (sidebar va AI tutor yashiriladi)
+  const isFullPageRoute = showPortfolio || showShop || showLeaderboard || showFlashcards ||
+    showReport || showPlacement || showGrammar || showDictionary || showMissions || showReferral;
+
+  const goHome = () => {
+    window.location.hash = '#/';
+    dispatch({ type: 'SELECT_LANGUAGE', payload: null });
+  };
 
   const handleToggleTutor = () => {
     dispatch({ type: 'TOGGLE_TUTOR' });
@@ -110,20 +173,28 @@ function AppContent() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Main content */}
-        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${!showPortfolio && !showShop && showSidebar && (showDashboard || showHome) ? 'lg:mr-80' : ''}`}>
+        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${!isFullPageRoute && showSidebar && (showDashboard || showHome) ? 'lg:mr-80' : ''}`}>
           {showShop && <ShopPage />}
           {showPortfolio && <PortfolioPage />}
-          {!showPortfolio && !showShop && showHome && <HomePage />}
-          {!showPortfolio && !showShop && showDashboard && (
+          {showLeaderboard && <Leaderboard onBack={goHome} />}
+          {showFlashcards && <Flashcards onBack={goHome} />}
+          {showReport && <WeeklyReport onBack={goHome} />}
+          {showPlacement && <PlacementTest onBack={goHome} />}
+          {showGrammar && <GrammarPage onBack={goHome} />}
+          {showDictionary && <DictionaryPage onBack={goHome} />}
+          {showMissions && <MissionsPage onBack={goHome} />}
+          {showReferral && <ReferralPage onBack={goHome} />}
+          {!isFullPageRoute && showHome && <HomePage />}
+          {!isFullPageRoute && showDashboard && (
             <LanguageDashboard onSelectLevel={handleSelectLevel} />
           )}
-          {!showPortfolio && !showShop && showLevel && (
+          {!isFullPageRoute && showLevel && (
             <LevelPage onBack={handleBackToDashboard} />
           )}
         </main>
 
         {/* Sidebar with widgets (only on Home and Dashboard) */}
-        {!showPortfolio && !showShop && (showDashboard || showHome) && showSidebar && (
+        {!isFullPageRoute && (showDashboard || showHome) && showSidebar && (
           <>
             {/* Mobil qurilmalarda orqa fon qoraytiriladi */}
             <div
@@ -172,7 +243,7 @@ function AppContent() {
       </div>
 
       {/* Sidebar toggle button (on Home and Dashboard) */}
-      {!showPortfolio && !showShop && (showDashboard || showHome) && !showSidebar && (
+      {!isFullPageRoute && (showDashboard || showHome) && !showSidebar && (
         <button
           onClick={() => setShowSidebar(true)}
           className="fixed right-4 top-20 z-30 btn btn-sm btn-ghost bg-base-100/80 backdrop-blur-sm shadow-sm border border-base-300 hover:bg-base-200 transition-all duration-300"
@@ -191,7 +262,7 @@ function AppContent() {
       <LiveVisitorsBadge />
 
       {/* AI Tutor Floating Button */}
-      {!showPortfolio && !showShop && state.selectedLanguage && (
+      {!isFullPageRoute && state.selectedLanguage && (
         <>
           {!isTutorOpen && (
             <button

@@ -6,6 +6,11 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+    // Dev'da /api so'rovlarini Vercel serverless funksiyaga yo'naltirish.
+    // Prod'da bu kerak emas — vercel.json'dagi rewrite ishlaydi.
+    proxy: {
+      '/api': 'http://localhost:3000',
+    },
   },
   plugins: [react(), tailwindcss()],
   build: {

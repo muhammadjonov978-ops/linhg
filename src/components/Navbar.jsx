@@ -7,12 +7,15 @@ import {
   FaCoins as Coins, FaSignInAlt as LogIn, FaUser as User,
   FaShieldAlt as Shield, FaBriefcase as Briefcase, FaStore as Store,
   FaBars as MenuIcon, FaTimes as X, FaFire as Flame, FaBolt as Bolt,
-  FaBell as Bell, FaGift as Gift,
+  FaBell as Bell, FaGift as Gift, FaTrophy as Trophy, FaLayerGroup as Layers,
+  FaChartBar as ChartBar, FaBullseye as Target, FaBookOpen as BookOpen,
+  FaBook as Book, FaTasks as Tasks,
 } from 'react-icons/fa';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal, { USER_EVENT } from './GoogleAuthModal';
 import LanguageSwitcher from './LanguageSwitcher';
 import Flag from './Flag';
+import { requestNotificationPermission, subscribeToPush } from '../lib/notifications';
 
 function loadSavedUser() {
   try {
@@ -30,6 +33,23 @@ export default function Navbar({ onToggleTutor }) {
   const [bellOpen, setBellOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [savedUser, setSavedUser] = useState(loadSavedUser);
+  const [notifState, setNotifState] = useState(() =>
+    typeof window !== 'undefined' && 'Notification' in window ? Notification.permission : 'unsupported'
+  );
+
+  // Bildirishnoma tugmasi — ruxsat so'raydi va web push obunasini yaratadi
+  const handleEnableNotifications = async (e) => {
+    e.preventDefault();
+    const perm = await requestNotificationPermission();
+    setNotifState(perm.granted ? 'granted' : (perm.reason || 'denied'));
+    if (perm.granted) {
+      const sub = await subscribeToPush();
+      if (sub.ok) {
+        setNotifState('granted');
+      }
+      // VAPID sozlanmagan bo'lsa ham lokal bildirishnomalar ishlaydi
+    }
+  };
 
   // GoogleAuthModal kirish/chiqish qilganda Navbar'ni ham yangilaydi
   useEffect(() => {
@@ -86,6 +106,54 @@ export default function Navbar({ onToggleTutor }) {
       label: t('nav.shop'),
       href: '#/shop',
       icon: <Store className="w-4 h-4 text-warning" />,
+    },
+    {
+      key: 'leaderboard',
+      label: t('nav.leaderboard'),
+      href: '#/leaderboard',
+      icon: <Trophy className="w-4 h-4 text-amber-400" />,
+    },
+    {
+      key: 'flashcards',
+      label: t('nav.flashcards'),
+      href: '#/flashcards',
+      icon: <Layers className="w-4 h-4 text-violet-400" />,
+    },
+    {
+      key: 'report',
+      label: t('nav.report'),
+      href: '#/report',
+      icon: <ChartBar className="w-4 h-4 text-emerald-400" />,
+    },
+    {
+      key: 'placement',
+      label: t('nav.placement'),
+      href: '#/placement',
+      icon: <Target className="w-4 h-4 text-primary" />,
+    },
+    {
+      key: 'grammar',
+      label: t('nav.grammar'),
+      href: '#/grammar',
+      icon: <BookOpen className="w-4 h-4 text-amber-500" />,
+    },
+    {
+      key: 'dictionary',
+      label: t('nav.dictionary'),
+      href: '#/dictionary',
+      icon: <Book className="w-4 h-4 text-sky-500" />,
+    },
+    {
+      key: 'missions',
+      label: t('nav.missions'),
+      href: '#/missions',
+      icon: <Tasks className="w-4 h-4 text-warning" />,
+    },
+    {
+      key: 'referral',
+      label: t('nav.referral'),
+      href: '#/referral',
+      icon: <Gift className="w-4 h-4 text-emerald-500" />,
     },
     {
       key: 'home',
@@ -259,6 +327,99 @@ export default function Navbar({ onToggleTutor }) {
           <Store className="w-4 h-4 text-warning" />
           <span className="hidden sm:inline text-xs">{t('nav.shop')}</span>
         </a>
+
+        {/* Reyting Button */}
+        <a
+          href="#/leaderboard"
+          className="btn btn-ghost btn-sm gap-1.5 tooltip hidden md:inline-flex"
+          data-tip={t('nav.leaderboard')}
+        >
+          <Trophy className="w-4 h-4 text-amber-400" />
+          <span className="hidden sm:inline text-xs">{t('nav.leaderboard')}</span>
+        </a>
+
+        {/* Flashcard Button */}
+        <a
+          href="#/flashcards"
+          className="btn btn-ghost btn-sm gap-1.5 tooltip hidden md:inline-flex"
+          data-tip={t('nav.flashcards')}
+        >
+          <Layers className="w-4 h-4 text-violet-400" />
+          <span className="hidden sm:inline text-xs">{t('nav.flashcards')}</span>
+        </a>
+
+        {/* Haftalik hisobot Button */}
+        <a
+          href="#/report"
+          className="btn btn-ghost btn-sm gap-1.5 tooltip hidden md:inline-flex"
+          data-tip={t('nav.report')}
+        >
+          <ChartBar className="w-4 h-4 text-emerald-400" />
+          <span className="hidden sm:inline text-xs">{t('nav.report')}</span>
+        </a>
+
+        {/* Yangi bo'limlar dropdown (Test, Grammatika, Lug'at, Missiyalar, Taklif) */}
+        <div className="dropdown dropdown-end hidden md:inline-flex">
+          <button
+            tabIndex={0}
+            className="btn btn-ghost btn-sm gap-1.5 tooltip"
+            data-tip={t('nav.more')}
+            title={t('nav.more')}
+          >
+            <MenuIcon className="w-4 h-4 opacity-80" />
+            <span className="hidden lg:inline text-xs">{t('nav.more')}</span>
+          </button>
+          <ul
+            tabIndex={0}
+            className="dropdown-content z-[60] menu p-2 shadow-xl bg-base-100 rounded-box border border-base-300 w-64 mt-2"
+          >
+            <li className="menu-title text-[10px] opacity-50">{t('nav.moreSections')}</li>
+            <li>
+              <a href="#/placement" className="gap-2">
+                <Target className="w-4 h-4 text-primary" /> {t('nav.placement')}
+              </a>
+            </li>
+            <li>
+              <a href="#/grammar" className="gap-2">
+                <BookOpen className="w-4 h-4 text-amber-500" /> {t('nav.grammar')}
+              </a>
+            </li>
+            <li>
+              <a href="#/dictionary" className="gap-2">
+                <Book className="w-4 h-4 text-sky-500" /> {t('nav.dictionary')}
+              </a>
+            </li>
+            <li>
+              <a href="#/missions" className="gap-2">
+                <Tasks className="w-4 h-4 text-warning" /> {t('nav.missions')}
+              </a>
+            </li>
+            <li>
+              <a href="#/referral" className="gap-2">
+                <Gift className="w-4 h-4 text-emerald-500" /> {t('nav.referral')}
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        {/* Bildirishnomalar (PWA push) */}
+        {typeof window !== 'undefined' && 'Notification' in window && (
+          notifState === 'granted' ? (
+            <div className="tooltip hidden md:inline-flex items-center px-2 text-success" data-tip={t('nav.notifOn')}>
+              <Bell className="w-4 h-4" />
+            </div>
+          ) : (
+            <button
+              onClick={handleEnableNotifications}
+              className="btn btn-ghost btn-sm btn-circle tooltip hidden md:inline-flex"
+              data-tip={t('nav.notifEnable')}
+              title={t('nav.notifEnable')}
+            >
+              <Bell className="w-4 h-4 opacity-70" />
+              <span className="absolute w-2 h-2 rounded-full bg-error -top-0.5 -right-0.5 animate-pulse" />
+            </button>
+          )
+        )}
 
         {/* Language Switcher (UZ / RU / ENG) */}
         <div className="hidden md:block">
