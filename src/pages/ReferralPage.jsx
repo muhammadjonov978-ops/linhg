@@ -36,7 +36,8 @@ export default function ReferralPage({ onBack }) {
       }
     });
     return () => { cancelled = true; };
-  }, [code, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]);
 
   const localVisits = getLocalInviteVisits(code);
   const invitesMade = getInvitesMade();

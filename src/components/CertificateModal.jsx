@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   FaTimes as X, FaDownload as Download, FaAward as Award,
   FaCheckCircle as CheckCircle, FaPrint as Print, FaMedal as Medal,
@@ -6,18 +6,54 @@ import {
 } from 'react-icons/fa';
 import { shareToTelegram, shareToWhatsApp, shareToX, copyToClipboard } from '../lib/share';
 
+// ---- Sertifikat templatelari (turga qarab) ----
+function getTemplate(cert) {
+  switch (cert?.type) {
+    case 'milestone':
+      return {
+        icon: '🌟', title: 'YUTUQ SERTIFIKATI', accent: '#34d399',
+        topLine: 'Lingohub • 130+ tilda interaktiv o\'rganish platformasi',
+        quote: 'Har bir bosqich — yutug\'ingiz! Davom eting!',
+        nameLine: `${cert.langFlag || ''} ${cert.langName || 'Kurs'}ning ${cert.percent || 50}% bosqichini muvaffaqiyatli yakunladi`,
+      };
+    case 'cefr':
+      return {
+        icon: '🎓', title: 'DARAJALANISH SERTIFIKATI', accent: '#818cf8',
+        topLine: 'Lingohub • CEFR xalqaro daraja tizimi',
+        quote: 'Darajangizni yanada oshirishga harakat qiling!',
+        nameLine: `${cert.level || 'B1'} darajasi (${cert.subtitle || ''})`,
+      };
+    case 'streak':
+      return {
+        icon: '🔥', title: 'MATONAT SERTIFIKATI', accent: '#f97316',
+        topLine: 'Lingohub • Kunlik o\'rganish marafoni',
+        quote: 'Izchillik — muvaffaqiyat kaliti!',
+        nameLine: `${cert.days || 7} kun ketma-ket dars qildi — ajoyib izchillik!`,
+      };
+    default: // course
+      return {
+        icon: '🏆', title: 'SERTIFIKAT', accent: '#fbbf24',
+        topLine: 'Lingohub • 130+ tilda interaktiv o\'rganish platformasi',
+        quote: 'Til o\'rganishda izchillik va sabr-toqat — muvaffaqiyat kaliti!',
+        nameLine: `${cert.langFlag || ''} ${cert.langName || 'Til'} kursini ${cert.percent || 100}% natija bilan muvaffaqiyatli tugatdi`,
+      };
+  }
+}
+
 // Canvas orqali chiroyli sertifikat chizadi va PNG sifatida qaytaradi.
-function drawCertificate(canvas, { userName, langName, langFlag, percent, dateStr }) {
+function drawCertificate(canvas, { userName, cert, dateStr }) {
   const W = 1200;
   const H = 850;
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d');
 
+  const tpl = getTemplate(cert);
+
   // Fon gradienti
   const bg = ctx.createLinearGradient(0, 0, W, H);
   bg.addColorStop(0, '#0f172a');
-  bg.addColorStop(0.5, '#1e3a5f');
+  bg.addColorStop(0.5, '#1e293b');
   bg.addColorStop(1, '#0f172a');
   ctx.fillStyle = bg;
   ctx.fillRect(0, 0, W, H);
@@ -32,29 +68,29 @@ function drawCertificate(canvas, { userName, langName, langFlag, percent, dateSt
     ctx.fill();
   }
 
-  // Ichki chegara (oltin rang)
-  ctx.strokeStyle = 'rgba(251,191,36,0.7)';
+  // Ichki chegara (akcent rang)
+  ctx.strokeStyle = hexToRgba(tpl.accent, 0.7);
   ctx.lineWidth = 3;
   ctx.strokeRect(40, 40, W - 80, H - 80);
-  ctx.strokeStyle = 'rgba(251,191,36,0.25)';
+  ctx.strokeStyle = hexToRgba(tpl.accent, 0.25);
   ctx.lineWidth = 1;
   ctx.strokeRect(56, 56, W - 112, H - 112);
 
   // Yuqori emblem
   const cx = W / 2;
-  ctx.fillStyle = '#fbbf24';
+  ctx.fillStyle = tpl.accent;
   ctx.font = '64px serif';
   ctx.textAlign = 'center';
-  ctx.fillText('🏆', cx, 130);
+  ctx.fillText(tpl.icon, cx, 130);
 
   // Sarlavha
-  ctx.fillStyle = '#fbbf24';
-  ctx.font = 'bold 44px Georgia, serif';
-  ctx.fillText('SERTIFIKAT', cx, 205);
+  ctx.fillStyle = tpl.accent;
+  ctx.font = 'bold 42px Georgia, serif';
+  ctx.fillText(tpl.title, cx, 205);
 
   ctx.fillStyle = 'rgba(255,255,255,0.75)';
   ctx.font = '20px Arial';
-  ctx.fillText('Lingohub • 130+ tilda interaktiv o\'rganish platformasi', cx, 245);
+  ctx.fillText(tpl.topLine, cx, 245);
 
   // "Ushbu sertifikat..." matni
   ctx.fillStyle = 'rgba(255,255,255,0.85)';
@@ -69,11 +105,11 @@ function drawCertificate(canvas, { userName, langName, langFlag, percent, dateSt
   // Til va natija
   ctx.fillStyle = 'rgba(255,255,255,0.9)';
   ctx.font = '24px Arial';
-  ctx.fillText(`${langFlag || ''} ${langName || 'Til'} kursini ${percent}% natija bilan muvaffaqiyatli tugatdi`, cx, 455);
+  ctx.fillText(nameLineEllipsis(ctx, tpl.nameLine, W - 200), cx, 455);
 
   ctx.fillStyle = 'rgba(255,255,255,0.55)';
   ctx.font = '18px Arial';
-  ctx.fillText('Til o\'rganishda izchillik va sabr-toqat — muvaffaqiyat kaliti!', cx, 500);
+  ctx.fillText(tpl.quote, cx, 500);
 
   // Sana
   ctx.fillStyle = 'rgba(255,255,255,0.7)';
@@ -100,29 +136,56 @@ function drawCertificate(canvas, { userName, langName, langFlag, percent, dateSt
   return canvas.toDataURL('image/png');
 }
 
-export default function CertificateModal({ userName, lang, percent, onClose }) {
-  const [shareMsg, setShareMsg] = useState('');
+function hexToRgba(hex, alpha) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
 
-  const handleShare = (fn) => {
-    const text = `🎓 ${userName || 'Men'} Lingohub'da ${lang?.flag} ${lang?.name} kursini ${Math.round(percent || 0)}% natija bilan tugatdim! Siz ham sinab ko'ring — 130+ til bepul!`;
-    const url = typeof window !== 'undefined' ? window.location.origin : 'https://lingohub.uz';
-    fn(`${url}/#/`, text);
-    setShareMsg('✅ Havola ulashish oynasida ochildi!');
-    setTimeout(() => setShareMsg(''), 3000);
-  };
+function nameLineEllipsis(ctx, text, maxWidth) {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  let t = text;
+  while (t.length > 10 && ctx.measureText(t + '…').width > maxWidth) {
+    t = t.slice(0, -1);
+  }
+  return t + '…';
+}
 
-  const handleCopyLink = async () => {
-    const url = typeof window !== 'undefined' ? window.location.origin : 'https://lingohub.uz';
-    const ok = await copyToClipboard(`${url}/#/`);
-    setShareMsg(ok ? '✅ Havola nusxalandi!' : 'Nusxalash muvaffaqiyatsiz');
-    setTimeout(() => setShareMsg(''), 3000);
-  };
-
+export default function CertificateModal({ userName, lang, percent, cert, onClose }) {
   const canvasRef = useRef(null);
   const [imgSrc, setImgSrc] = useState('');
   const [downloaded, setDownloaded] = useState(false);
+  const [shareMsg, setShareMsg] = useState('');
 
-  const dateStr = new Date().toLocaleDateString('uz-UZ', {
+  // Eski interfeys (lang/percent) berilgan bo'lsa — course tipiga o'tkazamiz.
+  // useMemo: primitive qiymatlar o'zgarmasa, sertifikat qayta chizilmaydi.
+  const certObj = useMemo(() => {
+    if (cert) {
+      return {
+        type: cert.type,
+        title: cert.title,
+        subtitle: cert.subtitle,
+        icon: cert.icon,
+        color: cert.color,
+        langName: cert.langName,
+        langFlag: cert.langFlag,
+        percent: cert.percent,
+        level: cert.level,
+        days: cert.days,
+        date: cert.date,
+      };
+    }
+    return {
+      type: 'course',
+      langName: lang?.name,
+      langFlag: lang?.flag,
+      percent: Math.round(percent || 0),
+    };
+  }, [cert?.type, cert?.title, cert?.subtitle, cert?.icon, cert?.color, cert?.langName, cert?.langFlag, cert?.percent, cert?.level, cert?.days, cert?.date, lang?.name, lang?.flag, percent]);
+
+  const dateStr = new Date((cert?.date || Date.now())).toLocaleDateString('uz-UZ', {
     year: 'numeric', month: 'long', day: 'numeric',
   });
 
@@ -130,19 +193,17 @@ export default function CertificateModal({ userName, lang, percent, onClose }) {
     if (!canvasRef.current) return;
     const src = drawCertificate(canvasRef.current, {
       userName,
-      langName: lang?.name,
-      langFlag: lang?.flag,
-      percent: Math.max(0, Math.min(100, Math.round(percent || 0))),
+      cert: certObj,
       dateStr,
     });
     setImgSrc(src);
-  }, [userName, lang, percent, dateStr]);
+  }, [userName, certObj, dateStr]);
 
   const handleDownload = () => {
     if (!imgSrc) return;
     const a = document.createElement('a');
     a.href = imgSrc;
-    a.download = `Lingohub-Sertifikat-${lang?.id || 'til'}.png`;
+    a.download = `Lingohub-Sertifikat-${certObj.type}-${Date.now()}.png`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -158,6 +219,22 @@ export default function CertificateModal({ userName, lang, percent, onClose }) {
     w.document.close();
     w.focus();
     setTimeout(() => w.print(), 400);
+  };
+
+  const handleShare = (fn) => {
+    const typeIcon = { course: '🎓', milestone: '🌟', cefr: '🎓', streak: '🔥' }[certObj.type] || '🎓';
+    const text = `${typeIcon} ${userName || 'Men'} Lingohub'da ${certObj.title || 'sertifikat'} oldim! Siz ham 130+ tilni bepul o'rganing!`;
+    const url = typeof window !== 'undefined' ? window.location.origin : 'https://lingohub.uz';
+    fn(`${url}/#/certificates`, text);
+    setShareMsg('✅ Havola ulashish oynasida ochildi!');
+    setTimeout(() => setShareMsg(''), 3000);
+  };
+
+  const handleCopyLink = async () => {
+    const url = typeof window !== 'undefined' ? window.location.origin : 'https://lingohub.uz';
+    const ok = await copyToClipboard(`${url}/#/certificates`);
+    setShareMsg(ok ? '✅ Havola nusxalandi!' : 'Nusxalash muvaffaqiyatsiz');
+    setTimeout(() => setShareMsg(''), 3000);
   };
 
   return (
@@ -194,16 +271,16 @@ export default function CertificateModal({ userName, lang, percent, onClose }) {
           {/* Natija statistikasi */}
           <div className="grid grid-cols-3 gap-2 mt-4">
             <div className="bg-success/10 border border-success/20 rounded-xl p-3 text-center">
-              <p className="text-lg font-bold text-success">{percent}%</p>
+              <p className="text-lg font-bold text-success">{certObj.percent ?? '✓'}{certObj.percent !== undefined && '%'}</p>
               <p className="text-[10px] opacity-60">Natija</p>
             </div>
             <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 text-center">
-              <p className="text-lg font-bold text-primary">{lang?.flag}</p>
-              <p className="text-[10px] opacity-60">{lang?.name}</p>
+              <p className="text-lg font-bold text-primary">{certObj.langFlag || certObj.icon || '🎓'}</p>
+              <p className="text-[10px] opacity-60">{certObj.langName || certObj.title || 'Yutuq'}</p>
             </div>
             <div className="bg-warning/10 border border-warning/20 rounded-xl p-3 text-center">
-              <p className="text-lg font-bold text-warning">100</p>
-              <p className="text-[10px] opacity-60">Dars</p>
+              <p className="text-lg font-bold text-warning">{dateStr}</p>
+              <p className="text-[10px] opacity-60">Sana</p>
             </div>
           </div>
 

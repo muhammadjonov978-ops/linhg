@@ -9,7 +9,7 @@ import {
   FaBars as MenuIcon, FaTimes as X, FaFire as Flame, FaBolt as Bolt,
   FaBell as Bell, FaGift as Gift, FaTrophy as Trophy, FaLayerGroup as Layers,
   FaChartBar as ChartBar, FaBullseye as Target, FaBookOpen as BookOpen,
-  FaBook as Book, FaTasks as Tasks,
+  FaBook as Book, FaTasks as Tasks, FaMedal as Medal,
 } from 'react-icons/fa';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal, { USER_EVENT } from './GoogleAuthModal';
@@ -154,6 +154,12 @@ export default function Navbar({ onToggleTutor }) {
       label: t('nav.referral'),
       href: '#/referral',
       icon: <Gift className="w-4 h-4 text-emerald-500" />,
+    },
+    {
+      key: 'certificates',
+      label: t('nav.certificates'),
+      href: '#/certificates',
+      icon: <Medal className="w-4 h-4 text-amber-400" />,
     },
     {
       key: 'home',
@@ -397,6 +403,11 @@ export default function Navbar({ onToggleTutor }) {
             <li>
               <a href="#/referral" className="gap-2">
                 <Gift className="w-4 h-4 text-emerald-500" /> {t('nav.referral')}
+              </a>
+            </li>
+            <li>
+              <a href="#/certificates" className="gap-2">
+                <Medal className="w-4 h-4 text-amber-400" /> {t('nav.certificates')}
               </a>
             </li>
           </ul>

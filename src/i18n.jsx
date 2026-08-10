@@ -143,6 +143,8 @@ const uz = {
   'admin.tab.coins': 'Tanga berish',
   'admin.tab.texts': 'Sayt matnlari',
   'admin.tab.telegram': 'Telegram',
+  'admin.nav.overview': 'Umumiy',
+  'admin.nav.seo': 'Google SEO',
   'admin.activityTitle': 'Jonli faoliyat',
   'admin.activityDesc': 'Admin panelga kirishlar real vaqtda kuzatiladi',
   'admin.todayLogins': "Bugungi kirishlar",
@@ -217,6 +219,7 @@ const uz = {
   'nav.dictionary': "Lug'at",
   'nav.missions': 'Missiyalar',
   'nav.referral': 'Taklif qilish',
+  'nav.certificates': 'Sertifikatlar',
   'nav.more': 'Menyu',
   'nav.moreSections': "Boshqa bo'limlar",
   // Placement test
@@ -238,6 +241,7 @@ const uz = {
   'placement.skip': "Bilmayman, o'tkazib yuborish",
   'placement.prev': 'Oldingi',
   'placement.choose': "Javobni tanlang yoki o'tkazib yuboring",
+  'placement.cert': 'Sertifikat olish',
 };
 
 const ru = {
@@ -352,6 +356,8 @@ const ru = {
   'admin.tab.coins': 'Выдача монет',
   'admin.tab.texts': 'Тексты сайта',
   'admin.tab.telegram': 'Telegram',
+  'admin.nav.overview': 'Обзор',
+  'admin.nav.seo': 'Google SEO',
   'admin.activityTitle': 'Живая активность',
   'admin.activityDesc': 'Входы в админ-панель отслеживаются в реальном времени',
   'admin.todayLogins': 'Входов сегодня',
@@ -426,6 +432,7 @@ const ru = {
   'nav.dictionary': 'Словарь',
   'nav.missions': 'Миссии',
   'nav.referral': 'Пригласить',
+  'nav.certificates': 'Сертификаты',
   'nav.more': 'Меню',
   'nav.moreSections': 'Другие разделы',
   // Тест на уровень
@@ -447,6 +454,7 @@ const ru = {
   'placement.skip': 'Не знаю, пропустить',
   'placement.prev': 'Назад',
   'placement.choose': 'Выберите ответ или пропустите',
+  'placement.cert': 'Получить сертификат',
 };
 
 const en = {
@@ -561,6 +569,8 @@ const en = {
   'admin.tab.coins': 'Give coins',
   'admin.tab.texts': 'Site texts',
   'admin.tab.telegram': 'Telegram',
+  'admin.nav.overview': 'Overview',
+  'admin.nav.seo': 'Google SEO',
   'admin.activityTitle': 'Live activity',
   'admin.activityDesc': 'Admin panel logins are tracked in real time',
   'admin.todayLogins': 'Logins today',
@@ -635,6 +645,7 @@ const en = {
   'nav.dictionary': 'Dictionary',
   'nav.missions': 'Missions',
   'nav.referral': 'Invite',
+  'nav.certificates': 'Certificates',
   'nav.more': 'Menu',
   'nav.moreSections': 'More sections',
   // Placement test
@@ -656,6 +667,7 @@ const en = {
   'placement.skip': 'I don\'t know, skip',
   'placement.prev': 'Prev',
   'placement.choose': 'Choose an answer or skip',
+  'placement.cert': 'Get certificate',
 };
 
 export const translations = { uz, ru, en };

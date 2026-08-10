@@ -18,7 +18,7 @@ import {
   FaEyeSlash as EyeOff, FaSignOutAlt as LogOut, FaArrowLeft as ArrowLeft,
   FaCopy as Copy, FaCheck as Check, FaHeartbeat as Activity, FaUsers as Users,
   FaBroadcastTower as Radio, FaClock as Clock, FaCrown as Crown,
-  FaUserPlus as UserPlus, FaTrash as Trash2, FaCoins as Coins, FaFont as Type,
+  FaUserPlus as UserPlus, FaTrash as Trash2, FaFont as Type,
   FaSave as Save, FaSync as RefreshCw, FaSearch as Search,
   FaUpload as Upload, FaLink as Link2, FaTimes as X, FaChevronRight as ChevronRight,
   FaFileExcel as FileSpreadsheet, FaChartLine as TrendingUp,
@@ -26,6 +26,7 @@ import {
   FaGift as Gift, FaSpinner as Loader2, FaPaperPlane as PaperPlane,
   FaTelegramPlane as TelegramPlane, FaExclamationTriangle as AlertIcon, FaGlobe as Globe,
   FaUserClock as UserClock, FaServer as ServerIcon, FaHistory as HistoryIcon,
+  FaTachometerAlt as Gauge, FaBars as MenuIcon,
 } from 'react-icons/fa';
 
 const LOG_KEY = 'lingohub_admin_log';
@@ -109,24 +110,24 @@ function LoginScreen({ onSuccess }) {
   };
 
   return (
-    <div data-theme="dark" className="admin-shell min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <div data-theme="dark" className="admin-pro min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
       {/* Dekorativ fon */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-[#3b82f6]/10 blur-3xl" />
-        <div className="absolute -bottom-32 -right-24 w-[28rem] h-[28rem] rounded-full bg-[#60a5fa]/10 blur-3xl" />
-        <div className="absolute top-1/3 right-10 w-40 h-40 rounded-full bg-[#a78bfa]/10 blur-3xl" />
+        <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-indigo-500/10 blur-3xl" />
+        <div className="absolute -bottom-32 -right-24 w-[28rem] h-[28rem] rounded-full bg-violet-500/10 blur-3xl" />
+        <div className="absolute top-1/3 right-10 w-40 h-40 rounded-full bg-sky-500/10 blur-3xl" />
       </div>
 
       <div className="w-full max-w-md relative animate-[fadeInUp_0.5s_ease-out]">
         <div className="text-center mb-6">
-          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3b82f6] to-[#2563eb] flex items-center justify-center shadow-lg shadow-[#3b82f6]/30 mb-3 animate-[bounceIn_0.6s_ease-out]">
+          <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 mb-3 animate-[bounceIn_0.6s_ease-out]">
             <Shield className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-extrabold text-white">{t('admin.title')}</h1>
           <p className="text-sm text-white/50 mt-1">{t('admin.subtitle')}</p>
         </div>
 
-        <div className="admin-card p-6 md:p-8 shadow-2xl relative overflow-hidden">
+        <div className="admin-pro-card p-6 md:p-8 shadow-2xl relative overflow-hidden">
           <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-[#3b82f6]/[0.06] blur-2xl pointer-events-none" />
           <form onSubmit={handleSubmit} className="space-y-4 relative">
             <div>
@@ -176,7 +177,7 @@ function LoginScreen({ onSuccess }) {
               </div>
             )}
 
-            <button type="submit" disabled={busy} className="btn btn-primary w-full gap-2 btn-wave border-0 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white hover:brightness-105 disabled:opacity-60">
+            <button type="submit" disabled={busy} className="btn btn-primary w-full gap-2 btn-wave border-0 bg-gradient-to-r from-indigo-500 to-violet-600 text-white hover:brightness-105 disabled:opacity-60">
               {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Shield className="w-4 h-4" />}
               {busy ? t('admin.checking') : t('admin.signIn')}
             </button>
@@ -1521,7 +1522,8 @@ function Dashboard({ session, onLogout }) {
   const [presence, setPresence] = useState({ total: 0, site: 0, admin: 0, mode: 'local' });
   const [visits, setVisits] = useState({ total: 0, today: 0, last7d: 0, unique: 0, mode: 'local' });
   const [refreshing, setRefreshing] = useState(false);
-  const [tab, setTab] = useState('hisoblar');
+  const [tab, setTab] = useState('overview');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   useEffect(() => {
     startPresence('admin');
@@ -1550,176 +1552,279 @@ function Dashboard({ session, onLogout }) {
   const liveMode = presence.mode === 'firebase' || visits.mode === 'firebase';
 
   const statCards = [
-    { label: t('admin.totalVisits'), value: visits.total, icon: Eye, note: t('admin.noteAllTime'), color: '#3b82f6' },
-    { label: t('admin.today'), value: visits.today, icon: Activity, note: t('admin.noteToday'), color: '#4ade80' },
-    { label: t('admin.last7d'), value: visits.last7d, icon: Clock, note: t('admin.noteLast7'), color: '#60a5fa' },
+    { label: t('admin.totalVisits'), value: visits.total, icon: Eye, note: t('admin.noteAllTime'), color: '#818cf8' },
+    { label: t('admin.today'), value: visits.today, icon: Activity, note: t('admin.noteToday'), color: '#34d399' },
+    { label: t('admin.last7d'), value: visits.last7d, icon: Clock, note: t('admin.noteLast7'), color: '#38bdf8' },
     { label: t('admin.uniqueVisits'), value: visits.unique, icon: Users, note: t('admin.noteUnique'), color: '#c084fc' },
-    { label: t('admin.languageCount'), value: languages.length, icon: Globe, note: t('admin.notePlatform'), color: '#f472b6' },
+    { label: t('admin.languageCount'), value: languages.length, icon: Globe, note: t('admin.notePlatform'), color: '#fb7185' },
   ];
 
-  const tabs = [
+  const navItems = [
+    { id: 'overview', label: t('admin.nav.overview'), icon: Gauge },
     { id: 'hisoblar', label: t('admin.tab.accounts'), icon: Users },
-    { id: 'tillar', label: t('admin.tab.languages'), icon: Coins },
+    { id: 'tillar', label: t('admin.tab.languages'), icon: Globe },
     { id: 'tanga', label: t('admin.tab.coins'), icon: Gift },
     { id: 'matnlar', label: t('admin.tab.texts'), icon: Type },
     { id: 'telegram', label: t('admin.tab.telegram'), icon: PaperPlane },
+    { id: 'aktivlik', label: t('admin.activityTitle'), icon: UserClock },
+    { id: 'seo', label: t('admin.nav.seo'), icon: Search },
   ];
 
+  const pageMeta = navItems.find((n) => n.id === tab) || navItems[0];
+
+  const navigate = (id) => {
+    setTab(id);
+    setMobileNavOpen(false);
+  };
+
+  const renderSidebar = () => (
+    <div className="admin-pro-sidebar h-full flex flex-col">
+      {/* Logo */}
+      <div className="flex items-center gap-3 px-5 py-5">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 shrink-0">
+          <Shield className="w-5 h-5 text-white" />
+        </div>
+        <div className="min-w-0">
+          <p className="font-extrabold text-white text-sm leading-tight tracking-tight">Lingohub</p>
+          <p className="text-[10px] text-white/40 uppercase tracking-widest">Admin Panel</p>
+        </div>
+      </div>
+
+      <div className="h-px bg-white/[0.06] mx-4" />
+
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto admin-pro-scroll px-3 py-4 space-y-1">
+        <p className="px-2 pb-1 text-[9px] uppercase tracking-[0.18em] text-white/30 font-bold">Boshqaruv</p>
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = tab === item.id;
+          return (
+            <button key={item.id} onClick={() => navigate(item.id)} className={`admin-pro-nav-item ${active ? 'active' : ''}`}>
+              <Icon className="admin-pro-nav-icon w-4 h-4 shrink-0" />
+              <span className="truncate">{item.label}</span>
+              {item.id === 'hisoblar' && (
+                <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full bg-white/10 text-white/50">{config.accounts?.length || 0}</span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* User card */}
+      <div className="p-3 border-t border-white/[0.06]">
+        <div className="flex items-center gap-3 px-2 py-2 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+          <span className="w-9 h-9 rounded-lg bg-gradient-to-br from-indigo-500/30 to-violet-500/30 border border-white/10 flex items-center justify-center text-sm font-bold text-indigo-300 shrink-0">
+            {String(session.name || session.username || 'A').charAt(0).toUpperCase()}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold text-white truncate">{session.name || session.username}</p>
+            <p className="text-[10px] text-white/40 truncate">{isOwner ? '👑 Egasi' : 'Admin'}</p>
+          </div>
+          <button onClick={onLogout} className="btn btn-ghost btn-xs btn-circle text-white/40 hover:text-red-400" title={t('admin.logout')}>
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
+        </div>
+        <a href="#/" className="mt-2 flex items-center gap-2 px-2 py-1.5 text-[11px] text-white/40 hover:text-white transition-colors">
+          <ArrowLeft className="w-3 h-3" /> {t('admin.backToSite')}
+        </a>
+      </div>
+    </div>
+  );
+
   return (
-    <div data-theme="dark" className="admin-shell">
-      <div className="max-w-6xl mx-auto px-4 py-6 md:py-8 space-y-5">
-        {/* ===== HEADER ===== */}
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#3b82f6] to-[#2563eb] flex items-center justify-center shadow-lg shadow-[#3b82f6]/25 shrink-0">
-            <Shield className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-extrabold text-white tracking-tight">{t('admin.title')}</h1>
-              <p className="text-[11px] text-white/45 flex items-center gap-1.5 mt-0.5">
-                <UserIcon className="w-3 h-3" />
+    <div data-theme="dark" className="admin-pro">
+      <div className="flex min-h-screen">
+        {/* Desktop sidebar */}
+        <aside className="hidden lg:block w-64 shrink-0 sticky top-0 h-screen">
+          {renderSidebar()}
+        </aside>
+
+        {/* Mobile sidebar overlay */}
+        {mobileNavOpen && (
+          <>
+            <div className="admin-pro-overlay lg:hidden" onClick={() => setMobileNavOpen(false)} />
+            <aside className="fixed inset-y-0 left-0 w-72 z-50 lg:hidden animate-[fadeIn_0.2s_ease-out]">
+              {renderSidebar()}
+            </aside>
+          </>
+        )}
+
+        {/* Main */}
+        <div className="flex-1 min-w-0 flex flex-col">
+          {/* ===== TOPBAR ===== */}
+          <header className="admin-pro-topbar sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3">
+            <button
+              onClick={() => setMobileNavOpen(true)}
+              className="btn btn-ghost btn-sm btn-circle lg:hidden"
+              title={t('admin.nav.overview')}
+            >
+              <MenuIcon className="w-5 h-5" />
+            </button>
+
+            <div className="min-w-0">
+              <h1 className="text-sm md:text-base font-extrabold text-white tracking-tight truncate">
+                {pageMeta.label}
+              </h1>
+              <p className="text-[10px] text-white/40 hidden sm:block">
                 {isOwner ? 'admin' : session.username} · {session.name || session.username}
               </p>
             </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Live badge */}
-            <span className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-[#16a34a]/15 border border-[#16a34a]/40 text-[#4ade80] text-xs font-semibold">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ade80] opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4ade80]" />
+            <div className="ml-auto flex items-center gap-1.5 md:gap-2">
+              {/* Live badge */}
+              <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/40 text-emerald-400 text-[11px] font-semibold">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                </span>
+                {t('admin.liveBadge')}
               </span>
-              {t('admin.liveBadge')}
-            </span>
 
-            {/* Yangilash */}
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-semibold text-white/80 hover:bg-white/[0.09] hover:border-white/20 transition-all disabled:opacity-60"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-              {t('admin.refresh')}
-            </button>
-
-            {/* Chiqish */}
-            <button
-              onClick={onLogout}
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-semibold text-white/80 hover:bg-red-500/10 hover:border-red-400/40 hover:text-red-300 transition-all"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              {t('admin.logout')}
-            </button>
-
-            {/* Orqaga */}
-            <a
-              href="#/"
-              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/[0.04] border border-white/10 text-xs font-semibold text-white/80 hover:bg-white/[0.09] hover:border-white/20 transition-all"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              {t('admin.back')}
-            </a>
-          </div>
-        </header>
-
-        {/* ===== TIZIM HOLATI ===== */}
-        <ServiceStatus />
-
-        {/* Standart parol ishlatilayotgan bo'lsa ogohlantirish */}
-        {session.warning && (
-          <div className="admin-card px-4 py-3 text-xs bg-amber-500/10 border border-amber-500/40 text-[#7dd3fc] flex items-start gap-2.5">
-            <AlertIcon className="w-4 h-4 shrink-0 mt-0.5" />
-            <span>
-              <b>⚠️ Standart parol ishlatilmoqda.</b> {session.warning}
-            </span>
-          </div>
-        )}
-
-        {/* ===== STAT CARDS ===== */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {statCards.map((card, i) => {
-            const Icon = card.icon;
-            return (
-              <div
-                key={card.label}
-                className="admin-card admin-card-hover p-5 animate-[fadeInUp_0.5s_ease-out]"
-                style={{ animationDelay: `${i * 70}ms` }}
-              >
-                <div
-                  className="w-9 h-9 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center mb-4"
-                  style={{ boxShadow: `0 0 14px ${card.color}14` }}
-                >
-                  <Icon className="w-4 h-4" style={{ color: card.color }} />
-                </div>
-                <StatValue value={card.value} />
-                <p className="text-xs font-medium text-white/70 mt-1">{card.label}</p>
-                <p className="text-[10px] text-white/35 mt-0.5">{card.note}</p>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* ===== LIVE STRIP (hozir onlayn) ===== */}
-        <div className="admin-card px-4 py-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
-          <span className="flex items-center gap-2 font-semibold text-white">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ade80] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4ade80]" />
-            </span>
-            {t('admin.onlineNow')}
-            <b className="text-[#4ade80] tabular-nums">{presence.total}</b>
-          </span>
-          <span className="text-white/20">|</span>
-          <span className="text-white/50">
-            {t('admin.onSite')} <b className="text-white tabular-nums">{presence.site}</b>
-          </span>
-          <span className="text-white/20">|</span>
-          <span className="text-white/50">
-            {t('admin.inAdminPanel')} <b className="text-white tabular-nums">{presence.admin}</b>
-          </span>
-          <span className="ml-auto flex items-center gap-1.5 text-white/35 text-[10px]">
-            <Radio className="w-3 h-3" />
-            {liveMode ? t('admin.realtimeFirebase') : t('admin.liveDemo')}
-          </span>
-        </div>
-
-        {/* ===== GOOGLE SEARCH SECTION ===== */}
-        <SearchConsoleSection />
-
-        {/* ===== TABS ===== */}
-        <div className="flex flex-wrap items-center gap-2">
-          {tabs.map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.id;
-            return (
+              {/* Yangilash */}
               <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                  active
-                    ? 'bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white shadow-lg shadow-[#3b82f6]/20'
-                    : 'bg-white/[0.04] border border-white/10 text-white/60 hover:bg-white/[0.08] hover:text-white'
-                }`}
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/10 text-[11px] font-semibold text-white/80 hover:bg-white/[0.08] transition-all disabled:opacity-60"
               >
-                <Icon className="w-3.5 h-3.5" />
-                {t.label}
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden md:inline">{t('admin.refresh')}</span>
               </button>
-            );
-          })}
-        </div>
 
-        {/* Tab content */}
-        <div className="admin-card p-5 md:p-6">
-          {tab === 'hisoblar' && <AccountsTab config={config} onSave={saveConfig} session={session} />}
-          {tab === 'tillar' && <LanguagesTab />}
-          {tab === 'tanga' && <CoinsTab config={config} session={session} />}
-          {tab === 'matnlar' && <TextsTab config={config} onSave={saveConfig} />}
-          {tab === 'telegram' && <TelegramTab />}
-        </div>
+              {/* Chiqish */}
+              <button
+                onClick={onLogout}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/10 text-[11px] font-semibold text-white/80 hover:bg-red-500/10 hover:border-red-400/40 hover:text-red-300 transition-all"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">{t('admin.logout')}</span>
+              </button>
+            </div>
+          </header>
 
-        {/* ===== JONLI FAOLIYAT (kim kirgani — live) ===== */}
-        <ActivitySection session={session} presenceAdmin={presence.admin} />
+          {/* ===== CONTENT ===== */}
+          <main className="flex-1 p-4 md:p-6 space-y-5">
+            {tab === 'overview' && (
+              <>
+                {/* Standart parol ogohlantirishi */}
+                {session.warning && (
+                  <div className="admin-pro-card px-4 py-3 text-xs bg-amber-500/10 border border-amber-500/40 text-amber-200 flex items-start gap-2.5">
+                    <AlertIcon className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span><b>⚠️ Standart parol ishlatilmoqda.</b> {session.warning}</span>
+                  </div>
+                )}
+
+                {/* STAT CARDS */}
+                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+                  {statCards.map((card, i) => {
+                    const Icon = card.icon;
+                    return (
+                      <div
+                        key={card.label}
+                        className="admin-pro-stat p-4 animate-[fadeInUp_0.4s_ease-out]"
+                        style={{ animationDelay: `${i * 60}ms` }}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center mb-3"
+                          style={{ boxShadow: `0 0 14px ${card.color}1a` }}
+                        >
+                          <Icon className="w-4 h-4" style={{ color: card.color }} />
+                        </div>
+                        <StatValue value={card.value} />
+                        <p className="text-xs font-medium text-white/70 mt-1">{card.label}</p>
+                        <p className="text-[10px] text-white/35 mt-0.5">{card.note}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* TIZIM HOLATI */}
+                <ServiceStatus />
+
+                {/* LIVE STRIP */}
+                <div className="admin-pro-card px-4 py-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs">
+                  <span className="flex items-center gap-2 font-semibold text-white">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-400" />
+                    </span>
+                    {t('admin.onlineNow')}
+                    <b className="text-emerald-400 tabular-nums">{presence.total}</b>
+                  </span>
+                  <span className="text-white/20">|</span>
+                  <span className="text-white/50">
+                    {t('admin.onSite')} <b className="text-white tabular-nums">{presence.site}</b>
+                  </span>
+                  <span className="text-white/20">|</span>
+                  <span className="text-white/50">
+                    {t('admin.inAdminPanel')} <b className="text-white tabular-nums">{presence.admin}</b>
+                  </span>
+                  <span className="ml-auto flex items-center gap-1.5 text-white/35 text-[10px]">
+                    <Radio className="w-3 h-3" />
+                    {liveMode ? t('admin.realtimeFirebase') : t('admin.liveDemo')}
+                  </span>
+                </div>
+
+                {/* TEZKOR AMALLAR */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { id: 'hisoblar', icon: Users, label: t('admin.tab.accounts'), desc: 'Admin qo\'shish', color: '#818cf8' },
+                    { id: 'tanga', icon: Gift, label: t('admin.tab.coins'), desc: 'Tanga berish', color: '#fbbf24' },
+                    { id: 'telegram', icon: PaperPlane, label: t('admin.tab.telegram'), desc: 'Bot holati', color: '#38bdf8' },
+                    { id: 'aktivlik', icon: UserClock, label: t('admin.activityTitle'), desc: 'Jonli kuzatuv', color: '#34d399' },
+                  ].map((a) => {
+                    const Icon = a.icon;
+                    return (
+                      <button
+                        key={a.id}
+                        onClick={() => navigate(a.id)}
+                        className="admin-pro-card p-4 text-left hover:-translate-y-0.5 transition-all group"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0" style={{ boxShadow: `0 0 12px ${a.color}14` }}>
+                            <Icon className="w-4 h-4" style={{ color: a.color }} />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-xs font-bold text-white truncate">{a.label}</span>
+                            <span className="block text-[10px] text-white/40 truncate">{a.desc}</span>
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+
+            {/* Boshqa bo'limlar */}
+            {tab === 'hisoblar' && (
+              <div className="admin-pro-card p-4 md:p-5">
+                <AccountsTab config={config} onSave={saveConfig} session={session} />
+              </div>
+            )}
+            {tab === 'tillar' && (
+              <div className="admin-pro-card p-4 md:p-5">
+                <LanguagesTab />
+              </div>
+            )}
+            {tab === 'tanga' && (
+              <div className="admin-pro-card p-4 md:p-5">
+                <CoinsTab config={config} session={session} />
+              </div>
+            )}
+            {tab === 'matnlar' && (
+              <div className="admin-pro-card p-4 md:p-5">
+                <TextsTab config={config} onSave={saveConfig} />
+              </div>
+            )}
+            {tab === 'telegram' && (
+              <div className="admin-pro-card p-4 md:p-5">
+                <TelegramTab />
+              </div>
+            )}
+            {tab === 'aktivlik' && <ActivitySection session={session} presenceAdmin={presence.admin} />}
+            {tab === 'seo' && <SearchConsoleSection />}
+          </main>
+        </div>
       </div>
     </div>
   );
@@ -1761,9 +1866,9 @@ export default function AdminPanel() {
 
   if (checking) {
     return (
-      <div data-theme="dark" className="admin-shell min-h-screen flex items-center justify-center p-4">
+      <div data-theme="dark" className="admin-pro min-h-screen flex items-center justify-center p-4">
         <div className="text-center space-y-4 animate-[fadeIn_0.3s_ease-out]">
-          <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-[#3b82f6] to-[#2563eb] flex items-center justify-center shadow-lg shadow-[#3b82f6]/25">
+          <div className="mx-auto w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/25">
             <Shield className="w-7 h-7 text-white" />
           </div>
           <p className="text-sm font-semibold text-white/80 inline-flex items-center gap-2">

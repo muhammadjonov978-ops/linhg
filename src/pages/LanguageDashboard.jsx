@@ -8,7 +8,7 @@ import {
   FaBullseye as Target, FaBookOpen as BookOpen, FaHeadphones as Headphones,
   FaPencilAlt as Pencil, FaMicrophone as Mic, FaChevronLeft as ChevronLeft,
   FaGraduationCap as GraduationCap, FaCoins as Coins, FaCrown as Crown,
-  FaMedal as Medal, FaTrophy as Trophy,
+  FaMedal as Medal, FaTrophy as Trophy, FaFire as Flame,
 } from 'react-icons/fa';
 import DailyChallenge from '../components/DailyChallenge';
 import AchievementsPanel from '../components/AchievementsPanel';
@@ -47,6 +47,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [showCompleted, setShowCompleted] = useState(true);
   const [certificateOpen, setCertificateOpen] = useState(false);
+  const [streakCertOpen, setStreakCertOpen] = useState(false);
 
   const currentLang = languages.find(l => l.id === state.selectedLanguage);
 
@@ -141,6 +142,14 @@ export default function LanguageDashboard({ onSelectLevel }) {
                 className="btn btn-sm gap-1.5 border-0 bg-gradient-to-r from-amber-400 to-orange-500 text-white shadow-lg shadow-amber-500/25 hover:brightness-110 animate-pulse"
               >
                 <Medal className="w-4 h-4" /> Sertifikat
+              </button>
+            )}
+            {state.streak >= 7 && (
+              <button
+                onClick={() => setStreakCertOpen(true)}
+                className="btn btn-sm gap-1.5 border-0 bg-gradient-to-r from-orange-400 to-red-500 text-white shadow-lg shadow-orange-500/25 hover:brightness-110"
+              >
+                <Flame className="w-4 h-4" /> Streak sertifikati
               </button>
             )}
             <div className="flex items-center gap-1 badge badge-primary badge-lg p-3">
@@ -402,6 +411,23 @@ export default function LanguageDashboard({ onSelectLevel }) {
           lang={currentLang}
           percent={stats.percentage}
           onClose={() => setCertificateOpen(false)}
+        />
+      )}
+
+      {/* Streak sertifikati modal */}
+      {streakCertOpen && (
+        <CertificateModal
+          userName={loadSavedUser()?.name || 'O\'quvchi'}
+          cert={{
+            type: 'streak',
+            title: `${state.streak} kunlik streak`,
+            subtitle: `${state.streak} kun ketma-ket dars qildi`,
+            icon: '🔥',
+            color: '#f97316',
+            days: state.streak,
+            date: Date.now(),
+          }}
+          onClose={() => setStreakCertOpen(false)}
         />
       )}
     </div>

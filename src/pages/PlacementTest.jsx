@@ -8,8 +8,9 @@ import {
 import {
   FaArrowLeft as ArrowLeft, FaBullseye as Target, FaChevronRight as ChevronRight,
   FaChevronLeft as ChevronLeft, FaRedo as RotateCcw,
-  FaCoins as Coins, FaRocket as Rocket,
+  FaCoins as Coins, FaRocket as Rocket, FaMedal as Medal,
 } from 'react-icons/fa';
+import CertificateModal from '../components/CertificateModal';
 
 const SKIP_VALUE = -1;
 
@@ -19,6 +20,7 @@ export default function PlacementTest({ onBack }) {
   const [answers, setAnswers] = useState([]);
   const [currentIdx, setCurrentIdx] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [certOpen, setCertOpen] = useState(false);
 
   const currentLang = languages.find((l) => l.id === state.selectedLanguage);
   const questions = useMemo(
@@ -144,12 +146,44 @@ export default function PlacementTest({ onBack }) {
           <button onClick={handleRetake} className="btn btn-ghost flex-1 gap-2 border border-base-300">
             <RotateCcw className="w-4 h-4" /> {t('placement.retake')}
           </button>
+          <button
+            onClick={() => setCertOpen(true)}
+            className="btn btn-warning gap-2 btn-wave"
+          >
+            <Medal className="w-4 h-4" /> {t('placement.cert')}
+          </button>
           <button onClick={onBack} className="btn btn-primary flex-1 gap-2">
             {t('placement.continue')} <ChevronRight className="w-4 h-4" />
           </button>
         </div>
+
+        {/* CEFR sertifikat modal */}
+        {certOpen && result && (
+          <CertificateModal
+            userName={loadSavedUser()?.name || 'O\'quvchi'}
+            cert={{
+              type: 'cefr',
+              title: `${result.level} daraja — ${cefr.label}`,
+              subtitle: cefr.description,
+              icon: cefr.icon,
+              color: '#818cf8',
+              level: result.level,
+              date: Date.now(),
+            }}
+            onClose={() => setCertOpen(false)}
+          />
+        )}
       </div>
     );
+  }
+
+  function loadSavedUser() {
+    try {
+      const raw = localStorage.getItem('lingohub_user');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
   }
 
   // ===== TEST SAHIFASI =====

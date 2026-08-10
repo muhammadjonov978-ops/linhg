@@ -27,6 +27,7 @@ import GrammarPage from './pages/GrammarPage';
 import DictionaryPage from './pages/DictionaryPage';
 import MissionsPage from './pages/MissionsPage';
 import ReferralPage from './pages/ReferralPage';
+import CertificatesPage from './pages/CertificatesPage';
 import { hasGatePassed } from './lib/gate';
 import { registerServiceWorker, maybeShowDailyReminder } from './lib/notifications';
 import { claimInviteBonus, syncInviteToCloud } from './lib/referral';
@@ -140,10 +141,11 @@ function AppContent() {
   const showDictionary = hash.startsWith('#/dictionary');
   const showMissions = hash.startsWith('#/missions');
   const showReferral = hash.startsWith('#/referral');
+  const showCertificates = hash.startsWith('#/certificates');
 
   // Barcha to'liq sahifa route'lari (sidebar va AI tutor yashiriladi)
   const isFullPageRoute = showPortfolio || showShop || showLeaderboard || showFlashcards ||
-    showReport || showPlacement || showGrammar || showDictionary || showMissions || showReferral;
+    showReport || showPlacement || showGrammar || showDictionary || showMissions || showReferral || showCertificates;
 
   const goHome = () => {
     window.location.hash = '#/';
@@ -184,6 +186,7 @@ function AppContent() {
           {showDictionary && <DictionaryPage onBack={goHome} />}
           {showMissions && <MissionsPage onBack={goHome} />}
           {showReferral && <ReferralPage onBack={goHome} />}
+          {showCertificates && <CertificatesPage onBack={goHome} />}
           {!isFullPageRoute && showHome && <HomePage />}
           {!isFullPageRoute && showDashboard && (
             <LanguageDashboard onSelectLevel={handleSelectLevel} />

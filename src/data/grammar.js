@@ -516,7 +516,7 @@ export const GRAMMAR_LANGS = {
       ],
       quiz: [
         { q: "'Yozayapman' — qaysi zamon?", options: ['Hozirgi', 'O\'tgan', 'Kelasi', 'Shart'], a: 0, explain: "-yapman → hozirgi zamon." },
-        { q: "'Ko\'rdim' — qaysi zamon?", options: ['Hozirgi', 'O\'tgan', 'Kelasi', 'Buyruq'], a: 1, explain: "-di → o'tgan zamon." },
+        { q: "'Ko'rdim' — qaysi zamon?", options: ['Hozirgi', 'O\'tgan', 'Kelasi', 'Buyruq'], a: 1, explain: "-di → o'tgan zamon." },
         { q: "'Boraman' — qaysi zamon?", options: ['Hozirgi', 'O\'tgan', 'Kelasi', 'Tushum'], a: 2, explain: "-aman → kelasi zamon." },
       ],
     },
