@@ -6,8 +6,15 @@ React + Vite asosida qurilgan interaktiv til o'rganish platformasi.
 
 ```bash
 npm install
-npm run dev
+npm run dev:all
 ```
+
+> `dev:all` — Vite (frontend, :5173) **va** API server (:3000)ni birga ishga
+> tushiradi. `/api/*` so'rovlari frontend'dan mahalliy API'ga yo'naltiriladi
+> (vite.config.js proxy). Faqat `npm run dev` ishga tushirsangiz, `/api/*`
+> so'rovlari `ECONNREFUSED` xatosi bilan ishlamay qoladi (widgetlar — Kunlik
+> bonus, Reyting, Turnir — ma'lumot ololmaydi). Alohida ishga tushirish:
+> `npm run dev` + alohida terminalda `npm run dev:api`.
 
 ## To'lov tizimi (Payme)
 
@@ -52,6 +59,9 @@ Vercel → Project → Settings → Environment Variables (barcha environment'la
 | `VITE_CLICK_SERVICE_ID` | (ixtiyoriy) Click ham qo'shmoqchi bo'lsangiz | Ochiq |
 | `CLICK_SECRET_KEY` | (ixtiyoriy) Click secret key | **MAXFIY** |
 | `ADMIN_PASSWORD` | Admin panel egasi paroli. **MAJBURIY** — o'rnatilmasa panelga kirish butunlay yopiq | **MAXFIY** |
+| `ESKIZ_EMAIL` | Eskiz.uz hisobi emaili — SMS eslatmalar uchun (ixtiyoriy) | **MAXFIY** |
+| `ESKIZ_PASSWORD` | Eskiz.uz paroli (ixtiyoriy) | **MAXFIY** |
+| `ESKIZ_SENDER` | (ixtiyoriy) Eskiz jo'natuvchi nomi, default `4546` | MAXFIY |
 | `ADMIN_USERNAME` | (ixtiyoriy) Admin login, default `shxsh` | MAXFIY |
 | `ADMIN_NAME` | (ixtiyoriy) Egasining ismi, default `Shox` | MAXFIY |
 | `ADMIN_TOKEN_SECRET` | (ixtiyoriy) Sessiya token imzosi — bo'sh bo'lsa `ADMIN_PASSWORD` ishlatiladi | MAXFIY |
@@ -222,6 +232,51 @@ yutuqlar birlashtiriladi.
 - Kunlik streak eslatmasi (Notification API)
 - Web Push: Vercel'ga VAPID kalitlar qo'shilsa `/api/push/subscribe` +
   `/api/push/send` ishlaydi (Redis'da obunalar saqlanadi)
+
+### 📲 SMS eslatma (Eskiz.uz) — dars o'tkazib yuborilganda
+
+Foydalanuvchi 24 soatdan ko'proq dars qilmasa, saytda **telefon raqamini
+so'rovchi** oyna chiqadi (SMSReminder). Raqam kiritilgach — shu raqamga
+haqiqiy SMS yuboriladi.
+
+**Sozlash (bir marta):**
+
+1. [eskiz.uz](https://eskiz.uz) saytida ro'yxatdan o'ting (notify.eskiz.uz).
+2. Vercel → Project → Settings → Environment Variables ga qo'shing:
+   - `ESKIZ_EMAIL` — Eskiz login (email)
+   - `ESKIZ_PASSWORD` — Eskiz parol
+   - `ESKIZ_SENDER` — (ixtiyoriy) jo'natuvchi nomi, default `4546`
+3. Deploy qiling.
+
+> Hammasi **serverda** ishlaydi: `POST /api/sms/send` → Eskiz API. Kalitlar
+> brauzerga chiqmaydi (xavfsiz). Har raqam/qurilmaga kunlik limit bor
+> (spam himoyasi): raqamga 3 ta, IP'dan 10 ta SMS/kun.
+
+**Test:** raqamni kiritib "Yuborish" tugmasini bosing — telefoningizga SMS
+kelishi kerak. Kelmasa `ESKIZ_EMAIL`/`ESKIZ_PASSWORD` to'g'riligini tekshiring
+(yoki Eskiz kabinetida jo'natuvchi nomini tasdiqlang).
+
+### 🎮 O'yinlashtirish (server-side — Redis)
+
+Saytning raqobat tizimlari endi **serverda** boshqariladi (Upstash Redis):
+
+| Funksiya | Endpoint | Tavsif |
+|---|---|---|
+| 🏆 Global reyting | `GET /api/leaderboard` | Barcha foydalanuvchilar jadvali (serverda) |
+| | `POST /api/leaderboard/report` | O'z ballini yozish (dars×10 + tanga/10 + streak×5) |
+| 🎁 Kunlik bonus | `GET /api/daily/bonus` | Bonus holati — streak bilan oshadi |
+| | `POST /api/daily/bonus/claim` | Kunlik bonusni olish (kuniga 1 marta, server vaqtida) |
+| ✨ AI kun so'zi | `GET /api/daily/content` | OpenAI yordamida kun so'zi + mini-test |
+| 🏆 Haftalik turnir | `GET /api/tournament` | Haftalik jadval + TOP-3 mukofoti |
+| | `POST /api/tournament/score` | Turnirga ball yozish |
+| | `POST /api/tournament/claim` | O'tgan hafta TOP-3 mukofotini olish (200/100/50🪙) |
+| 📊 Statistika | `POST /api/stats/event` | Dars/tashrif/til hodisalari |
+| | `GET /api/stats/dashboard` | Sayt egasi uchun yig'ma statistika (admin) |
+
+**Sozlash:** `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (upstash.com) —
+qo'shilsa hammasi barcha qurilmalarda umumiy ishlaydi. Qo'shilmasa — demo rejim
+(bitta serverless instansiyada). AI kun so'zi uchun `OPENAI_API_KEY` ixtiyoriy —
+sozlanmasa tayyor bazadan so'z olinadi.
 
 ### 📊 Haftalik hisobot
 `#/report` — so'nggi 7 kundagi darslar, faol kunlar, tangalar, yutuqlar

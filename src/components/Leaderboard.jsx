@@ -3,18 +3,15 @@ import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
 import { ref, onValue, set, serverTimestamp } from 'firebase/database';
 import { db, HAS_FIREBASE } from '../firebase';
+import { fetchLeaderboard, getServerUid, reportScore, computeScore } from '../lib/server';
 import {
   FaTrophy as Trophy, FaCrown as Crown, FaMedal as Medal, FaFire as Flame,
   FaUser as User, FaArrowLeft as ArrowLeft,
   FaBookOpen as BookOpen, FaCloudUploadAlt as Cloud, FaUserFriends as Users,
-  FaGlobe as Globe, FaMagic as Sparkles,
+  FaGlobe as Globe, FaMagic as Sparkles, FaServer as ServerIcon,
 } from 'react-icons/fa';
 
-// Reyting balli: tugallangan darslar + tanga + streak
-function computeScore(state) {
-  const completed = Object.values(state.progress).filter((p) => p.completed).length;
-  return completed * 10 + (state.coins || 0) / 10 + (state.streak || 0) * 5;
-}
+// Reyting balli: tugallangan darslar + tanga + streak (server.js'dagi formula)
 
 function loadSavedUser() {
   try {
@@ -66,6 +63,9 @@ export default function Leaderboard({ onBack }) {
   const [tab, setTab] = useState('global'); // 'global' | 'lang'
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [synced, setSynced] = useState(false);
+  // Server rejim (Redis) — frontend'ning asosiy manbasi; Firebase demo sifatida
+  const [serverEntries, setServerEntries] = useState(null);
+  const [serverMode, setServerMode] = useState(null); // 'redis' | 'memory' | null
 
   const savedUser = loadSavedUser();
   const myName = savedUser?.name || 'Siz';
@@ -73,7 +73,26 @@ export default function Leaderboard({ onBack }) {
 
   const completedCount = Object.values(state.progress).filter((p) => p.completed).length;
 
-  // Firebase'ga o'z reytingimizni yozish + boshqalarni o'qish
+  // SERVER reyting: o'z ballini yozish + jadvalni o'qish
+  useEffect(() => {
+    let cancelled = false;
+    const uid = getServerUid();
+    reportScore(state, uid).then((r) => {
+      if (cancelled) return;
+      if (r?.ok) {
+        fetchLeaderboard(uid).then((data) => {
+          if (cancelled || !data?.ok) return;
+          setServerEntries(data.entries || []);
+          setServerMode(data.mode || 'redis');
+          setSynced(true);
+        });
+      }
+    });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myScore]);
+
+  // Firebase'ga o'z reytingimizni yozish + boshqalarni o'qish (server bo'lmasa fallback)
   useEffect(() => {
     if (!HAS_FIREBASE) {
       setSynced(false);
@@ -99,13 +118,26 @@ export default function Leaderboard({ onBack }) {
         .sort((a, b) => b.score - a.score);
       setOnlineUsers(users);
     });
-    setSynced(true);
     return () => unsub();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myScore]);
 
-  // Global ro'yxat: Firebase bo'lsa onlayn, bo'lmasa demo + o'zimiz
+  // Global ro'yxat: SERVER > Firebase > demo
   const globalList = useMemo(() => {
+    // 1) Server reyting (Redis) — hamma qurilmalarda umumiy
+    if (serverEntries && serverEntries.length > 0) {
+      const myKey = getServerUid();
+      return serverEntries.map((u) => ({
+        name: u.name || 'O\'quvchi',
+        flag: '🏅',
+        score: Math.round(u.score || 0),
+        lessons: u.lessons || 0,
+        coins: u.coins || 0,
+        streak: u.streak || 0,
+        isMe: u.uid === myKey,
+      }));
+    }
+    // 2) Firebase (agar server yo'q bo'lsa)
     if (HAS_FIREBASE && onlineUsers.length > 0) {
       const myKey = savedUser?.sub || getDeviceId();
       return onlineUsers.map((u) => ({
@@ -118,13 +150,13 @@ export default function Leaderboard({ onBack }) {
         isMe: u.key === myKey,
       }));
     }
-    // Demo: namuna o'quvchilar + o'zimiz (agar faollik bo'lsa)
+    // 3) Demo: namuna o'quvchilar + o'zimiz (agar faollik bo'lsa)
     const demo = DEMO_USERS.map((u) => ({ ...u, score: demoScore(u), isMe: false }));
     if (myScore > 0) {
       demo.push({ name: myName, flag: '🫵', lessons: completedCount, coins: state.coins || 0, streak: state.streak || 0, score: myScore, isMe: true });
     }
     return demo.sort((a, b) => b.score - a.score);
-  }, [onlineUsers, myScore, myName, completedCount, state.coins, state.streak, savedUser]);
+  }, [serverEntries, onlineUsers, myScore, myName, completedCount, state.coins, state.streak, savedUser]);
 
   // Til bo'yicha reyting — faqat o'zimiz + til statistikasi
   const langList = useMemo(() => {
@@ -161,7 +193,11 @@ export default function Leaderboard({ onBack }) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {synced ? (
+          {serverMode ? (
+            <span className="badge badge-success badge-sm gap-1">
+              <ServerIcon className="w-3 h-3" /> {serverMode === 'redis' ? 'Server reyting' : 'Demo (xotira)'}
+            </span>
+          ) : synced ? (
             <span className="badge badge-success badge-sm gap-1">
               <Cloud className="w-3 h-3" /> Onlayn sinxron
             </span>

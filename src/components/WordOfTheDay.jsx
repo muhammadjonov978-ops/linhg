@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
+import { useI18n } from '../i18n';
 import { getSpeechLang } from '../utils/speech';
-import { FaVolumeUp as Volume2, FaRegBookmark as Bookmark, FaBookmark as BookmarkCheck, FaMagic as Sparkles } from 'react-icons/fa';
+import { fetchDailyContent } from '../lib/server';
+import { FaVolumeUp as Volume2, FaRegBookmark as Bookmark, FaBookmark as BookmarkCheck, FaMagic as Sparkles, FaRobot as Bot, FaCheckCircle as CheckCircle, FaTimes as X } from 'react-icons/fa';
 
 const wordDatabase = {
   english: [
@@ -62,8 +64,12 @@ const wordDatabase = {
 
 export default function WordOfTheDay() {
   const { state } = useApp();
+  const { lang: uiLang } = useI18n();
   const [isSaved, setIsSaved] = useState(false);
   const [showMeaning, setShowMeaning] = useState(false);
+  // Serverdan AI kontent
+  const [serverWord, setServerWord] = useState(null);
+  const [quizAnswer, setQuizAnswer] = useState(null); // index | null
 
   // Get today's word based on date
   const today = new Date();
@@ -72,6 +78,22 @@ export default function WordOfTheDay() {
   const words = wordDatabase[langId] || wordDatabase.english;
   const wordIndex = Math.abs(dateStr.split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % words.length;
   const todaysWord = words[wordIndex];
+
+  // Serverdan kun so'zini olish (AI generatsiya qilgan bo'lishi mumkin)
+  useEffect(() => {
+    let cancelled = false;
+    fetchDailyContent({ lang: langId, level: 'beginner', uiLang }).then((data) => {
+      if (cancelled || !data?.ok || !data?.word) return;
+      setServerWord(data);
+    });
+    return () => { cancelled = true; };
+  }, [langId, uiLang]);
+
+  // Foydalaniladigan so'z: serverdan kelgani ustun, bo'lmasa lokal bazadan
+  const activeWord = serverWord
+    ? { word: serverWord.word, meaning: serverWord.meaning, example: serverWord.example, level: serverWord.level, tip: serverWord.tip }
+    : todaysWord;
+  const isAi = serverWord?.source === 'ai';
 
   const speakWord = (text) => {
     if ('speechSynthesis' in window) {
@@ -90,7 +112,13 @@ export default function WordOfTheDay() {
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-primary" />
             </div>
-            <h3 className="font-bold text-sm">Kun so'zi</h3>
+            <h3 className="font-bold text-sm flex items-center gap-1.5">Kun so'zi
+              {isAi && (
+                <span className="badge badge-primary badge-xs gap-0.5 font-normal" title="Serverda AI yordamida generatsiya qilindi">
+                  <Bot className="w-2.5 h-2.5" /> AI
+                </span>
+              )}
+            </h3>
           </div>
           <button
             onClick={() => setIsSaved(!isSaved)}
@@ -108,10 +136,10 @@ export default function WordOfTheDay() {
         <div className="text-center py-2">
           <div className="flex items-center justify-center gap-2 mb-1">
             <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              {todaysWord.word}
+              {activeWord.word}
             </h2>
             <button
-              onClick={() => speakWord(todaysWord.word)}
+              onClick={() => speakWord(activeWord.word)}
               className="btn btn-ghost btn-xs btn-circle hover:bg-primary/10"
               title="Tinglash"
             >
@@ -129,14 +157,61 @@ export default function WordOfTheDay() {
           ) : (
             <div className="animate-[fadeIn_0.3s_ease-out]">
               <p className="text-sm font-medium text-primary">
-                {todaysWord.meaning}
+                {activeWord.meaning}
               </p>
               <p className="text-xs italic opacity-60 mt-1">
-                "{todaysWord.example}"
+                "{activeWord.example}"
               </p>
-              <div className="badge badge-ghost badge-xs mt-2">
-                {todaysWord.level}
+              <div className="flex items-center justify-center gap-1.5 mt-2">
+                <div className="badge badge-ghost badge-xs">
+                  {activeWord.level}
+                </div>
+                {activeWord.tip && (
+                  <span className="text-[10px] opacity-40">💡 {activeWord.tip}</span>
+                )}
               </div>
+            </div>
+          )}
+
+          {/* AI viktorina — server yaratgan */}
+          {serverWord?.quiz?.question && serverWord.quiz.options?.length >= 2 && (
+            <div className="mt-3 pt-3 border-t border-base-300/60 text-left animate-[fadeIn_0.4s_ease-out]">
+              <p className="text-xs font-semibold mb-2">🧠 Mini-test: {serverWord.quiz.question}</p>
+              <div className="space-y-1.5">
+                {serverWord.quiz.options.map((opt, i) => {
+                  const isCorrect = i === serverWord.quiz.answerIndex;
+                  const isChosen = quizAnswer === i;
+                  let cls = 'bg-base-200 hover:bg-primary/10 border border-transparent';
+                  if (quizAnswer !== null) {
+                    if (isCorrect) cls = 'bg-success/15 border border-success/40 text-success';
+                    else if (isChosen) cls = 'bg-error/10 border border-error/30 text-error';
+                    else cls = 'bg-base-200 opacity-50 border border-transparent';
+                  }
+                  return (
+                    <button
+                      key={i}
+                      disabled={quizAnswer !== null}
+                      onClick={() => setQuizAnswer(i)}
+                      className={`w-full text-left text-xs px-3 py-2 rounded-lg transition-all duration-200 ${cls}`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="font-bold opacity-50">{String.fromCharCode(65 + i)}.</span>
+                        <span className="flex-1">{opt}</span>
+                        {quizAnswer !== null && isCorrect && <CheckCircle className="w-3.5 h-3.5 shrink-0" />}
+                        {quizAnswer !== null && isChosen && !isCorrect && <X className="w-3.5 h-3.5 shrink-0" />}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              {quizAnswer !== null && (
+                <p className={`text-[11px] font-medium mt-2 animate-[fadeIn_0.3s_ease-out] ${
+                  quizAnswer === serverWord.quiz.answerIndex ? 'text-success' : 'text-error'
+                }`}>
+                  {quizAnswer === serverWord.quiz.answerIndex
+                    ? '✅ To\'g\'ri! Ajoyib ish!' : `❌ To\'g\'ri javob: ${String.fromCharCode(65 + serverWord.quiz.answerIndex)}`}
+                </p>
+              )}
             </div>
           )}
         </div>

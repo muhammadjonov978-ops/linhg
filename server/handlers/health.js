@@ -3,6 +3,8 @@
 import { redis } from '../lib/redis.js';
 import { isAuthConfigured } from '../lib/adminAuth.js';
 import { telegramConfigured, ownerChatId } from '../lib/telegram.js';
+import { smsConfigured } from '../lib/sms.js';
+import { weekKey, getTournament } from '../lib/gamification.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -28,6 +30,10 @@ export default async function handler(req, res) {
       adminAuth: isAuthConfigured(),
       telegram: telegramConfigured(),
       telegramChat: Boolean(ownerChatId()),
+      sms: smsConfigured(),
+      gamification: Boolean(redis),
+      tournamentWeek: weekKey(),
+      tournament: await getTournament({ limit: 1 }).then((t) => t.ok ? { ok: true, mode: t.mode } : { ok: false }).catch(() => ({ ok: false })),
     },
   });
 }

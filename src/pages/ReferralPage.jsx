@@ -14,7 +14,7 @@ import { shareToTelegram, shareToWhatsApp, shareToX, copyToClipboard } from '../
 const BONUS = 50;
 
 export default function ReferralPage({ onBack }) {
-  const { state } = useApp();
+  const { state, dispatch } = useApp();
   const [code] = useState(getReferralCode);
   const [link] = useState(() => getReferralLink());
   const [copied, setCopied] = useState(false);

@@ -35,6 +35,12 @@ import health from '../server/handlers/health.js';
 import aiChat from '../server/handlers/ai-chat.js';
 import pushSubscribe from '../server/handlers/push-subscribe.js';
 import pushSend from '../server/handlers/push-send.js';
+import smsSend from '../server/handlers/sms-send.js';
+import leaderboard from '../server/handlers/leaderboard.js';
+import dailyBonus from '../server/handlers/daily-bonus.js';
+import dailyContent from '../server/handlers/daily-content.js';
+import tournament from '../server/handlers/tournament.js';
+import stats from '../server/handlers/stats.js';
 
 // Route jadvali: yo'l → handler.
 // `method` ko'rsatilgan bo'lsa router tekshiradi; ko'rsatilmagan bo'lsa
@@ -58,6 +64,18 @@ const routes = [
   { path: '/ai/chat', method: 'POST', handler: aiChat },
   { path: '/push/subscribe', method: 'POST', handler: pushSubscribe },
   { path: '/push/send', method: 'POST', handler: pushSend },
+  { path: '/sms/send', method: 'POST', handler: smsSend },
+  // ===== O'YINLASHTIRISH (server-side) =====
+  { path: '/leaderboard', method: 'GET', handler: leaderboard },
+  { path: '/leaderboard/report', method: 'POST', handler: leaderboard },
+  { path: '/daily/bonus', method: 'GET', handler: dailyBonus },
+  { path: '/daily/bonus/claim', method: 'POST', handler: dailyBonus },
+  { path: '/daily/content', method: 'GET', handler: dailyContent },
+  { path: '/tournament', method: 'GET', handler: tournament },
+  { path: '/tournament/score', method: 'POST', handler: tournament },
+  { path: '/tournament/claim', method: 'POST', handler: tournament },
+  { path: '/stats/event', method: 'POST', handler: stats },
+  { path: '/stats/dashboard', method: 'GET', handler: stats },
 ];
 
 export default async function handler(req, res) {

@@ -4,6 +4,7 @@ import { isThemeId, DEFAULT_THEME } from '../data/themes';
 import { getShopItem, DEFAULT_OWNED, DEFAULT_EQUIPPED } from '../data/shop';
 import { pushToCloud, pullFromCloud, mergeState } from '../lib/cloudSync';
 import { markInviteeCompleted } from '../lib/referral';
+import { sendStatEvent, reportScore, getServerUid } from '../lib/server';
 
 const AppContext = createContext();
 
@@ -428,6 +429,34 @@ export function AppProvider({ children }) {
       /* ignore */
     }
   }, [state.progress]);
+
+  // ===== SERVER O'YINLASHTIRISH =====
+  // 1) lesson hodisasi FAQAT progress o'zgarganda yuboriladi (tanga/streak
+  //    o'zgarishi dars emas — statistika noto'g'ri to'planishi mumkin).
+  const prevProgressRef = useRef(state.progress);
+  useEffect(() => {
+    const changed = prevProgressRef.current !== state.progress;
+    prevProgressRef.current = state.progress;
+    if (!changed) return;
+    try {
+      const uid = getServerUid();
+      sendStatEvent('lesson', { lang: state.selectedLanguage || '', uid });
+    } catch { /* noop */ }
+  }, [state.progress, state.selectedLanguage]);
+
+  // 2) Reyting ballini yangilash (leaderboard + turnir) — debounced, 3 soniya
+  const gameTimer = useRef(null);
+  useEffect(() => {
+    if (gameTimer.current) clearTimeout(gameTimer.current);
+    gameTimer.current = setTimeout(() => {
+      try {
+        reportScore(state, getServerUid());
+      } catch { /* noop */ }
+    }, 3000);
+    return () => {
+      if (gameTimer.current) clearTimeout(gameTimer.current);
+    };
+  }, [state.progress, state.coins, state.streak, state.selectedLanguage]);
 
   // ===== BULUTLI SINXRONLASH (Firebase) =====
   // Kirgan foydalanuvchida taraqqiyotni bulutga yozadi (debounced — 2.5s)

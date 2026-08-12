@@ -13,6 +13,7 @@ import {
   startPresence, setPresenceLocation, subscribePresence,
 } from '../utils/presence';
 import { subscribeVisits, refreshVisits } from '../utils/visits';
+import { fetchServerStats } from '../lib/server';
 import {
   FaShieldAlt as Shield, FaKey as KeyRound, FaUser as UserIcon, FaEye as Eye,
   FaEyeSlash as EyeOff, FaSignOutAlt as LogOut, FaArrowLeft as ArrowLeft,
@@ -27,6 +28,7 @@ import {
   FaTelegramPlane as TelegramPlane, FaExclamationTriangle as AlertIcon, FaGlobe as Globe,
   FaUserClock as UserClock, FaServer as ServerIcon, FaHistory as HistoryIcon,
   FaTachometerAlt as Gauge, FaBars as MenuIcon,
+  FaSms as SmsIcon, FaMobileAlt as MobileAlt,
 } from 'react-icons/fa';
 
 const LOG_KEY = 'lingohub_admin_log';
@@ -659,6 +661,268 @@ function TelegramTab() {
           skriptni ishga tushiring. Botga <b className="text-[#38bdf8]">/start</b> yuborish orqali chat ID avtomatik eslab qolinadi.
         </p>
       </div>
+    </div>
+  );
+}
+
+// ================= SMS ESLATMA (Eskiz.uz — dars o'tkazib yuborilganda) =================
+function SmsTab() {
+  const [phone, setPhone] = useState('');
+  const [message, setMessage] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState('');
+  const [health, setHealth] = useState(null);
+
+  // Eskiz sozlanganmi? — /api/health dan bilamiz (har 30s yangilanadi)
+  useEffect(() => {
+    const load = () => {
+      fetch('/api/health')
+        .then((r) => r.json())
+        .then((d) => setHealth(d?.services || null))
+        .catch(() => setHealth(null));
+    };
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, []);
+
+  const send = async () => {
+    setBusy(true);
+    setMsg('');
+    try {
+      const res = await fetch('/api/sms/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone,
+          message: message.trim() || "Assalomu alaykum! 👋 Lingohub'da dars qilmadingiz. Bugun kamida 1 ta dars bajaring! 🔥 Sayt: lingohub.uz",
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      setMsg(
+        data?.ok
+          ? '✅ SMS yuborildi! Telefoningizni tekshiring.'
+          : `❌ ${data?.error || 'Xato yuz berdi'}`
+      );
+    } catch {
+      setMsg('❌ Serverga ulanishmadi');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const smsOn = health?.sms === true;
+
+  return (
+    <div className="space-y-4">
+      {/* Status card */}
+      <div className="rounded-xl bg-gradient-to-br from-[#34d399]/15 to-[#10b981]/[0.05] border border-[#34d399]/30 p-4 sm:p-5 relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-[#34d399]/10 blur-2xl pointer-events-none" />
+        <div className="flex flex-wrap items-center gap-3 relative">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#34d399] to-[#10b981] flex items-center justify-center shadow-lg shadow-[#34d399]/30 shrink-0">
+            <SmsIcon className="w-5 h-5 text-white" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+              SMS eslatma (Eskiz.uz)
+              {smsOn ? (
+                <span className="badge badge-success badge-xs gap-1 border-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" /> Faol
+                </span>
+              ) : (
+                <span className="badge badge-error badge-xs gap-1 border-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400" /> Sozlanmagan
+                </span>
+              )}
+            </h3>
+            <p className="text-[11px] text-white/50 mt-0.5">
+              Foydalanuvchi 24 soat dars qilmasa — saytda raqam so'raladi va shu raqamga SMS boradi
+            </p>
+          </div>
+        </div>
+
+        {!smsOn && (
+          <div className="rounded-lg bg-black/25 border border-white/10 px-3 py-2.5 mt-4 relative">
+            <p className="text-[11px] text-white/60 leading-relaxed">
+              ⚠️ <b className="text-white">Eskiz.uz sozlanmagan.</b> Vercel → Settings → Environment Variables ga qo'shing:
+              <span className="font-mono text-[#4ade80]"> ESKIZ_EMAIL</span> (Eskiz login),
+              <span className="font-mono text-[#4ade80]"> ESKIZ_PASSWORD</span> (Eskiz parol).
+              Hisob: <b className="text-white/80">eskiz.uz</b> — bepul ro'yxatdan o'tish mumkin. README'ga qarang.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Test SMS formasi */}
+      <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4">
+        <h3 className="font-bold text-sm flex items-center gap-2 mb-2 text-white">
+          <MobileAlt className="w-4 h-4 text-[#34d399]" /> SMS yuborish (test)
+        </h3>
+        <p className="text-[11px] text-white/40 mb-3 leading-relaxed">
+          Istalgan raqamga eslatma SMS yuboring — masalan o'z raqamingizga test qiling.
+          Har raqamga kuniga 3 ta, har qurilmadan 10 ta SMS limiti bor (spam himoyasi).
+        </p>
+        <div className="space-y-2.5">
+          <div className="relative">
+            <MobileAlt className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+998 90 123 45 67"
+              className="input input-bordered input-sm w-full pl-9 bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 focus:border-[#34d399] transition-colors"
+            />
+          </div>
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Xabar matni (bo'sh qoldirsangiz — standart eslatma yuboriladi)"
+            rows={3}
+            className="textarea textarea-bordered textarea-sm w-full bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 focus:border-[#34d399] transition-colors resize-none"
+          />
+          <button
+            onClick={send}
+            disabled={busy || !phone.trim()}
+            className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#34d399] to-[#10b981] text-white hover:brightness-110 disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SmsIcon className="w-3.5 h-3.5" />}
+            {busy ? 'Yuborilmoqda...' : 'SMS yuborish'}
+          </button>
+        </div>
+        {msg && <div className="text-xs font-medium mt-2 animate-[fadeIn_0.3s_ease-out]">{msg}</div>}
+      </div>
+    </div>
+  );
+}
+
+// ================= SERVER STATISTIKA TAB (o'yinlashtirish — Redis) =================
+function GamificationTab({ session }) {
+  const [stats, setStats] = useState(null);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    const res = await fetchServerStats(session?.token || '');
+    if (res?.ok) {
+      setStats(res);
+      setError('');
+    } else if (res?.ok === false) {
+      setError(res.error || "Server statistika o'qib bo'lmadi");
+    }
+    setLoading(false);
+  }, [session]);
+
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 30000);
+    return () => clearInterval(t);
+  }, [load]);
+
+  const cards = stats ? [
+    { label: 'Bugungi darslar', value: stats.lessonsToday, icon: '📚', color: '#3b82f6' },
+    { label: 'Kechagi darslar', value: stats.lessonsYesterday, icon: '📖', color: '#60a5fa' },
+    { label: 'Bugungi tashriflar', value: stats.visitsToday, icon: '👥', color: '#34d399' },
+    { label: 'Jami foydalanuvchilar', value: stats.users, icon: '🧑‍🎓', color: '#fbbf24' },
+  ] : [];
+
+  return (
+    <div className="space-y-4">
+      {/* Status card */}
+      <div className="rounded-xl bg-gradient-to-br from-[#a78bfa]/15 to-[#7c3aed]/[0.05] border border-[#a78bfa]/30 p-4 sm:p-5 relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-[#a78bfa]/10 blur-2xl pointer-events-none" />
+        <div className="flex flex-wrap items-center gap-3 relative">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#a78bfa] to-[#7c3aed] flex items-center justify-center shadow-lg shadow-[#a78bfa]/30 shrink-0">
+            <Gauge className="w-5 h-5 text-white" />
+          </div>
+          <div className="min-w-0">
+            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+              Server statistika (o'yinlashtirish)
+              {stats?.mode === 'redis' ? (
+                <span className="badge badge-success badge-xs gap-1 border-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" /> Redis — jonli
+                </span>
+              ) : stats ? (
+                <span className="badge badge-warning badge-xs gap-1 border-0">Demo rejim</span>
+              ) : (
+                <span className="badge badge-ghost badge-xs border-0">Yuklanmoqda...</span>
+              )}
+            </h3>
+            <p className="text-[11px] text-white/50 mt-0.5">
+              Darslar, tashriflar va foydalanuvchilar — serverda to'planadi (Redislarda)
+            </p>
+          </div>
+        </div>
+
+        {error && (
+          <div className="rounded-lg bg-black/25 border border-white/10 px-3 py-2.5 mt-4 relative">
+            <p className="text-[11px] text-white/60 leading-relaxed">⚠️ {error}</p>
+          </div>
+        )}
+      </div>
+
+      {/* Asosiy ko'rsatkichlar */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {cards.map((c) => (
+          <div key={c.label} className="rounded-xl bg-white/[0.02] border border-white/10 p-4 relative overflow-hidden group hover:border-white/20 transition-colors">
+            <div className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-[0.07] group-hover:opacity-15 transition-opacity" style={{ background: c.color }} />
+            <span className="text-xl">{c.icon}</span>
+            <p className="text-2xl font-extrabold text-white tabular-nums mt-1" style={{ color: c.color }}>
+              {loading ? '...' : Number(c.value || 0).toLocaleString('uz-UZ')}
+            </p>
+            <p className="text-[10px] text-white/40 mt-0.5">{c.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Ommabop tillar + faol soatlar */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {/* Tillar */}
+        <div className="rounded-xl border border-white/10 overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2">
+            <Globe className="w-3.5 h-3.5 text-[#34d399]" />
+            <h4 className="text-xs font-bold text-white">Bugun ommabop tillar</h4>
+          </div>
+          {!stats || stats.topLangs?.length === 0 ? (
+            <p className="text-sm text-white/30 text-center py-6">Hali ma'lumot yo'q</p>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {stats.topLangs.map((l, i) => (
+                <div key={i} className="flex items-center gap-3 px-4 py-2.5 text-xs">
+                  <span className="font-bold text-white/40 tabular-nums w-5">{i + 1}</span>
+                  <span className="flex-1 font-semibold text-white/80">{l.lang}</span>
+                  <span className="font-extrabold text-[#34d399] tabular-nums">{l.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Soatlar */}
+        <div className="rounded-xl border border-white/10 overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-[#a78bfa]" />
+            <h4 className="text-xs font-bold text-white">Eng faol soatlar (bugun)</h4>
+          </div>
+          {!stats || stats.topHours?.length === 0 ? (
+            <p className="text-sm text-white/30 text-center py-6">Hali ma'lumot yo'q</p>
+          ) : (
+            <div className="divide-y divide-white/5">
+              {stats.topHours.map((h, i) => (
+                <div key={i} className="flex items-center gap-3 px-4 py-2.5 text-xs">
+                  <span className="font-bold text-white/40 tabular-nums w-5">{i + 1}</span>
+                  <span className="flex-1 font-semibold text-white/80">{h.hour}:00</span>
+                  <span className="font-extrabold text-[#a78bfa] tabular-nums">{h.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <p className="text-[11px] text-white/35 leading-relaxed">
+        💡 Ma'lumotlar serverda to'planadi: har bir dars tugaganda, saytga tashrif
+        kelganda va til tanlanganda. Redis sozlanmagan bo'lsa — demo rejim (bitta instansiya).
+      </p>
     </div>
   );
 }
@@ -1566,6 +1830,8 @@ function Dashboard({ session, onLogout }) {
     { id: 'tanga', label: t('admin.tab.coins'), icon: Gift },
     { id: 'matnlar', label: t('admin.tab.texts'), icon: Type },
     { id: 'telegram', label: t('admin.tab.telegram'), icon: PaperPlane },
+    { id: 'sms', label: 'SMS eslatma', icon: SmsIcon },
+    { id: 'statistika', label: 'Server statistika', icon: Gauge },
     { id: 'aktivlik', label: t('admin.activityTitle'), icon: UserClock },
     { id: 'seo', label: t('admin.nav.seo'), icon: Search },
   ];
@@ -1770,6 +2036,8 @@ function Dashboard({ session, onLogout }) {
                     { id: 'hisoblar', icon: Users, label: t('admin.tab.accounts'), desc: 'Admin qo\'shish', color: '#818cf8' },
                     { id: 'tanga', icon: Gift, label: t('admin.tab.coins'), desc: 'Tanga berish', color: '#fbbf24' },
                     { id: 'telegram', icon: PaperPlane, label: t('admin.tab.telegram'), desc: 'Bot holati', color: '#38bdf8' },
+                    { id: 'sms', icon: SmsIcon, label: 'SMS eslatma', desc: 'Eskiz.uz', color: '#34d399' },
+                    { id: 'statistika', icon: Gauge, label: 'Server statistika', desc: 'Darslar · tashriflar', color: '#a78bfa' },
                     { id: 'aktivlik', icon: UserClock, label: t('admin.activityTitle'), desc: 'Jonli kuzatuv', color: '#34d399' },
                   ].map((a) => {
                     const Icon = a.icon;
@@ -1819,6 +2087,16 @@ function Dashboard({ session, onLogout }) {
             {tab === 'telegram' && (
               <div className="admin-pro-card p-4 md:p-5">
                 <TelegramTab />
+              </div>
+            )}
+            {tab === 'sms' && (
+              <div className="space-y-4">
+                <SmsTab />
+              </div>
+            )}
+            {tab === 'statistika' && (
+              <div className="space-y-4">
+                <GamificationTab session={session} />
               </div>
             )}
             {tab === 'aktivlik' && <ActivitySection session={session} presenceAdmin={presence.admin} />}

@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import AITutor from './components/AITutor';
 import AchievementsPanel from './components/AchievementsPanel';
 import DailyChallenge from './components/DailyChallenge';
+import DailyBonus from './components/DailyBonus';
 import StatsDashboard from './components/StatsDashboard';
 import WordOfTheDay from './components/WordOfTheDay';
 import MistakesReview from './components/MistakesReview';
@@ -22,6 +23,7 @@ import SubscriptionGate from './components/SubscriptionGate';
 import Leaderboard from './components/Leaderboard';
 import Flashcards from './components/Flashcards';
 import WeeklyReport from './components/WeeklyReport';
+import TournamentPage from './pages/TournamentPage';
 import PlacementTest from './pages/PlacementTest';
 import GrammarPage from './pages/GrammarPage';
 import DictionaryPage from './pages/DictionaryPage';
@@ -31,6 +33,7 @@ import CertificatesPage from './pages/CertificatesPage';
 import { hasGatePassed } from './lib/gate';
 import { registerServiceWorker, maybeShowDailyReminder } from './lib/notifications';
 import { claimInviteBonus, syncInviteToCloud } from './lib/referral';
+import { sendStatEvent, getServerUid } from './lib/server';
 import {
   FaCommentDots as MessageCircle, FaTimes as X, FaMagic as Sparkles,
   FaColumns as PanelRightOpen, FaBars as MenuIcon,
@@ -71,7 +74,11 @@ function AppContent() {
     startVisitsTracking();
     // PWA service worker ro'yxatdan o'tkazish (offline + push)
     registerServiceWorker();
+    // Serverga tashrifni qayd qilish (o'yinlashtirish).
+    // Reyting ballini AppContext o'zi yuboradi (debounced — state o'zgarganda).
+    sendStatEvent('visit', { uid: getServerUid() });
     return () => stopPresence();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Kunlik eslatma: bugun dars qilinmagan bo'lsa — streak ogohlantirishi
@@ -134,6 +141,7 @@ function AppContent() {
 
   // Yangi route'lar
   const showLeaderboard = hash.startsWith('#/leaderboard');
+  const showTournament = hash.startsWith('#/tournament');
   const showFlashcards = hash.startsWith('#/flashcards');
   const showReport = hash.startsWith('#/report');
   const showPlacement = hash.startsWith('#/placement');
@@ -144,7 +152,7 @@ function AppContent() {
   const showCertificates = hash.startsWith('#/certificates');
 
   // Barcha to'liq sahifa route'lari (sidebar va AI tutor yashiriladi)
-  const isFullPageRoute = showPortfolio || showShop || showLeaderboard || showFlashcards ||
+  const isFullPageRoute = showPortfolio || showShop || showLeaderboard || showTournament || showFlashcards ||
     showReport || showPlacement || showGrammar || showDictionary || showMissions || showReferral || showCertificates;
 
   const goHome = () => {
@@ -179,6 +187,7 @@ function AppContent() {
           {showShop && <ShopPage />}
           {showPortfolio && <PortfolioPage />}
           {showLeaderboard && <Leaderboard onBack={goHome} />}
+          {showTournament && <TournamentPage onBack={goHome} />}
           {showFlashcards && <Flashcards onBack={goHome} />}
           {showReport && <WeeklyReport onBack={goHome} />}
           {showPlacement && <PlacementTest onBack={goHome} />}
@@ -223,6 +232,7 @@ function AppContent() {
               {showDashboard ? (
                 <>
                   {/* Dashboard sidebar widgets */}
+                  <DailyBonus />
                   <DailyChallenge />
                   <WordOfTheDay />
                   <StatsDashboard />
@@ -233,6 +243,7 @@ function AppContent() {
               ) : (
                 <>
                   {/* Home sidebar widgets */}
+                  <DailyBonus />
                   <WordOfTheDay />
                   <DailyChallenge />
                   <StatsDashboard />

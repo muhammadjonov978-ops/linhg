@@ -1,16 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { SMS_API_KEY, SMS_BACKEND_URL } from '../config';
-import { FaBell as Bell, FaPhone as Phone, FaTimes as X, FaSpinner as Loader2, FaCheckCircle as CheckCircle, FaExclamationTriangle as AlertTriangle } from 'react-icons/fa';
+import { FaBell as Bell, FaPhone as Phone, FaTimes as X, FaSpinner as Loader2, FaCheckCircle as CheckCircle, FaExclamationTriangle as AlertTriangle, FaPaperPlane as PaperPlane } from 'react-icons/fa';
 
 const SMS_REMINDER_KEY = 'lingohub_sms_reminder';
 const LAST_SENT_KEY = 'lingohub_sms_last_sent';
+const PHONE_MEMORY_KEY = 'lingohub_sms_phone';
 
-/**
- * SMSReminder — if the user hasn't studied for more than 24h (missed a day),
- * ask for their phone number and send a reminder SMS (via Eskiz API through a backend).
- * Note: SMS cannot be sent directly from the browser — a small backend is required.
- */
+// Server-side SMS: /api/sms/send → Eskiz.uz (ESKIZ_EMAIL/ESKIZ_PASSWORD Vercel'da).
+// Kalit brauzerga chiqmaydi — hammasi serverda, xavfsiz.
+function buildMessage() {
+  return (
+    "Assalomu alaykum! 👋 Lingohub'da bugun dars qilmadingiz. " +
+    "Til o'rganishni davom ettiring — bugun kamida 1 ta dars bajaring! 🔥 " +
+    "Sayt: lingohub.uz"
+  );
+}
+
 export default function SMSReminder() {
   const { state } = useApp();
   const [open, setOpen] = useState(false);
@@ -22,6 +27,14 @@ export default function SMSReminder() {
   const lastActive = state.lastActive || 0;
   const hoursSinceActive = lastActive ? (Date.now() - lastActive) / (1000 * 60 * 60) : 0;
   const missedDay = hoursSinceActive > 24;
+
+  // Foydalanuvchi ilgari kiritgan raqamni eslab qolamiz (qayta kiritish shart emas)
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(PHONE_MEMORY_KEY);
+      if (saved) setPhone(saved);
+    } catch { /* noop */ }
+  }, []);
 
   // Only show if user missed a day and hasn't been asked today
   useEffect(() => {
@@ -40,7 +53,7 @@ export default function SMSReminder() {
   const handleSend = async () => {
     const cleanPhone = phone.replace(/[^\d+]/g, '');
     if (cleanPhone.length < 9) {
-      setError("Telefon raqamni to'g'ri kiriting (masalan: +998901234567)");
+      setError("Telefon raqamni to'g'ri kiriting (masalan: +998 90 123 45 67)");
       return;
     }
 
@@ -48,53 +61,32 @@ export default function SMSReminder() {
     setError('');
 
     try {
-      // 1) Try the backend endpoint if configured (recommended — keeps API key secret)
-      if (SMS_BACKEND_URL) {
-        const res = await fetch(SMS_BACKEND_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phone: cleanPhone, type: 'missed-day' }),
-        });
-        if (!res.ok) throw new Error('Backend xatosi');
-      } else if (SMS_API_KEY && typeof window !== 'undefined') {
-        // 2) Fallback: direct Eskiz API call (not recommended for production — key is exposed)
-        const tokenRes = await fetch('https://notify.eskiz.uz/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'demo@eskiz.uz', password: SMS_API_KEY }),
-        });
-        const tokenData = await tokenRes.json();
-        const token = tokenData?.data?.token;
-        if (!token) throw new Error('Eskiz token olinmadi');
+      const res = await fetch('/api/sms/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: cleanPhone, message: buildMessage() }),
+      });
+      const data = await res.json().catch(() => null);
 
-        const message = "Assalomu alaykum! Lingohub'da bugun dars qilmadingiz. Til o'rganishni davom ettiring! 🔥";
-        await fetch('https://notify.eskiz.uz/api/message/sms/send', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            mobile_phone: cleanPhone,
-            message,
-            from: '4546',
-          }),
-        });
-      } else {
-        // 3) No backend / API key — simulate and show guidance
-        await new Promise(r => setTimeout(r, 800));
+      if (!data?.ok) {
+        throw new Error(
+          data?.code === 'not_configured'
+            ? 'SMS hali sozlanmagan — administratorga murojaat qiling'
+            : (data?.error || 'SMS jo\'natilmadi')
+        );
       }
 
-      // Mark as asked today
+      // Raqamni eslab qolamiz + bugun so'ralganini belgilaymiz
       try {
+        localStorage.setItem(PHONE_MEMORY_KEY, cleanPhone);
         localStorage.setItem(SMS_REMINDER_KEY, new Date().toDateString());
         localStorage.setItem(LAST_SENT_KEY, String(Date.now()));
       } catch { /* noop */ }
 
       setSent(true);
-      setTimeout(() => setOpen(false), 2500);
+      setTimeout(() => setOpen(false), 3500);
     } catch (e) {
-      setError("SMS jo'natilmadi: " + (e?.message || 'xato'));
+      setError(e?.message || "SMS jo'natilmadi. Qayta urinib ko'ring.");
     } finally {
       setSending(false);
     }
@@ -149,7 +141,7 @@ export default function SMSReminder() {
                   disabled={sending || !phone.trim()}
                   className="btn btn-primary gap-1"
                 >
-                  {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+                  {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <PaperPlane className="w-4 h-4" />}
                   Yuborish
                 </button>
               </div>
@@ -160,11 +152,9 @@ export default function SMSReminder() {
                 </p>
               )}
 
-              {!SMS_BACKEND_URL && !SMS_API_KEY && (
-                <p className="text-[10px] opacity-40 mt-2">
-                  * Haqiqiy SMS uchun Eskiz API kaliti va kichik backend kerak (config.js ga qarang)
-                </p>
-              )}
+              <p className="text-[10px] opacity-40 mt-2">
+                * SMS Eskiz.uz orqali yuboriladi (serverda, xavfsiz)
+              </p>
             </>
           )}
         </div>

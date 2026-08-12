@@ -9,7 +9,7 @@ import {
   FaBars as MenuIcon, FaTimes as X, FaFire as Flame, FaBolt as Bolt,
   FaBell as Bell, FaGift as Gift, FaTrophy as Trophy, FaLayerGroup as Layers,
   FaChartBar as ChartBar, FaBullseye as Target, FaBookOpen as BookOpen,
-  FaBook as Book, FaTasks as Tasks, FaMedal as Medal,
+  FaBook as Book, FaTasks as Tasks, FaMedal as Medal, FaCrown as Crown,
 } from 'react-icons/fa';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal, { USER_EVENT } from './GoogleAuthModal';
@@ -114,6 +114,12 @@ export default function Navbar({ onToggleTutor }) {
       icon: <Trophy className="w-4 h-4 text-amber-400" />,
     },
     {
+      key: 'tournament',
+      label: t('nav.tournament'),
+      href: '#/tournament',
+      icon: <Crown className="w-4 h-4 text-violet-400" />,
+    },
+    {
       key: 'flashcards',
       label: t('nav.flashcards'),
       href: '#/flashcards',
@@ -190,9 +196,9 @@ export default function Navbar({ onToggleTutor }) {
         </a>
       </div>
 
-      <div className="navbar-center hidden lg:flex gap-2">
+      <div className="navbar-center hidden xl:flex gap-2">
         {currentLang && (
-          <div className="badge badge-lg gap-2 p-3 border border-primary/25 bg-primary/10 gold-glow">
+          <div className="badge badge-lg gap-2 p-3 border border-primary/25 bg-primary/10 gold-glow hidden 2xl:flex">
             <Flag lang={currentLang} size={22} />
             <span className="font-medium">{currentLang.name}</span>
           </div>
@@ -291,7 +297,7 @@ export default function Navbar({ onToggleTutor }) {
                 <User className="w-4 h-4 text-primary" />
               )}
             </span>
-            <span className="hidden sm:inline text-xs font-medium">{savedUser.givenName || savedUser.name}</span>
+            <span className="hidden lg:inline text-xs font-medium">{savedUser.givenName || savedUser.name}</span>
           </button>
         ) : (
           <button
@@ -300,7 +306,7 @@ export default function Navbar({ onToggleTutor }) {
             data-tip={t('nav.googleSignIn')}
           >
             <LogIn className="w-4 h-4 text-primary" />
-            <span className="hidden sm:inline text-xs">{t('nav.signIn')}</span>
+            <span className="hidden lg:inline text-xs">{t('nav.signIn')}</span>
           </button>
         )}
 
@@ -311,7 +317,7 @@ export default function Navbar({ onToggleTutor }) {
           data-tip={t('nav.adminPanel')}
         >
           <Shield className="w-4 h-4 text-secondary" />
-          <span className="hidden sm:inline text-xs">{t('nav.admin')}</span>
+          <span className="hidden lg:inline text-xs">{t('nav.admin')}</span>
         </a>
 
         {/* Portfolio Button */}
@@ -321,7 +327,7 @@ export default function Navbar({ onToggleTutor }) {
           data-tip={t('nav.portfolio')}
         >
           <Briefcase className="w-4 h-4 text-primary" />
-          <span className="hidden sm:inline text-xs">{t('nav.portfolio')}</span>
+          <span className="hidden lg:inline text-xs">{t('nav.portfolio')}</span>
         </a>
 
         {/* Magazin Button */}
@@ -331,37 +337,7 @@ export default function Navbar({ onToggleTutor }) {
           data-tip={t('nav.heroShop')}
         >
           <Store className="w-4 h-4 text-warning" />
-          <span className="hidden sm:inline text-xs">{t('nav.shop')}</span>
-        </a>
-
-        {/* Reyting Button */}
-        <a
-          href="#/leaderboard"
-          className="btn btn-ghost btn-sm gap-1.5 tooltip hidden md:inline-flex"
-          data-tip={t('nav.leaderboard')}
-        >
-          <Trophy className="w-4 h-4 text-amber-400" />
-          <span className="hidden sm:inline text-xs">{t('nav.leaderboard')}</span>
-        </a>
-
-        {/* Flashcard Button */}
-        <a
-          href="#/flashcards"
-          className="btn btn-ghost btn-sm gap-1.5 tooltip hidden md:inline-flex"
-          data-tip={t('nav.flashcards')}
-        >
-          <Layers className="w-4 h-4 text-violet-400" />
-          <span className="hidden sm:inline text-xs">{t('nav.flashcards')}</span>
-        </a>
-
-        {/* Haftalik hisobot Button */}
-        <a
-          href="#/report"
-          className="btn btn-ghost btn-sm gap-1.5 tooltip hidden md:inline-flex"
-          data-tip={t('nav.report')}
-        >
-          <ChartBar className="w-4 h-4 text-emerald-400" />
-          <span className="hidden sm:inline text-xs">{t('nav.report')}</span>
+          <span className="hidden lg:inline text-xs">{t('nav.shop')}</span>
         </a>
 
         {/* Yangi bo'limlar dropdown (Test, Grammatika, Lug'at, Missiyalar, Taklif) */}
@@ -380,6 +356,26 @@ export default function Navbar({ onToggleTutor }) {
             className="dropdown-content z-[60] menu p-2 shadow-xl bg-base-100 rounded-box border border-base-300 w-64 mt-2"
           >
             <li className="menu-title text-[10px] opacity-50">{t('nav.moreSections')}</li>
+            <li>
+              <a href="#/leaderboard" className="gap-2">
+                <Trophy className="w-4 h-4 text-amber-400" /> {t('nav.leaderboard')}
+              </a>
+            </li>
+            <li>
+              <a href="#/tournament" className="gap-2">
+                <Crown className="w-4 h-4 text-violet-400" /> {t('nav.tournament')}
+              </a>
+            </li>
+            <li>
+              <a href="#/flashcards" className="gap-2">
+                <Layers className="w-4 h-4 text-violet-400" /> {t('nav.flashcards')}
+              </a>
+            </li>
+            <li>
+              <a href="#/report" className="gap-2">
+                <ChartBar className="w-4 h-4 text-emerald-400" /> {t('nav.report')}
+              </a>
+            </li>
             <li>
               <a href="#/placement" className="gap-2">
                 <Target className="w-4 h-4 text-primary" /> {t('nav.placement')}
