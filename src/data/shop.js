@@ -25,7 +25,7 @@ export const RARITY_META = {
 const hats = [
   { id: 'hat_none', name: 'Bosh kiyimsiz', style: 'none', price: 0, rarity: 'oddiy', emoji: '🙂', color: '#64748b', accent: '#475569' },
   { id: 'hat_cap', name: 'Kepka', style: 'cap', price: 150, rarity: 'oddiy', emoji: '🧢', color: '#ef4444', accent: '#dc2626' },
-  { id: 'hat_beanie', name: 'Shapka', style: 'beanie', price: 120, rarity: 'oddiy', emoji: '🧶', color: '#3b82f6', accent: '#facc15' },
+  { id: 'hat_beanie', name: 'Shapka', style: 'beanie', price: 120, rarity: 'oddiy', emoji: '🧶', color: '#8b5cf6', accent: '#facc15' },
   { id: 'hat_flower', name: 'Gul toji', style: 'flower', price: 180, rarity: 'oddiy', emoji: '🌸', color: '#ec4899', accent: '#fde047' },
   { id: 'hat_cowboy', name: "Kovboy shlyapasi", style: 'cowboy', price: 400, rarity: 'nodir', emoji: '🤠', color: '#92400e', accent: '#d97706' },
   { id: 'hat_grad', name: 'Bitiruv shlyapasi', style: 'grad', price: 500, rarity: 'nodir', emoji: '🎓', color: '#1e293b', accent: '#facc15' },
@@ -67,8 +67,8 @@ const accessories = [
 
 // ===================== FONLAR (SPACE SHOP — BG) =====================
 const backgrounds = [
-  { id: 'bg_none', name: "Fon yo'q", style: 'none', price: 0, rarity: 'oddiy', emoji: '🌫️', color: '#0b1026', accent: '#3b82f6', shop: 'space' },
-  { id: 'bg_night', name: 'BG (Night)', style: 'night', price: 29, rarity: 'oddiy', emoji: '🌃', color: '#0b1026', accent: '#3b82f6', shop: 'space' },
+  { id: 'bg_none', name: "Fon yo'q", style: 'none', price: 0, rarity: 'oddiy', emoji: '🌫️', color: '#0b1026', accent: '#8b5cf6', shop: 'space' },
+  { id: 'bg_night', name: 'BG (Night)', style: 'night', price: 29, rarity: 'oddiy', emoji: '🌃', color: '#0b1026', accent: '#8b5cf6', shop: 'space' },
   { id: 'bg_mars', name: 'BG (Mars)', style: 'mars', price: 39, rarity: 'nodir', emoji: '🔴', color: '#7c2d12', accent: '#f97316', shop: 'space' },
   { id: 'bg_galaxy', name: 'BG (Galaxy)', style: 'galaxy', price: 49, rarity: 'nodir', emoji: '🌌', color: '#1e1b4b', accent: '#a78bfa', shop: 'space' },
   { id: 'bg_sunset', name: 'BG (Sunset)', style: 'sunset', price: 59, rarity: 'afsonaviy', emoji: '🌇', color: '#431407', accent: '#f97316', shop: 'space' },

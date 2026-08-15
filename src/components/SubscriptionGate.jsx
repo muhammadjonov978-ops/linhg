@@ -68,7 +68,7 @@ export default function SubscriptionGate({ onPass }) {
         {/* Yuqori qator */}
         <div className="w-full max-w-lg flex items-center justify-between mb-5 px-1">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Lingohub" className="w-10 h-10 rounded-xl object-cover ring-1 ring-[#3b82f6]/50 gold-glow" />
+            <img src="/logo.png" alt="Lingohub" className="w-10 h-10 rounded-xl object-cover ring-1 ring-[#8b5cf6]/50 gold-glow" />
             <span className="font-bold font-display text-xl text-white">
               Lingo<span className="gold-text">hub</span>
             </span>
@@ -78,12 +78,12 @@ export default function SubscriptionGate({ onPass }) {
 
         {/* Asosiy karta */}
         <div className="w-full max-w-lg gate-card rounded-3xl p-6 sm:p-8 relative overflow-hidden animate-[fadeInUp_0.5s_ease-out]">
-          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-[#3b82f6]/10 blur-3xl pointer-events-none" />
+          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-[#8b5cf6]/10 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-20 -left-16 w-56 h-56 rounded-full bg-[#38bdf8]/10 blur-3xl pointer-events-none" />
 
           <div className="relative">
             <div className="text-center mb-7">
-              <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-[#3b82f6] to-[#2563eb] flex items-center justify-center shadow-lg shadow-[#3b82f6]/30 mb-4 animate-[bounceIn_0.6s_ease-out]">
+              <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-[#8b5cf6] to-[#d946ef] flex items-center justify-center shadow-lg shadow-[#8b5cf6]/30 mb-4 animate-[bounceIn_0.6s_ease-out]">
                 <LuGlobe className="w-8 h-8 text-white" />
               </div>
               <h1 className="text-2xl font-extrabold text-white font-display">
@@ -161,7 +161,7 @@ export default function SubscriptionGate({ onPass }) {
               </div>
               <div className="h-2 bg-white/10 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-[#3b82f6] to-[#4ade80] rounded-full transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] rounded-full transition-all duration-500"
                   style={{ width: `${(verifiedCount / GATE_CHANNELS.length) * 100}%` }}
                 />
               </div>
@@ -173,7 +173,7 @@ export default function SubscriptionGate({ onPass }) {
               disabled={!allDone}
               className={`btn w-full gap-2 border-0 text-base font-bold h-12 rounded-2xl transition-all duration-300 ${
                 allDone
-                  ? 'bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white hover:brightness-110 shadow-lg shadow-[#3b82f6]/30 scale-[1.02] hover:scale-[1.03]'
+                  ? 'bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] text-white hover:brightness-110 shadow-lg shadow-[#8b5cf6]/30 scale-[1.02] hover:scale-[1.03]'
                   : 'bg-white/10 text-white/35 cursor-not-allowed'
               }`}
             >
@@ -190,13 +190,13 @@ export default function SubscriptionGate({ onPass }) {
 
             {/* Admin imtiyozi */}
             {isAdmin && (
-              <div className="mt-4 flex items-center justify-between gap-2 rounded-2xl border border-[#3b82f6]/30 bg-[#3b82f6]/[0.07] px-4 py-3">
+              <div className="mt-4 flex items-center justify-between gap-2 rounded-2xl border border-[#8b5cf6]/30 bg-[#8b5cf6]/[0.07] px-4 py-3">
                 <span className="text-xs text-white/70 flex items-center gap-1.5">
-                  <LuCrown className="w-4 h-4 text-[#3b82f6]" /> {t('gate.adminNote')}
+                  <LuCrown className="w-4 h-4 text-[#8b5cf6]" /> {t('gate.adminNote')}
                 </span>
                 <button
                   onClick={handleAdminEnter}
-                  className="btn btn-xs gap-1 border-0 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white font-bold"
+                  className="btn btn-xs gap-1 border-0 bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] text-white font-bold"
                 >
                   <LuShieldCheck className="w-3 h-3" /> {t('gate.adminEnter')}
                 </button>
@@ -204,7 +204,7 @@ export default function SubscriptionGate({ onPass }) {
             )}
 
             <p className="text-center text-[10px] text-white/30 mt-5 flex items-center justify-center gap-1">
-              <LuSparkles className="w-3 h-3 text-[#3b82f6]" /> {t('gate.freeNote')}
+              <LuSparkles className="w-3 h-3 text-[#8b5cf6]" /> {t('gate.freeNote')}
             </p>
           </div>
         </div>

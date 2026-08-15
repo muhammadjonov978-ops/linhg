@@ -89,6 +89,16 @@ export default function HomePage() {
     dispatch({ type: 'SELECT_LANGUAGE', payload: langId });
   };
 
+  // AI ustozni darhol ochish: English tanlab, suhbatni boshlaymiz
+  const openAITutor = () => {
+    if (!state.selectedLanguage) {
+      dispatch({ type: 'SELECT_LANGUAGE', payload: 'english' });
+    }
+    if (!state.isTutorOpen) {
+      dispatch({ type: 'TOGGLE_TUTOR' });
+    }
+  };
+
   // Calculate total stats
   const totalCompletedLessons = Object.values(state.progress).filter(p => p.completed).length;
   const achievementsUnlocked = state.achievements?.filter(a => a.unlocked)?.length || 0;
@@ -146,12 +156,28 @@ export default function HomePage() {
               {heroText('heroSubtitle', t('home.heroSubtitle'))}
             </p>
 
+            {/* CTA tugmalari */}
+            <div className="flex flex-wrap items-center justify-center gap-3 mb-8 animate-[fadeInUp_0.8s_ease-out]">
+              <a
+                href="#languages"
+                className="btn btn-primary btn-lg rounded-full px-8 shadow-lg shadow-primary/30 hover:scale-105 hover:shadow-xl hover:shadow-primary/40 transition-all duration-300 gap-2"
+              >
+                🚀 {t('home.startLearning')}
+              </a>
+              <button
+                onClick={openAITutor}
+                className="btn btn-lg rounded-full px-8 border border-secondary/40 bg-gradient-to-r from-violet-500/15 to-fuchsia-500/15 backdrop-blur-sm text-base-content gap-2 hover:scale-105 hover:border-secondary/70 hover:shadow-lg hover:shadow-fuchsia-500/20 transition-all duration-300"
+              >
+                🤖 {t('home.tryTutor')}
+              </button>
+            </div>
+
             {/* Stats */}
             <div className="flex flex-wrap justify-center gap-3 mb-6">
               {[
-                { icon: Users, text: t('home.statsLearners'), color: '#3b82f6' },
-                { icon: Globe, text: t('home.statsLanguages', { n: languages.length }), color: '#3b82f6' },
-                { icon: Shield, text: t('home.statsLessons'), color: '#3b82f6' },
+                { icon: Users, text: t('home.statsLearners'), color: '#8b5cf6' },
+                { icon: Globe, text: t('home.statsLanguages', { n: languages.length }), color: '#8b5cf6' },
+                { icon: Shield, text: t('home.statsLessons'), color: '#8b5cf6' },
               ].map((s, i) => (
                 <div
                   key={i}
@@ -252,7 +278,7 @@ export default function HomePage() {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div id="languages" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 scroll-mt-24">
               {filteredLanguages.map((lang, index) => {
                 // Count completed lessons for this language
                 const langLessonKeys = Object.keys(state.progress).filter(k =>
@@ -314,6 +340,43 @@ export default function HomePage() {
           <div className="mt-8">
             <StypingAdBanner />
           </div>
+
+          {/* AI ustoz banneri — yangi vibrant promo */}
+          <div className="mt-8">
+            <div className="relative overflow-hidden rounded-3xl glass-panel-strong border border-secondary/30 gold-glow glow-hover">
+              {/* Gradient blobs */}
+              <div className="absolute -top-20 -right-16 w-64 h-64 rounded-full bg-fuchsia-500/20 blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-24 -left-16 w-72 h-72 rounded-full bg-violet-500/20 blur-3xl pointer-events-none" />
+              <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #fff 1px, transparent 0)', backgroundSize: '28px 28px' }} />
+
+              <div className="relative p-6 md:p-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+                {/* Robot ikonka */}
+                <div className="shrink-0 w-20 h-20 md:w-24 md:h-24 rounded-3xl bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center shadow-2xl shadow-fuchsia-500/40 animate-float">
+                  <span className="text-4xl md:text-5xl">🤖</span>
+                </div>
+
+                <div className="flex-1 text-center md:text-left">
+                  <h3 className="text-xl md:text-2xl font-extrabold font-display mb-2">
+                    <span className="gold-text">{t('home.aiBannerTitle')}</span>
+                  </h3>
+                  <p className="text-sm md:text-base opacity-70 max-w-2xl mb-4">
+                    {t('home.aiBannerDesc')}
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                    <button
+                      onClick={openAITutor}
+                      className="btn btn-primary rounded-full px-6 gap-2 shadow-lg shadow-primary/30 hover:scale-105 transition-all duration-300"
+                    >
+                      ✨ {t('home.aiTry')}
+                    </button>
+                    <span className="badge badge-ghost gap-1.5 px-4 py-3 border border-base-300/60 bg-base-200/40 text-xs">
+                      {t('home.aiTip')}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -332,8 +395,8 @@ export default function HomePage() {
                 className="card glass-panel glow-hover group"
               >
                 <div className="card-body items-center text-center p-6">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#3b82f6]/25 to-[#2563eb]/10 border border-[#3b82f6]/25 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
-                    <feature.icon className="w-7 h-7 text-[#93c5fd]" />
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#8b5cf6]/25 to-[#d946ef]/10 border border-[#8b5cf6]/25 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300">
+                    <feature.icon className="w-7 h-7 text-[#c4b5fd]" />
                   </div>
                   <h3 className="font-bold">{t(feature.titleKey)}</h3>
                   <p className="text-xs opacity-60">{t(feature.descKey)}</p>

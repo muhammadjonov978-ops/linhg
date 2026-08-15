@@ -34,9 +34,9 @@ function BgLayer({ item }) {
       ))}
       {item.style === 'night' && (
         <g>
-          <circle cx="158" cy="72" r="34" fill="#3b82f6" />
-          <circle cx="148" cy="62" r="9" fill="#93c5fd" opacity="0.5" />
-          <ellipse cx="158" cy="72" rx="52" ry="12" fill="none" stroke="#60a5fa" strokeWidth="4" opacity="0.8" transform="rotate(-18 158 72)" />
+          <circle cx="158" cy="72" r="34" fill="#8b5cf6" />
+          <circle cx="148" cy="62" r="9" fill="#c4b5fd" opacity="0.5" />
+          <ellipse cx="158" cy="72" rx="52" ry="12" fill="none" stroke="#c084fc" strokeWidth="4" opacity="0.8" transform="rotate(-18 158 72)" />
           <circle cx="120" cy="102" r="5" fill="#cbd5e1" opacity="0.6" />
           <circle cx="66" cy="118" r="3" fill="#cbd5e1" opacity="0.5" />
         </g>
@@ -145,7 +145,7 @@ function HatLayer({ item }) {
           <path d="M68 52 L74 24 L88 36 L100 16 L112 36 L126 24 L132 52 Z" fill={c} stroke={a} strokeWidth="2" />
           <rect x="68" y="52" width="64" height="7" rx="3" fill={a} />
           <circle cx="88" cy="42" r="3.5" fill="#ef4444" />
-          <circle cx="100" cy="30" r="3.5" fill="#3b82f6" />
+          <circle cx="100" cy="30" r="3.5" fill="#8b5cf6" />
           <circle cx="112" cy="42" r="3.5" fill="#22c55e" />
         </g>
       )}
@@ -322,7 +322,7 @@ function OutfitLayer({ item }) {
       details = (
         <g>
           <rect x="72" y="148" width="56" height="9" fill="#1c1917" />
-          <rect x="90" y="146" width="20" height="13" rx="2" fill="#3b82f6" />
+          <rect x="90" y="146" width="20" height="13" rx="2" fill="#8b5cf6" />
           <circle cx="100" cy="152" r="3" fill="#1c1917" />
           <circle cx="96" cy="152" r="3" fill="#1c1917" />
           <circle cx="104" cy="152" r="3" fill="#1c1917" />
@@ -344,7 +344,7 @@ function OutfitLayer({ item }) {
           <rect x="80" y="124" width="40" height="10" rx="4" fill={a} opacity="0.85" />
           <rect x="86" y="148" width="28" height="22" rx="4" fill="#cbd5e1" />
           <circle cx="94" cy="156" r="3" fill="#ef4444" />
-          <circle cx="106" cy="162" r="3" fill="#3b82f6" />
+          <circle cx="106" cy="162" r="3" fill="#8b5cf6" />
           <circle cx="100" cy="168" r="3" fill="#22c55e" />
         </g>
       );
@@ -355,10 +355,10 @@ function OutfitLayer({ item }) {
           <rect x="82" y="120" width="36" height="9" rx="4" fill={a} opacity="0.9" />
           <rect x="86" y="146" width="28" height="22" rx="4" fill="#cbd5e1" />
           <circle cx="94" cy="154" r="3" fill="#ef4444" />
-          <circle cx="100" cy="160" r="3" fill="#3b82f6" />
+          <circle cx="100" cy="160" r="3" fill="#8b5cf6" />
           <circle cx="106" cy="154" r="3" fill="#22c55e" />
           <rect x="72" y="168" width="56" height="7" rx="3" fill={a} />
-          <circle cx="100" cy="171.5" r="2.5" fill="#3b82f6" />
+          <circle cx="100" cy="171.5" r="2.5" fill="#8b5cf6" />
         </g>
       );
       break;

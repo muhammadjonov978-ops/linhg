@@ -11,19 +11,19 @@
   prefersdark: true;
   color-scheme: dark;
 
-  --color-base-100: oklch(0.17 0.028 258);
-  --color-base-200: oklch(0.21 0.032 258);
-  --color-base-300: oklch(0.27 0.04 258);
-  --color-base-content: oklch(0.95 0.012 220);
-  --color-primary: oklch(0.63 0.19 258);
-  --color-primary-content: oklch(0.98 0.005 220);
-  --color-secondary: oklch(0.73 0.14 245);
-  --color-secondary-content: oklch(0.2 0.04 258);
-  --color-accent: oklch(0.8 0.11 215);
-  --color-accent-content: oklch(0.22 0.04 258);
-  --color-neutral: oklch(0.3 0.05 260);
-  --color-neutral-content: oklch(0.95 0.012 220);
-  --color-info: oklch(0.74 0.11 232);
+  --color-base-100: oklch(0.16 0.03 293);
+  --color-base-200: oklch(0.2 0.035 293);
+  --color-base-300: oklch(0.26 0.045 293);
+  --color-base-content: oklch(0.96 0.015 300);
+  --color-primary: oklch(0.585 0.233 277);
+  --color-primary-content: oklch(0.99 0.005 300);
+  --color-secondary: oklch(0.655 0.254 327);
+  --color-secondary-content: oklch(0.99 0.005 300);
+  --color-accent: oklch(0.718 0.202 349);
+  --color-accent-content: oklch(0.3 0.05 349);
+  --color-neutral: oklch(0.3 0.06 290);
+  --color-neutral-content: oklch(0.96 0.015 300);
+  --color-info: oklch(0.66 0.18 300);
   --color-info-content: oklch(0.15 0.02 232);
   --color-success: oklch(0.76 0.15 152);
   --color-success-content: oklch(0.15 0.02 152);
@@ -66,10 +66,10 @@ body {
 /* Sahifa orqa foni — yumshoq ko'k-qora + ko'k aurora (mavzuga mos rang) */
 body {
   background:
-    radial-gradient(1100px 600px at 85% -10%, rgba(59, 130, 246, 0.1), transparent 55%),
-    radial-gradient(900px 520px at -12% 20%, rgba(96, 165, 250, 0.09), transparent 55%),
-    radial-gradient(800px 500px at 50% 115%, rgba(125, 211, 252, 0.07), transparent 55%),
-    var(--color-base-200, oklch(0.21 0.032 258));
+    radial-gradient(1100px 600px at 85% -10%, rgba(139, 92, 246, 0.14), transparent 55%),
+    radial-gradient(900px 520px at -12% 20%, rgba(217, 70, 239, 0.11), transparent 55%),
+    radial-gradient(800px 500px at 50% 115%, rgba(244, 114, 182, 0.09), transparent 55%),
+    var(--color-base-200, oklch(0.2 0.035 293));
   background-attachment: fixed;
 }
 
@@ -82,10 +82,10 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(38% 45% at 22% 28%, rgba(59, 130, 246, 0.16), transparent 60%),
-    radial-gradient(34% 42% at 78% 22%, rgba(96, 165, 250, 0.13), transparent 60%),
-    radial-gradient(40% 48% at 60% 82%, rgba(167, 139, 250, 0.12), transparent 62%),
-    radial-gradient(30% 36% at 92% 64%, rgba(56, 189, 248, 0.1), transparent 60%);
+    radial-gradient(38% 45% at 22% 28%, rgba(139, 92, 246, 0.2), transparent 60%),
+    radial-gradient(34% 42% at 78% 22%, rgba(217, 70, 239, 0.16), transparent 60%),
+    radial-gradient(40% 48% at 60% 82%, rgba(192, 132, 252, 0.14), transparent 62%),
+    radial-gradient(30% 36% at 92% 64%, rgba(244, 114, 182, 0.12), transparent 60%);
   filter: blur(36px);
   animation: aurora-drift 18s ease-in-out infinite alternate;
 }
@@ -124,7 +124,7 @@ html.animated-bg-off body::after {
 }
 
 ::selection {
-  background: rgba(59, 130, 246, 0.4);
+  background: rgba(139, 92, 246, 0.45);
   color: #fff;
 }
 
@@ -137,13 +137,13 @@ html.animated-bg-off body::after {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(59, 130, 246, 0.5), rgba(96, 165, 250, 0.25));
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.55), rgba(217, 70, 239, 0.3));
   border-radius: 99px;
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(59, 130, 246, 0.75), rgba(96, 165, 250, 0.4));
+  background: linear-gradient(180deg, rgba(139, 92, 246, 0.8), rgba(217, 70, 239, 0.45));
   background-clip: padding-box;
 }
 
@@ -160,10 +160,10 @@ html.animated-bg-off body::after {
   inset: -40% -30%;
   z-index: -2;
   background:
-    radial-gradient(38% 45% at 22% 28%, rgba(59, 130, 246, 0.18), transparent 60%),
-    radial-gradient(34% 42% at 78% 22%, rgba(96, 165, 250, 0.16), transparent 60%),
-    radial-gradient(40% 48% at 60% 82%, rgba(125, 211, 252, 0.14), transparent 62%),
-    radial-gradient(30% 36% at 92% 64%, rgba(56, 189, 248, 0.11), transparent 60%);
+    radial-gradient(38% 45% at 22% 28%, rgba(139, 92, 246, 0.22), transparent 60%),
+    radial-gradient(34% 42% at 78% 22%, rgba(217, 70, 239, 0.18), transparent 60%),
+    radial-gradient(40% 48% at 60% 82%, rgba(244, 114, 182, 0.16), transparent 62%),
+    radial-gradient(30% 36% at 92% 64%, rgba(192, 132, 252, 0.14), transparent 60%);
   filter: blur(30px);
   animation: aurora-drift 16s ease-in-out infinite alternate;
 }
@@ -213,8 +213,8 @@ html.animated-bg-off body::after {
   position: relative;
   border: 1px solid transparent;
   background:
-    linear-gradient(oklch(0.17 0.028 258), oklch(0.165 0.026 258)) padding-box,
-    linear-gradient(135deg, rgba(59, 130, 246, 0.6), rgba(59, 130, 246, 0.08) 40%, rgba(125, 211, 252, 0.35)) border-box;
+    linear-gradient(oklch(0.16 0.03 293), oklch(0.155 0.028 293)) padding-box,
+    linear-gradient(135deg, rgba(139, 92, 246, 0.65), rgba(217, 70, 239, 0.1) 40%, rgba(244, 114, 182, 0.4)) border-box;
 }
 
 /* Yumshoq oltin glow hover */
@@ -223,12 +223,12 @@ html.animated-bg-off body::after {
 }
 .glow-hover:hover {
   transform: translateY(-3px);
-  box-shadow: 0 14px 40px rgba(59, 130, 246, 0.16), 0 4px 18px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 14px 40px rgba(139, 92, 246, 0.2), 0 4px 18px rgba(0, 0, 0, 0.35);
 }
 
 /* Ko'k gradient matn */
 .gold-text {
-  background: linear-gradient(100deg, #93c5fd 0%, #3b82f6 35%, #dbeafe 55%, #1d4ed8 100%);
+  background: linear-gradient(100deg, #c4b5fd 0%, #8b5cf6 35%, #f0abfc 55%, #a21caf 100%);
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -261,16 +261,16 @@ h1, h2, h3 {
 
 /* Ko'k yorug'lik (glow) */
 .gold-glow {
-  box-shadow: 0 0 18px rgba(59, 130, 246, 0.28), 0 0 46px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 18px rgba(139, 92, 246, 0.32), 0 0 46px rgba(217, 70, 239, 0.12);
 }
 
 .gold-glow-strong {
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.4), 0 8px 32px rgba(59, 130, 246, 0.3);
+  box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.45), 0 8px 32px rgba(217, 70, 239, 0.32);
 }
 
 /* Modal Escape tugmasi bilan yopilishi uchun focus chiroyli */
 .modal-close-focus:focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid #8b5cf6;
   outline-offset: 2px;
 }
 
@@ -695,10 +695,10 @@ h1, h2, h3 {
   color: #e7e7ea;
   font-family: var(--font-sans);
   background:
-    radial-gradient(900px 500px at 92% -10%, rgba(59, 130, 246, 0.09), transparent 55%),
-    radial-gradient(700px 420px at -10% 30%, rgba(96, 165, 250, 0.07), transparent 55%),
-    radial-gradient(600px 380px at 50% 110%, rgba(125, 211, 252, 0.06), transparent 55%),
-    #0b1220;
+    radial-gradient(900px 500px at 92% -10%, rgba(139, 92, 246, 0.12), transparent 55%),
+    radial-gradient(700px 420px at -10% 30%, rgba(217, 70, 239, 0.09), transparent 55%),
+    radial-gradient(600px 380px at 50% 110%, rgba(244, 114, 182, 0.07), transparent 55%),
+    #0d0a16;
 }
 
 .admin-card {
@@ -883,10 +883,10 @@ h1, h2, h3 {
 
 .gate-bg {
   background:
-    radial-gradient(45% 50% at 18% 20%, rgba(59, 130, 246, 0.22), transparent 60%),
-    radial-gradient(40% 45% at 82% 25%, rgba(56, 189, 248, 0.18), transparent 60%),
-    radial-gradient(45% 55% at 55% 85%, rgba(125, 211, 252, 0.16), transparent 62%),
-    radial-gradient(35% 40% at 92% 70%, rgba(147, 197, 253, 0.12), transparent 60%);
+    radial-gradient(45% 50% at 18% 20%, rgba(139, 92, 246, 0.25), transparent 60%),
+    radial-gradient(40% 45% at 82% 25%, rgba(217, 70, 239, 0.2), transparent 60%),
+    radial-gradient(45% 55% at 55% 85%, rgba(244, 114, 182, 0.18), transparent 62%),
+    radial-gradient(35% 40% at 92% 70%, rgba(192, 132, 252, 0.15), transparent 60%);
   filter: blur(34px);
   animation: aurora-drift 18s ease-in-out infinite alternate;
 }
@@ -901,8 +901,8 @@ h1, h2, h3 {
 }
 
 .gate-star {
-  color: rgba(147, 197, 253, 0.9);
-  text-shadow: 0 0 14px rgba(59, 130, 246, 0.6);
+  color: rgba(240, 171, 252, 0.9);
+  text-shadow: 0 0 14px rgba(139, 92, 246, 0.65);
   animation: gate-twinkle 3.2s ease-in-out infinite;
 }
 
@@ -912,11 +912,11 @@ h1, h2, h3 {
 }
 
 .gate-card {
-  background: linear-gradient(180deg, rgba(24, 24, 30, 0.78), rgba(14, 14, 19, 0.82));
+  background: linear-gradient(180deg, rgba(28, 24, 38, 0.78), rgba(16, 14, 24, 0.82));
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(59, 130, 246, 0.15), 0 0 60px rgba(59, 130, 246, 0.09);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(139, 92, 246, 0.18), 0 0 60px rgba(217, 70, 239, 0.1);
 }
 
 /* ============================================================
@@ -934,10 +934,10 @@ h1, h2, h3 {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(38% 42% at 20% 25%, rgba(59, 130, 246, 0.16), transparent 60%),
-    radial-gradient(34% 40% at 80% 20%, rgba(96, 165, 250, 0.13), transparent 60%),
-    radial-gradient(40% 46% at 55% 85%, rgba(125, 211, 252, 0.14), transparent 62%),
-    radial-gradient(28% 34% at 90% 60%, rgba(56, 189, 248, 0.11), transparent 60%);
+    radial-gradient(38% 42% at 20% 25%, rgba(139, 92, 246, 0.2), transparent 60%),
+    radial-gradient(34% 40% at 80% 20%, rgba(217, 70, 239, 0.16), transparent 60%),
+    radial-gradient(40% 46% at 55% 85%, rgba(244, 114, 182, 0.17), transparent 62%),
+    radial-gradient(28% 34% at 90% 60%, rgba(192, 132, 252, 0.14), transparent 60%);
   filter: blur(56px);
   animation: aurora-drift 24s ease-in-out infinite alternate;
 }

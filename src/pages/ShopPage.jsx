@@ -176,7 +176,7 @@ export default function ShopPage() {
       {/* Sarlavha */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-400 to-blue-600 flex items-center justify-center text-2xl shadow-lg shadow-blue-500/25 gold-glow">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-fuchsia-600 flex items-center justify-center text-2xl shadow-lg shadow-fuchsia-500/25 gold-glow">
             <ShoppingBag className="w-6 h-6 text-amber-950" />
           </div>
           <div>
@@ -381,7 +381,7 @@ export default function ShopPage() {
                         <button
                           onClick={(e) => { e.stopPropagation(); buyItem(item); }}
                           disabled={!canAfford}
-                          className="text-xs font-bold text-[#2563eb] hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="text-xs font-bold text-[#d946ef] hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           {canAfford ? 'Sotib olish ›' : 'Yetarli emas'}
                         </button>

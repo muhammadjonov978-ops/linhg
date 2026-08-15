@@ -130,7 +130,7 @@ function LoginScreen({ onSuccess }) {
         </div>
 
         <div className="admin-pro-card p-6 md:p-8 shadow-2xl relative overflow-hidden">
-          <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-[#3b82f6]/[0.06] blur-2xl pointer-events-none" />
+          <div className="absolute -top-12 -right-12 w-40 h-40 rounded-full bg-[#8b5cf6]/[0.06] blur-2xl pointer-events-none" />
           <form onSubmit={handleSubmit} className="space-y-4 relative">
             <div>
               <label htmlFor="admin-login" className="label text-xs font-medium text-white/60">{t('admin.login')}</label>
@@ -142,7 +142,7 @@ function LoginScreen({ onSuccess }) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   placeholder={t('admin.loginPlaceholder')}
-                  className="input input-bordered w-full pl-10 bg-white/[0.03] border-white/10 focus:outline-none focus:border-[#3b82f6] transition-colors"
+                  className="input input-bordered w-full pl-10 bg-white/[0.03] border-white/10 focus:outline-none focus:border-[#8b5cf6] transition-colors"
                   autoComplete="username"
                   required
                 />
@@ -159,7 +159,7 @@ function LoginScreen({ onSuccess }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={t('admin.passwordPlaceholder')}
-                  className="input input-bordered w-full pl-10 pr-10 bg-white/[0.03] border-white/10 focus:outline-none focus:border-[#3b82f6] transition-colors"
+                  className="input input-bordered w-full pl-10 pr-10 bg-white/[0.03] border-white/10 focus:outline-none focus:border-[#8b5cf6] transition-colors"
                   autoComplete="current-password"
                   required
                 />
@@ -289,7 +289,7 @@ function AccountsTab({ config, onSave, session }) {
         <div className={`rounded-xl px-4 py-2.5 text-[11px] flex flex-wrap items-center gap-2 border ${
           storeMode === 'redis'
             ? 'bg-[#16a34a]/10 border-[#16a34a]/40 text-[#4ade80]'
-            : 'bg-[#2563eb]/10 border-[#2563eb]/40 text-[#7dd3fc]'
+            : 'bg-[#d946ef]/10 border-[#d946ef]/40 text-[#f5d0fe]'
         }`}>
           <ServerIcon className="w-3.5 h-3.5 shrink-0" />
           {storeMode === 'redis' ? t('admin.storeRedis') : t('admin.storeMemory')}
@@ -298,9 +298,9 @@ function AccountsTab({ config, onSave, session }) {
 
       {/* Add form — faqat egasi uchun */}
       {isOwner && (
-        <div className="rounded-xl bg-gradient-to-br from-[#3b82f6]/[0.08] to-transparent border border-white/10 p-4">
+        <div className="rounded-xl bg-gradient-to-br from-[#8b5cf6]/[0.08] to-transparent border border-white/10 p-4">
           <h3 className="font-bold text-sm flex items-center gap-2 mb-2 text-white">
-            <UserPlus className="w-4 h-4 text-[#3b82f6]" /> {t('admin.accountsTitle')}
+            <UserPlus className="w-4 h-4 text-[#8b5cf6]" /> {t('admin.accountsTitle')}
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <input
@@ -328,7 +328,7 @@ function AccountsTab({ config, onSave, session }) {
             <button
               onClick={addAccount}
               disabled={busy}
-              className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white disabled:opacity-60"
+              className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] text-white disabled:opacity-60"
             >
               {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserPlus className="w-3.5 h-3.5" />}
               {t('admin.addAccount')}
@@ -425,7 +425,7 @@ function LanguagesTab() {
     <div className="space-y-4">
       {/* Summary strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="rounded-xl bg-[#3b82f6]/10 border border-[#3b82f6]/25 p-4">
+        <div className="rounded-xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/25 p-4">
           <p className="text-2xl font-extrabold text-white tabular-nums">{languages.length}</p>
           <p className="text-[10px] text-white/40 mt-1">Jami tillar</p>
         </div>
@@ -433,7 +433,7 @@ function LanguagesTab() {
           <p className="text-2xl font-extrabold text-white tabular-nums">{totalCompleted}</p>
           <p className="text-[10px] text-white/40 mt-1">Bajarilgan darslar</p>
         </div>
-        <div className="rounded-xl bg-[#60a5fa]/10 border border-[#60a5fa]/25 p-4">
+        <div className="rounded-xl bg-[#c084fc]/10 border border-[#c084fc]/25 p-4">
           <p className="text-2xl font-extrabold text-white tabular-nums">{(activeLearners / 1000).toFixed(0)}K+</p>
           <p className="text-[10px] text-white/40 mt-1">O'quvchilar</p>
         </div>
@@ -448,7 +448,7 @@ function LanguagesTab() {
         {langStats.map(({ lang, completed }) => (
           <div
             key={lang.id}
-            className="rounded-xl border border-white/10 bg-white/[0.02] p-3 hover:border-[#3b82f6]/40 hover:bg-white/[0.04] transition-all duration-200"
+            className="rounded-xl border border-white/10 bg-white/[0.02] p-3 hover:border-[#8b5cf6]/40 hover:bg-white/[0.04] transition-all duration-200"
           >
             <div className="flex items-center gap-2">
               <Flag lang={lang} size={24} />
@@ -459,7 +459,7 @@ function LanguagesTab() {
             </div>
             <div className="mt-2 h-1 bg-white/[0.06] rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-[#3b82f6] to-[#2563eb] rounded-full transition-all duration-500"
+                className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(100, Math.round((completed / 100) * 100))}%` }}
               />
             </div>
@@ -502,12 +502,12 @@ function TextsTab({ config, onSave }) {
             value={texts[f.key] ?? ''}
             onChange={set(f.key)}
             placeholder={f.hint}
-            className="input input-bordered w-full bg-white/[0.03] border-white/10 focus:outline-none focus:border-[#3b82f6] transition-colors"
+            className="input input-bordered w-full bg-white/[0.03] border-white/10 focus:outline-none focus:border-[#8b5cf6] transition-colors"
           />
         </div>
       ))}
       <div className="flex items-center gap-3 pt-1">
-        <button onClick={save} className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white">
+        <button onClick={save} className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] text-white">
           <Save className="w-3.5 h-3.5" /> Saqlash
         </button>
         {msg && <span className="text-xs text-success font-medium">{msg}</span>}
@@ -819,8 +819,8 @@ function GamificationTab({ session }) {
   }, [load]);
 
   const cards = stats ? [
-    { label: 'Bugungi darslar', value: stats.lessonsToday, icon: '📚', color: '#3b82f6' },
-    { label: 'Kechagi darslar', value: stats.lessonsYesterday, icon: '📖', color: '#60a5fa' },
+    { label: 'Bugungi darslar', value: stats.lessonsToday, icon: '📚', color: '#8b5cf6' },
+    { label: 'Kechagi darslar', value: stats.lessonsYesterday, icon: '📖', color: '#c084fc' },
     { label: 'Bugungi tashriflar', value: stats.visitsToday, icon: '👥', color: '#34d399' },
     { label: 'Jami foydalanuvchilar', value: stats.users, icon: '🧑‍🎓', color: '#fbbf24' },
   ] : [];
@@ -1018,7 +1018,7 @@ function CoinsTab({ config, session }) {
   return (
     <div className="space-y-4">
       {/* Rejim ko'rsatkichi */}
-      <div className={`rounded-xl px-4 py-3 text-xs flex flex-wrap items-center gap-2 border ${isFirebase ? 'bg-[#16a34a]/10 border-[#16a34a]/40 text-[#4ade80]' : 'bg-[#2563eb]/10 border-[#2563eb]/40 text-[#7dd3fc]'}`}>
+      <div className={`rounded-xl px-4 py-3 text-xs flex flex-wrap items-center gap-2 border ${isFirebase ? 'bg-[#16a34a]/10 border-[#16a34a]/40 text-[#4ade80]' : 'bg-[#d946ef]/10 border-[#d946ef]/40 text-[#f5d0fe]'}`}>
         {isFirebase ? (
           <>
             <span className="relative flex h-2 w-2">
@@ -1030,7 +1030,7 @@ function CoinsTab({ config, session }) {
           </>
         ) : (
           <>
-            <span className="w-2 h-2 rounded-full bg-[#7dd3fc]" />
+            <span className="w-2 h-2 rounded-full bg-[#f5d0fe]" />
             <b>Demo rejim — shu brauzer</b>
             <span className="opacity-70">Firebase sozlanmagan. Coinlar faqat shu brauzerda saqlanadi. To\u2018liq ishlash uchun .env faylga VITE_FIREBASE_* kalitlarini kiriting.</span>
           </>
@@ -1038,10 +1038,10 @@ function CoinsTab({ config, session }) {
       </div>
 
       {/* ⚡ O'zimga tez coin berish (100 000 gacha) */}
-      <div className="rounded-xl bg-gradient-to-br from-[#3b82f6]/20 to-[#2563eb]/[0.07] border border-[#3b82f6]/40 p-4 sm:p-5 relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-[#3b82f6]/10 blur-2xl pointer-events-none" />
+      <div className="rounded-xl bg-gradient-to-br from-[#8b5cf6]/20 to-[#d946ef]/[0.07] border border-[#8b5cf6]/40 p-4 sm:p-5 relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-[#8b5cf6]/10 blur-2xl pointer-events-none" />
         <div className="flex flex-wrap items-center gap-2 mb-3 relative">
-          <div className="w-8 h-8 rounded-lg bg-[#3b82f6] flex items-center justify-center shadow-lg shadow-[#3b82f6]/30 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#8b5cf6] flex items-center justify-center shadow-lg shadow-[#8b5cf6]/30 shrink-0">
             <UserIcon className="w-4 h-4 text-white" />
           </div>
           <h3 className="font-bold text-sm text-white">O\u2018zimga coin berish</h3>
@@ -1049,7 +1049,7 @@ function CoinsTab({ config, session }) {
             <Gift className="w-3 h-3" /> 100 000 gacha
           </span>
           <span className="text-[10px] text-white/40 ml-auto hidden md:block">
-            Hozirgi balans: <b className="text-[#3b82f6] tabular-nums">{(data.balances?.[SELF] ?? 0).toLocaleString('uz-UZ')} 🪙</b>
+            Hozirgi balans: <b className="text-[#8b5cf6] tabular-nums">{(data.balances?.[SELF] ?? 0).toLocaleString('uz-UZ')} 🪙</b>
           </span>
         </div>
         <div className="flex flex-wrap items-center gap-2 relative">
@@ -1060,8 +1060,8 @@ function CoinsTab({ config, session }) {
                 onClick={() => { setTarget(''); setAmount(String(n)); }}
                 className={`btn btn-xs border tabular-nums transition-colors ${
                   amount === String(n)
-                    ? 'bg-[#3b82f6] border-[#3b82f6] text-white font-bold'
-                    : 'bg-white/[0.04] border-white/15 text-white/70 hover:border-[#3b82f6]/60 hover:text-[#3b82f6]'
+                    ? 'bg-[#8b5cf6] border-[#8b5cf6] text-white font-bold'
+                    : 'bg-white/[0.04] border-white/15 text-white/70 hover:border-[#8b5cf6]/60 hover:text-[#8b5cf6]'
                 }`}
               >
                 +{n.toLocaleString('uz-UZ')}
@@ -1076,27 +1076,27 @@ function CoinsTab({ config, session }) {
             placeholder="Miqdor"
             value={amount}
             onChange={(e) => { setTarget(''); setAmount(e.target.value); }}
-            className="input input-bordered input-sm w-36 bg-black/30 border-white/15 text-white placeholder:text-white/30 focus:border-[#3b82f6] transition-colors tabular-nums"
+            className="input input-bordered input-sm w-36 bg-black/30 border-white/15 text-white placeholder:text-white/30 focus:border-[#8b5cf6] transition-colors tabular-nums"
           />
           <button
             onClick={handleSelfGive}
             disabled={busy}
-            className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white hover:brightness-105 shadow-lg shadow-[#3b82f6]/20 disabled:opacity-50"
+            className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] text-white hover:brightness-105 shadow-lg shadow-[#8b5cf6]/20 disabled:opacity-50"
           >
             {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Gift className="w-3.5 h-3.5" />}
             {busy ? 'Berilmoqda...' : 'O\u2018zimga berish'}
           </button>
         </div>
         <p className="text-[10px] text-white/35 mt-3 relative">
-          💡 Adminlar bir-biriga tekinga, bitta berishda ko\u2018pi bilan <b className="text-[#3b82f6]">100 000 tanga</b> bera oladi.
+          💡 Adminlar bir-biriga tekinga, bitta berishda ko\u2018pi bilan <b className="text-[#8b5cf6]">100 000 tanga</b> bera oladi.
         </p>
       </div>
 
       {/* Jami balans */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="rounded-xl bg-[#3b82f6]/10 border border-[#3b82f6]/25 p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#3b82f6]/15 flex items-center justify-center shrink-0">
-            <Gift className="w-5 h-5 text-[#3b82f6]" />
+        <div className="rounded-xl bg-[#8b5cf6]/10 border border-[#8b5cf6]/25 p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#8b5cf6]/15 flex items-center justify-center shrink-0">
+            <Gift className="w-5 h-5 text-[#8b5cf6]" />
           </div>
           <div>
             <p className="text-xl font-extrabold text-white tabular-nums">{totalCoins.toLocaleString('uz-UZ')}</p>
@@ -1105,7 +1105,7 @@ function CoinsTab({ config, session }) {
         </div>
         <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center shrink-0">
-            <Gift className="w-5 h-5 text-[#7dd3fc]" />
+            <Gift className="w-5 h-5 text-[#f5d0fe]" />
           </div>
           <div>
             <p className="text-sm font-bold text-white">100 000 gacha</p>
@@ -1114,7 +1114,7 @@ function CoinsTab({ config, session }) {
         </div>
         <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/[0.05] flex items-center justify-center shrink-0">
-            <Users className="w-5 h-5 text-[#60a5fa]" />
+            <Users className="w-5 h-5 text-[#c084fc]" />
           </div>
           <div>
             <p className="text-sm font-bold text-white">{adminRows.length} ta admin</p>
@@ -1139,14 +1139,14 @@ function CoinsTab({ config, session }) {
               <tr key={a.username} className="hover:bg-white/[0.03] transition-colors">
                 <td>
                   <div className="flex items-center gap-2.5">
-                    <span className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-sm font-bold text-[#3b82f6]">
+                    <span className="w-8 h-8 rounded-lg bg-white/[0.05] border border-white/10 flex items-center justify-center text-sm font-bold text-[#8b5cf6]">
                       {String(a.name || a.username || '?').charAt(0).toUpperCase()}
                     </span>
                     <div className="min-w-0">
                       <p className="font-mono text-xs font-bold text-white flex items-center gap-1.5">
                         {a.username}
                         {a.username === SELF && (
-                          <span className="badge badge-primary badge-xs gap-0.5 border-0 bg-[#3b82f6] text-white font-bold">
+                          <span className="badge badge-primary badge-xs gap-0.5 border-0 bg-[#8b5cf6] text-white font-bold">
                             <UserIcon className="w-2 h-2" /> Siz
                           </span>
                         )}
@@ -1163,7 +1163,7 @@ function CoinsTab({ config, session }) {
                   )}
                 </td>
                 <td className="text-right">
-                  <span className="font-extrabold text-[#3b82f6] tabular-nums">
+                  <span className="font-extrabold text-[#8b5cf6] tabular-nums">
                     {a.balance.toLocaleString('uz-UZ')}
                   </span>
                   <span className="text-[10px] text-white/30 ml-1">🪙</span>
@@ -1172,7 +1172,7 @@ function CoinsTab({ config, session }) {
                   <div className="flex items-center justify-end gap-2">
                     <button
                       onClick={() => { setTarget(a.username); setAmount(''); }}
-                      className="btn btn-ghost btn-xs text-[10px] text-white/50 hover:text-[#3b82f6]"
+                      className="btn btn-ghost btn-xs text-[10px] text-white/50 hover:text-[#8b5cf6]"
                     >
                       Tanlash
                     </button>
@@ -1189,7 +1189,7 @@ function CoinsTab({ config, session }) {
                     <button
                       onClick={() => handleGive(a.username)}
                       disabled={busy || target !== a.username}
-                      className="btn btn-primary btn-xs gap-1.5 border-0 bg-gradient-to-r from-[#3b82f6] to-[#2563eb] text-white disabled:opacity-40"
+                      className="btn btn-primary btn-xs gap-1.5 border-0 bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] text-white disabled:opacity-40"
                     >
                       {busy && target === a.username ? (
                         <Loader2 className="w-3 h-3 animate-spin" />
@@ -1221,13 +1221,13 @@ function CoinsTab({ config, session }) {
           <div className="max-h-56 overflow-y-auto divide-y divide-white/5 chat-scroll">
             {data.log.slice(0, 20).map((entry, i) => (
               <div key={i} className="flex items-center gap-3 px-4 py-2.5 text-xs">
-                <span className="w-7 h-7 rounded-lg bg-[#3b82f6]/10 border border-[#3b82f6]/20 flex items-center justify-center shrink-0">
-                  <Gift className="w-3 h-3 text-[#3b82f6]" />
+                <span className="w-7 h-7 rounded-lg bg-[#8b5cf6]/10 border border-[#8b5cf6]/20 flex items-center justify-center shrink-0">
+                  <Gift className="w-3 h-3 text-[#8b5cf6]" />
                 </span>
                 <span className="font-mono font-bold text-white">{entry.from}</span>
                 <span className="text-white/30">→</span>
                 <span className="font-mono font-bold text-white">{entry.to}</span>
-                <span className="font-extrabold text-[#3b82f6] tabular-nums">+{Number(entry.amount || 0).toLocaleString('uz-UZ')} 🪙</span>
+                <span className="font-extrabold text-[#8b5cf6] tabular-nums">+{Number(entry.amount || 0).toLocaleString('uz-UZ')} 🪙</span>
                 <span className="text-white/30 ml-auto tabular-nums">{fmtTime(entry.time)}</span>
               </div>
             ))}
@@ -1402,9 +1402,9 @@ function ApiGuideModal({ onClose }) {
 function GSCResults({ data, onRemove }) {
   const fmtNum = (n) => (n >= 1000 ? `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k` : String(n));
   const summary = [
-    { icon: MousePointerClick, label: 'Jami kliklar', value: fmtNum(data.totalClicks), color: '#3b82f6' },
+    { icon: MousePointerClick, label: 'Jami kliklar', value: fmtNum(data.totalClicks), color: '#8b5cf6' },
     { icon: BarChart3, label: 'Ko\u2018rsatuvlar', value: fmtNum(data.totalImpressions), color: '#4ade80' },
-    { icon: TrendingUp, label: 'O\u2018rtacha CTR', value: `${(data.avgCtr * 100).toFixed(1)}%`, color: '#60a5fa' },
+    { icon: TrendingUp, label: 'O\u2018rtacha CTR', value: `${(data.avgCtr * 100).toFixed(1)}%`, color: '#c084fc' },
     { icon: Search, label: 'O\u2018rtacha pozitsiya', value: data.avgPosition.toFixed(1), color: '#c084fc' },
   ];
 
@@ -1492,7 +1492,7 @@ function SearchConsoleSection() {
       {/* Section header */}
       <div className="px-5 md:px-6 py-4 border-b border-white/5 flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0">
-          <Search className="w-4 h-4 text-[#3b82f6]" />
+          <Search className="w-4 h-4 text-[#8b5cf6]" />
         </div>
         <div className="min-w-0">
           <h3 className="font-bold text-sm text-white">Google Search (Search Console)</h3>
@@ -1514,7 +1514,7 @@ function SearchConsoleSection() {
           className="admin-gsc-btn w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-5 hover:scale-105 active:scale-95 transition-transform"
           title="CSV import qilish"
         >
-          <Search className="w-7 h-7 text-[#3b82f6]" />
+          <Search className="w-7 h-7 text-[#8b5cf6]" />
         </button>
 
         <h2 className="text-lg font-bold text-white">Google Search ma'lumotlarini ulang</h2>
@@ -1536,7 +1536,7 @@ function SearchConsoleSection() {
             </p>
             <button
               onClick={openPicker}
-              className="mt-3 text-xs font-semibold text-[#3b82f6] inline-flex items-center gap-1 hover:gap-2 transition-all group"
+              className="mt-3 text-xs font-semibold text-[#8b5cf6] inline-flex items-center gap-1 hover:gap-2 transition-all group"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" /> Darhol ishlaydi
               <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
@@ -1619,7 +1619,7 @@ function ServiceStatus() {
   return (
     <div className="admin-card px-4 py-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs">
       <span className="font-semibold text-white inline-flex items-center gap-1.5">
-        <Activity className="w-3.5 h-3.5 text-[#3b82f6]" /> Tizim holati:
+        <Activity className="w-3.5 h-3.5 text-[#8b5cf6]" /> Tizim holati:
       </span>
       {items.map((s) => (
         <span
@@ -1684,8 +1684,8 @@ function ActivitySection({ session, presenceAdmin }) {
 
   const cards = [
     { icon: UserClock, label: t('admin.todayLogins'), value: isServer ? today : (localLog.filter((e) => e.ok && new Date(e.time).toDateString() === new Date().toDateString()).length), color: '#4ade80' },
-    { icon: HistoryIcon, label: t('admin.totalLogins'), value: isServer ? total : localLog.length, color: '#60a5fa' },
-    { icon: Users, label: t('admin.onlineAdmins'), value: presenceAdmin, color: '#3b82f6' },
+    { icon: HistoryIcon, label: t('admin.totalLogins'), value: isServer ? total : localLog.length, color: '#c084fc' },
+    { icon: Users, label: t('admin.onlineAdmins'), value: presenceAdmin, color: '#8b5cf6' },
   ];
 
   return (
@@ -2150,7 +2150,7 @@ export default function AdminPanel() {
             <Shield className="w-7 h-7 text-white" />
           </div>
           <p className="text-sm font-semibold text-white/80 inline-flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin text-[#3b82f6]" />
+            <Loader2 className="w-4 h-4 animate-spin text-[#8b5cf6]" />
             {t('admin.sessionChecking')}
           </p>
         </div>

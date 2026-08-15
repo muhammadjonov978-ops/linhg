@@ -15,15 +15,15 @@ export default function LiveVisitorsBadge() {
   return (
     <a
       href="#/admin"
-      className="fixed bottom-4 left-4 z-40 flex items-center gap-2 px-3 py-2 rounded-full bg-black/80 backdrop-blur-md border border-[#3b82f6]/40 shadow-lg gold-glow hover:shadow-xl hover:-translate-y-0.5 hover:border-[#3b82f6]/70 transition-all duration-300 group"
+      className="fixed bottom-4 left-4 z-40 flex items-center gap-2 px-3 py-2 rounded-full bg-black/80 backdrop-blur-md border border-[#8b5cf6]/40 shadow-lg gold-glow hover:shadow-xl hover:-translate-y-0.5 hover:border-[#8b5cf6]/70 transition-all duration-300 group"
       title="Hozir onlayn — admin panel"
     >
       <span className="relative flex h-2.5 w-2.5">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4ade80] opacity-75" />
         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#4ade80]" />
       </span>
-      <Radio className="w-3.5 h-3.5 text-[#3b82f6]" />
-      <span className="font-bold text-sm tabular-nums text-[#93c5fd]">{presence.total}</span>
+      <Radio className="w-3.5 h-3.5 text-[#8b5cf6]" />
+      <span className="font-bold text-sm tabular-nums text-[#c4b5fd]">{presence.total}</span>
       <span className="text-[11px] text-white/60 hidden sm:inline">onlayn</span>
     </a>
   );

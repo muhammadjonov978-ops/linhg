@@ -271,7 +271,7 @@ export default function LanguageDashboard({ onSelectLevel }) {
                               : isLocked
                                 ? 'bg-base-200'
                                 : lesson.type === 'alphabet'
-                                  ? 'bg-blue-100 dark:bg-blue-900/30'
+                                  ? 'bg-violet-100 dark:bg-violet-900/30'
                                   : 'bg-base-200'
                             }
                           `}>
