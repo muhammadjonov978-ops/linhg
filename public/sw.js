@@ -3,7 +3,10 @@
    - Offline rejim: asosiy sahifa va statik resurslar keshda
    - Push notifikatsiyalar: serverdan push kelganda ko'rsatish
    ============================================================ */
-const CACHE_NAME = 'lingohub-v1';
+// v2: optimallashtirilgan logo + yangi app shell uchun eski keshlarni yangilash.
+// Har bir muhim deploy'da bu raqamni oshiring — aks holda eski (katta) fayllar
+// cache-first qoidasi tufayli foydalanuvchida abadiy qolib ketishi mumkin.
+const CACHE_NAME = 'lingohub-v2';
 const CORE_ASSETS = [
   '/',
   '/index.html',

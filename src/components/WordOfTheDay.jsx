@@ -209,7 +209,7 @@ export default function WordOfTheDay() {
                   quizAnswer === serverWord.quiz.answerIndex ? 'text-success' : 'text-error'
                 }`}>
                   {quizAnswer === serverWord.quiz.answerIndex
-                    ? '✅ To\'g\'ri! Ajoyib ish!' : `❌ To\'g\'ri javob: ${String.fromCharCode(65 + serverWord.quiz.answerIndex)}`}
+                    ? "✅ To'g'ri! Ajoyib ish!" : `❌ To'g'ri javob: ${String.fromCharCode(65 + serverWord.quiz.answerIndex)}`}
                 </p>
               )}
             </div>

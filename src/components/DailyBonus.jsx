@@ -9,7 +9,7 @@ import {
 // Kunlik bonus — serverda boshqariladi (cheat qilib bo'lmaydi):
 // har kuni 1 marta, streak oshgan sari bonus ham oshadi.
 export default function DailyBonus() {
-  const { state, dispatch } = useApp();
+  const { dispatch } = useApp();
   const [status, setStatus] = useState(null);   // { claimed, streak, nextAmount }
   const [busy, setBusy] = useState(false);
   const [granted, setGranted] = useState(0);

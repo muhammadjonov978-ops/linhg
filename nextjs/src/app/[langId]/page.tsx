@@ -1,7 +1,7 @@
 'use client';
 
 import { use } from 'react';
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { languages, levels } from '../../data/languages';
 import { useRouter } from 'next/navigation';

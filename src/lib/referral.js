@@ -103,11 +103,14 @@ export function claimInviterReward(dispatch) {
 // Firebase sozlanmagan bo'lsa — shunchaki o'tkazib yuboriladi.
 export async function syncInviteToCloud(inviterCode) {
   try {
-    const { db } = await import('../firebase');
+    const [{ db }, { ref, set }] = await Promise.all([
+      import('../firebase'),
+      import('firebase/database'),
+    ]);
     if (!db) return false;
     const user = JSON.parse(localStorage.getItem('lingohub_user') || 'null');
     if (!user?.sub || !inviterCode) return false;
-    await db.ref(`referrals/${inviterCode}/${user.sub}`).set({
+    await set(ref(db, `referrals/${inviterCode}/${user.sub}`), {
       name: user.name || 'Anonim',
       ts: Date.now(),
     });
@@ -120,9 +123,12 @@ export async function syncInviteToCloud(inviterCode) {
 // Inviter uchun bulutdan takliflar sonini o'qish (kirgan bo'lsa)
 export async function fetchInviteCount(code) {
   try {
-    const { db } = await import('../firebase');
+    const [{ db }, { ref, get }] = await Promise.all([
+      import('../firebase'),
+      import('firebase/database'),
+    ]);
     if (!db) return null;
-    const snap = await db.ref(`referrals/${code}`).once('value');
+    const snap = await get(ref(db, `referrals/${code}`));
     const val = snap.val();
     return val ? Object.keys(val).length : 0;
   } catch {
@@ -158,12 +164,15 @@ export function getInvitesMade() {
 // Kirgan foydalanuvchi uchun: referrals/{inviterCode}/{uid} da completed: true
 export async function markInviteeCompleted(inviterCode) {
   try {
-    const { db } = await import('../firebase');
+    const [{ db }, { ref, update }] = await Promise.all([
+      import('../firebase'),
+      import('firebase/database'),
+    ]);
     if (!db) return false;
     const user = JSON.parse(localStorage.getItem('lingohub_user') || 'null');
     const inviter = inviterCode || localStorage.getItem('lingohub_ref_inviter');
     if (!user?.sub || !inviter) return false;
-    await db.ref(`referrals/${inviter}/${user.sub}`).update({ completed: true, ts: Date.now() });
+    await update(ref(db, `referrals/${inviter}/${user.sub}`), { completed: true, ts: Date.now() });
     return true;
   } catch {
     return false;

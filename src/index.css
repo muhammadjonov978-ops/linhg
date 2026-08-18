@@ -1,4 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700&family=Dancing+Script:wght@500;700&family=Great+Vibes&family=Playfair+Display:wght@600;700;800;900&display=swap');
+/* Shriftlar endi index.html'dagi <link> orqali yuklanadi (parallel + preconnect).
+   Faqat ishlatiladiganlar: Outfit (UI) + Playfair Display (sarlavhalar).
+   Inter/Dancing Script/Great Vibes olib tashlandi — hech qayerda ishlatilmaydi. */
 @import "tailwindcss";
 @plugin "daisyui" {
   themes: all;

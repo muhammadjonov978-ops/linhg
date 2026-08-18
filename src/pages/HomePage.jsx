@@ -158,12 +158,12 @@ export default function HomePage() {
 
             {/* CTA tugmalari */}
             <div className="flex flex-wrap items-center justify-center gap-3 mb-8 animate-[fadeInUp_0.8s_ease-out]">
-              <a
-                href="#languages"
+              <button
+                onClick={() => document.getElementById('languages')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 className="btn btn-primary btn-lg rounded-full px-8 shadow-lg shadow-primary/30 hover:scale-105 hover:shadow-xl hover:shadow-primary/40 transition-all duration-300 gap-2"
               >
                 🚀 {t('home.startLearning')}
-              </a>
+              </button>
               <button
                 onClick={openAITutor}
                 className="btn btn-lg rounded-full px-8 border border-secondary/40 bg-gradient-to-r from-violet-500/15 to-fuchsia-500/15 backdrop-blur-sm text-base-content gap-2 hover:scale-105 hover:border-secondary/70 hover:shadow-lg hover:shadow-fuchsia-500/20 transition-all duration-300"

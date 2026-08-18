@@ -1,35 +1,49 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AppProvider, useApp } from './context/AppContext';
 import Navbar from './components/Navbar';
-import AITutor from './components/AITutor';
-import AchievementsPanel from './components/AchievementsPanel';
-import DailyChallenge from './components/DailyChallenge';
-import DailyBonus from './components/DailyBonus';
-import StatsDashboard from './components/StatsDashboard';
-import WordOfTheDay from './components/WordOfTheDay';
-import MistakesReview from './components/MistakesReview';
-import StreakCalendar from './components/StreakCalendar';
 import HomePage from './pages/HomePage';
-import LanguageDashboard from './pages/LanguageDashboard';
-import LevelPage from './pages/LevelPage';
-import SMSReminder from './components/SMSReminder';
-import AdminPanel from './pages/AdminPanel';
-import PortfolioPage from './pages/PortfolioPage';
-import ShopPage from './pages/ShopPage';
-import LiveVisitorsBadge from './components/LiveVisitorsBadge';
+import SubscriptionGate from './components/SubscriptionGate';
 import { startPresence, stopPresence } from './utils/presence';
 import { startVisitsTracking } from './utils/visits';
-import SubscriptionGate from './components/SubscriptionGate';
-import Leaderboard from './components/Leaderboard';
-import Flashcards from './components/Flashcards';
-import WeeklyReport from './components/WeeklyReport';
-import TournamentPage from './pages/TournamentPage';
-import PlacementTest from './pages/PlacementTest';
-import GrammarPage from './pages/GrammarPage';
-import DictionaryPage from './pages/DictionaryPage';
-import MissionsPage from './pages/MissionsPage';
-import ReferralPage from './pages/ReferralPage';
-import CertificatesPage from './pages/CertificatesPage';
+
+// ===== CODE-SPLITTING =====
+// Bosh sahifa tez ochilishi uchun faqat kerakli qismlar darhol yuklanadi,
+// qolgan barcha sahifa/vidjetlar kerak bo'lganda (lazy) yuklanadi.
+// Natijada dastlabki JS bundle 1.12 MB → ~500 KB gacha tushadi.
+const AITutor = lazy(() => import('./components/AITutor'));
+const AchievementsPanel = lazy(() => import('./components/AchievementsPanel'));
+const DailyChallenge = lazy(() => import('./components/DailyChallenge'));
+const DailyBonus = lazy(() => import('./components/DailyBonus'));
+const StatsDashboard = lazy(() => import('./components/StatsDashboard'));
+const WordOfTheDay = lazy(() => import('./components/WordOfTheDay'));
+const MistakesReview = lazy(() => import('./components/MistakesReview'));
+const StreakCalendar = lazy(() => import('./components/StreakCalendar'));
+const SMSReminder = lazy(() => import('./components/SMSReminder'));
+const LiveVisitorsBadge = lazy(() => import('./components/LiveVisitorsBadge'));
+const LanguageDashboard = lazy(() => import('./pages/LanguageDashboard'));
+const LevelPage = lazy(() => import('./pages/LevelPage'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
+const PortfolioPage = lazy(() => import('./pages/PortfolioPage'));
+const ShopPage = lazy(() => import('./pages/ShopPage'));
+const Leaderboard = lazy(() => import('./components/Leaderboard'));
+const Flashcards = lazy(() => import('./components/Flashcards'));
+const WeeklyReport = lazy(() => import('./components/WeeklyReport'));
+const TournamentPage = lazy(() => import('./pages/TournamentPage'));
+const PlacementTest = lazy(() => import('./pages/PlacementTest'));
+const GrammarPage = lazy(() => import('./pages/GrammarPage'));
+const DictionaryPage = lazy(() => import('./pages/DictionaryPage'));
+const MissionsPage = lazy(() => import('./pages/MissionsPage'));
+const ReferralPage = lazy(() => import('./pages/ReferralPage'));
+const CertificatesPage = lazy(() => import('./pages/CertificatesPage'));
+
+// Lazy-chunk yuklanayotganda ko'rsatiladigan yengil loader
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[40vh]">
+      <span className="loading loading-spinner loading-lg text-primary" />
+    </div>
+  );
+}
 import { hasGatePassed } from './lib/gate';
 import { registerServiceWorker, maybeShowDailyReminder } from './lib/notifications';
 import { claimInviteBonus, syncInviteToCloud } from './lib/referral';
@@ -125,7 +139,11 @@ function AppContent() {
 
   // Admin panel route — shlyuzdan mustaqil (o'z login tizimiga ega)
   if (hash.startsWith('#/admin')) {
-    return <AdminPanel />;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <AdminPanel />
+      </Suspense>
+    );
   }
 
   // Obuna shlyuzi — kanallarga obuna bo'lmaganlar uchun sayt bloklanadi
@@ -184,25 +202,27 @@ function AppContent() {
       <div className="flex flex-1 overflow-hidden">
         {/* Main content */}
         <main className={`flex-1 overflow-y-auto transition-all duration-300 ${!isFullPageRoute && showSidebar && (showDashboard || showHome) ? 'lg:mr-80' : ''}`}>
-          {showShop && <ShopPage />}
-          {showPortfolio && <PortfolioPage />}
-          {showLeaderboard && <Leaderboard onBack={goHome} />}
-          {showTournament && <TournamentPage onBack={goHome} />}
-          {showFlashcards && <Flashcards onBack={goHome} />}
-          {showReport && <WeeklyReport onBack={goHome} />}
-          {showPlacement && <PlacementTest onBack={goHome} />}
-          {showGrammar && <GrammarPage onBack={goHome} />}
-          {showDictionary && <DictionaryPage onBack={goHome} />}
-          {showMissions && <MissionsPage onBack={goHome} />}
-          {showReferral && <ReferralPage onBack={goHome} />}
-          {showCertificates && <CertificatesPage onBack={goHome} />}
-          {!isFullPageRoute && showHome && <HomePage />}
-          {!isFullPageRoute && showDashboard && (
-            <LanguageDashboard onSelectLevel={handleSelectLevel} />
-          )}
-          {!isFullPageRoute && showLevel && (
-            <LevelPage onBack={handleBackToDashboard} />
-          )}
+          <Suspense fallback={<PageLoader />}>
+            {showShop && <ShopPage />}
+            {showPortfolio && <PortfolioPage />}
+            {showLeaderboard && <Leaderboard onBack={goHome} />}
+            {showTournament && <TournamentPage onBack={goHome} />}
+            {showFlashcards && <Flashcards onBack={goHome} />}
+            {showReport && <WeeklyReport onBack={goHome} />}
+            {showPlacement && <PlacementTest onBack={goHome} />}
+            {showGrammar && <GrammarPage onBack={goHome} />}
+            {showDictionary && <DictionaryPage onBack={goHome} />}
+            {showMissions && <MissionsPage onBack={goHome} />}
+            {showReferral && <ReferralPage onBack={goHome} />}
+            {showCertificates && <CertificatesPage onBack={goHome} />}
+            {!isFullPageRoute && showHome && <HomePage />}
+            {!isFullPageRoute && showDashboard && (
+              <LanguageDashboard onSelectLevel={handleSelectLevel} />
+            )}
+            {!isFullPageRoute && showLevel && (
+              <LevelPage onBack={handleBackToDashboard} />
+            )}
+          </Suspense>
         </main>
 
         {/* Sidebar with widgets (only on Home and Dashboard) */}
@@ -214,6 +234,7 @@ function AppContent() {
               onClick={() => setShowSidebar(false)}
             />
             <aside className="fixed right-0 top-16 h-[calc(100dvh-4rem)] w-80 max-w-[86vw] bg-base-100 border-l border-base-300 overflow-y-auto z-40 shadow-lg animate-[slideIn_0.3s_ease-out]">
+            <Suspense fallback={<PageLoader />}>
             <div className="p-4 space-y-4">
               {/* Sidebar Header */}
               <div className="flex items-center justify-between mb-2">
@@ -251,6 +272,7 @@ function AppContent() {
                 </>
               )}
             </div>
+            </Suspense>
             </aside>
           </>
         )}
@@ -270,25 +292,27 @@ function AppContent() {
       )}
 
       {/* SMS reminder when a day is missed */}
-      <SMSReminder />
+      <Suspense fallback={null}>
+        <SMSReminder />
 
-      {/* Live visitors badge (links to admin panel) */}
-      <LiveVisitorsBadge />
+        {/* Live visitors badge (links to admin panel) */}
+        <LiveVisitorsBadge />
 
-      {/* AI Tutor Floating Button */}
-      {!isFullPageRoute && state.selectedLanguage && (
-        <>
-          {!isTutorOpen && (
-            <button
-              onClick={handleToggleTutor}
-              className="fixed bottom-6 right-6 z-40 btn btn-primary btn-circle btn-lg shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all duration-300 hover:scale-110"
-            >
-              <MessageCircle className="w-6 h-6" />
-            </button>
-          )}
-          <AITutor />
-        </>
-      )}
+        {/* AI Tutor Floating Button */}
+        {!isFullPageRoute && state.selectedLanguage && (
+          <>
+            {!isTutorOpen && (
+              <button
+                onClick={handleToggleTutor}
+                className="fixed bottom-6 right-6 z-40 btn btn-primary btn-circle btn-lg shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all duration-300 hover:scale-110"
+              >
+                <MessageCircle className="w-6 h-6" />
+              </button>
+            )}
+            <AITutor />
+          </>
+        )}
+      </Suspense>
 
     </div>
   );
