@@ -2,16 +2,15 @@
 // Usage: node scripts/generate-sitemap.js
 // Builds sitemap.xml and saves it into the 'public' folder.
 //
-// ⚠️ MUHIM: Hozirgi deploy Vite SPA (hash-routing: #/portfolio, #/shop, ...).
-// Bu SPA'da faqat bitta HAQIQIY sahifa bor — "/" (bosh sahifa). "/english",
-// "/english/beginner" kabi yo'llar 404 qaytaradi (tekshirilgan: 2026-08-18),
-// shuning uchun ularni sitemap'ga qo'shish Google uchun zararli — crawl
-// byudjeti behuda sarflanadi va 404 sahifalar indekslanadi.
+// Jonli deploy Vite SPA. Endi /english, /english/beginner kabi clean URL'lar
+// ISHLAYDI (vercel.json'dagi SPA fallback + src/App.jsx'dagi path routing
+// orqali). Sitemap'ga faqat HAQIQIY mavjud sahifalar kiradi:
+//   - "/"                     — bosh sahifa
+//   - "/<til-id>"             — har bir til dashboardi (135 ta)
+//   - "/<til-id>/<daraja>"    — daraja sahifalari (lesson 1/26/51/76 ga ochiladi)
 //
-// Qachon til/daraja sahifalari qaytadan qo'shiladi? nextjs/ papkasidagi
-// Next.js (SSR) versiyasi deploy qilinganda — uning o'z sitemap.ts bor va
-// /english, /english/beginner kabi yo'llarni REAL kontent bilan xizmat
-// qiladi. O'sha paytda bu scriptning o'zi kerak bo'lmaydi.
+// nextjs/ papkasidagi SSR versiya deploy qilinganda uning o'z sitemap.ts
+// bu faylni to'liq almashtiradi.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -20,16 +19,76 @@ import path from 'node:path';
 const DOMAIN = 'https://lingohub.uz';
 const SITEMAP_NAME = 'sitemap.xml';
 
+// 4 daraja — src/App.jsx'dagi SEO_LEVEL_LESSON bilan mos keladi
+const LEVELS = ['beginner', 'elementary', 'pre-intermediate', 'advanced'];
+
+// ===== LANGUAGE DISCOVERY =====
+// src/data/languages.js dagi `languages` massividan id'larni o'qiymiz,
+// sitemap hech qachon app ma'lumotlaridan ajralib qolmasligi uchun.
+function discoverLanguages() {
+  const file = path.join(process.cwd(), 'src', 'data', 'languages.js');
+  if (!fs.existsSync(file)) {
+    console.error('src/data/languages.js topilmadi!');
+    process.exit(1);
+  }
+  const source = fs.readFileSync(file, 'utf8');
+  const start = source.indexOf('export const languages = [');
+  const end = source.indexOf('];', start);
+  if (start === -1 || end === -1) {
+    console.error('languages array topilmadi!');
+    process.exit(1);
+  }
+  const block = source.slice(start, end + 2);
+  const ids = [...block.matchAll(/id:\s*'([a-z0-9-]+)'/g)].map((m) => m[1]);
+  if (ids.length === 0) {
+    console.error('language id\'lari topilmadi!');
+    process.exit(1);
+  }
+  return ids;
+}
+
+// Priority per page type (see sitemaps.org spec)
+const PRIORITY = {
+  home: 1.0,
+  language: 0.9,
+  level: 0.7,
+};
+const CHANGEFREQ = {
+  home: 'daily',
+  language: 'weekly',
+  level: 'monthly',
+};
+
 // ===== ROUTE BUILDING =====
-// Faqat jonli saytda HAQIQATAN mavjud bo'lgan sahifalar.
 function buildRoutes() {
-  return [
-    { loc: '/', priority: 1.0, changefreq: 'daily' },
+  const LANGUAGES = discoverLanguages();
+
+  const routes = [
+    { loc: '/', priority: PRIORITY.home, changefreq: CHANGEFREQ.home },
   ];
+
+  for (const lang of LANGUAGES) {
+    routes.push({
+      loc: `/${lang}`,
+      priority: PRIORITY.language,
+      changefreq: CHANGEFREQ.language,
+    });
+  }
+
+  for (const lang of LANGUAGES) {
+    for (const level of LEVELS) {
+      routes.push({
+        loc: `/${lang}/${level}`,
+        priority: PRIORITY.level,
+        changefreq: CHANGEFREQ.level,
+      });
+    }
+  }
+
+  return routes;
 }
 
 // ===== XML BUILDING =====
-
 function escapeXml(str) {
   return String(str)
     .replace(/&/g, '&amp;')
@@ -61,7 +120,6 @@ ${urls}
 }
 
 // ===== MAIN =====
-
 const routes = buildRoutes();
 const xml = buildSitemap(routes);
 const outDir = path.join(process.cwd(), 'public');

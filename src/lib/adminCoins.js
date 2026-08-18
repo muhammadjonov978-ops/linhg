@@ -12,8 +12,17 @@
 //
 // Log (`adminCoinLog`) har bir berishni saqlaydi: kim, kimga, qancha, qachon.
 
-import { ref, runTransaction, onValue, push, limitToLast, query } from 'firebase/database';
-import { db, HAS_FIREBASE } from '../firebase';
+import { db, HAS_FIREBASE, ensureFirebaseInit } from '../firebase';
+
+// firebase/database moduli lazy yuklanadi — faqat Firebase sozlangan bo'lsa
+let dbModCache = null;
+async function fdb() {
+  if (!dbModCache) {
+    await ensureFirebaseInit();
+    dbModCache = await import('firebase/database');
+  }
+  return dbModCache;
+}
 
 const COINS_PATH = 'adminCoins';
 const LOG_PATH = 'adminCoinLog';
@@ -49,7 +58,7 @@ function emit() {
 
 export function subscribeAdminCoins(cb) {
   listeners.add(cb);
-  if (!started) start();
+  if (!started) start().catch(() => startLocal());
   cb({ balances: { ...lastState.balances }, log: [...lastState.log], mode: lastState.mode });
   return () => listeners.delete(cb);
 }
@@ -105,7 +114,8 @@ function startLocal() {
 
 // ---------- FIREBASE ----------
 
-function startFirebase() {
+async function startFirebase() {
+  const { ref, onValue, limitToLast, query } = await fdb();
   // Balanslar — jonli yangilanadi
   onValue(ref(db, COINS_PATH), (snap) => {
     lastState.balances = snap.val() || {};
@@ -121,13 +131,17 @@ function startFirebase() {
   });
 }
 
-function start() {
+async function start() {
   started = true;
-  if (HAS_FIREBASE) {
-    startFirebase();
-  } else {
-    startLocal();
+  try {
+    if (HAS_FIREBASE) {
+      await startFirebase();
+      return;
+    }
+  } catch {
+    /* firebase xatosi — lokal rejimga tushamiz */
   }
+  startLocal();
 }
 
 // ---------- PUBLIC API ----------
@@ -148,6 +162,7 @@ export async function giveAdminCoins(fromUsername, toUsername, amount) {
 
   if (HAS_FIREBASE) {
     try {
+      const { ref, runTransaction, push } = await fdb();
       const balanceRef = ref(db, `${COINS_PATH}/${toUsername}`);
       let finalBalance = 0;
       // runTransaction — bir vaqtda ko'p berish bo'lsa ham balans to'g'ri qo'shiladi

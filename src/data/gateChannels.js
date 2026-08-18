@@ -1,8 +1,25 @@
 // ==== OBUNA SHLYUZI — kanallar ro'yxati ====
 // Saytga kirishdan oldin foydalanuvchi shu kanallarga obuna bo'lishi kerak.
-// Instagram profilari uchun rasmiy obuna tekshiruv API si yo'q —
-// shuning uchun "Obuna bo'ldim ✓" tugmasi orqali tasdiqlanadi.
+//
+// Ikki xil tekshiruv usuli:
+//   1) TELEGRAM — HAQIQIY tekshiruv. Foydalanuvchi botga /start verify_<kod>
+//      yuboradi, server getChatMember orqali kanal a'zoligini tekshiradi.
+//      ⚠️ Bot (TELEGRAM_BOT_TOKEN) kanalga ADMIN qo'shilgan bo'lishi shart.
+//   2) INSTAGRAM — story-kod usuli. Egasi Instagram'da kunlik maxfiy kod
+//      e'lon qiladi (Admin panel → "Kirish shlyuzi" bo'limida o'rnatiladi),
+//      foydalanuvchi shu kodni kiritishi shart. Instagram API orqali
+//      obunani tekshirib bo'lmaydi (rasmiy API yo'q).
+export const GATE_TELEGRAM_CHANNEL = {
+  id: 'telegram_khoja_akbar',
+  type: 'telegram',
+  name: '@khoja_akbar',
+  label: 'Telegram kanal',
+  // Bot shu kanalga admin bo'lishi kerak (server/handlers/telegram-verify.js
+  // CHANNEL_MAP bilan mos kelishi shart).
+};
+
 export const GATE_CHANNELS = [
+  GATE_TELEGRAM_CHANNEL,
   {
     id: 'instagram_ai_videochi_uz',
     type: 'instagram',

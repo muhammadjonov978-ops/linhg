@@ -10,8 +10,17 @@
 //   users/{uid}/data/{progress,coins,streak,achievements,inventory,equipped,...}
 //   users/{uid}/lastSync — oxirgi sinxronlash vaqti
 
-import { ref, set, get, serverTimestamp } from 'firebase/database';
-import { db, HAS_FIREBASE } from '../firebase';
+import { db, HAS_FIREBASE, ensureFirebaseInit } from '../firebase';
+
+// firebase/database moduli lazy yuklanadi — faqat Firebase sozlangan bo'lsa
+let dbModCache = null;
+async function fdb() {
+  if (!dbModCache) {
+    await ensureFirebaseInit();
+    dbModCache = await import('firebase/database');
+  }
+  return dbModCache;
+}
 
 export const CLOUD_EVENT = 'lingohub-cloud-sync';
 
@@ -64,6 +73,7 @@ export async function pushToCloud(state) {
   const user = loadSavedUser();
   if (!user?.sub || !HAS_FIREBASE) return { ok: false, reason: 'no-user-or-firebase' };
   try {
+    const { ref, set, serverTimestamp } = await fdb();
     const dataRef = ref(db, `users/${user.sub}/data`);
     await set(dataRef, serializeState(state));
     await set(ref(db, `users/${user.sub}/lastSync`), serverTimestamp());
@@ -80,6 +90,7 @@ export async function pullFromCloud() {
   const user = loadSavedUser();
   if (!user?.sub || !HAS_FIREBASE) return { ok: false, data: null };
   try {
+    const { ref, get } = await fdb();
     const snap = await get(ref(db, `users/${user.sub}/data`));
     const data = snap.val();
     if (!data) return { ok: true, data: null };

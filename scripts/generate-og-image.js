@@ -71,6 +71,20 @@ fs.mkdirSync(OUT_DIR, { recursive: true });
 
 const pixels = renderOgImage();
 const png = createPNG(WIDTH, HEIGHT, pixels);
-const file = path.join(OUT_DIR, 'og-image.png');
-fs.writeFileSync(file, png);
-console.log(`✓ ${file} (${WIDTH}x${HEIGHT}, ${png.length} bytes)`);
+const pngFile = path.join(OUT_DIR, 'og-image.png');
+fs.writeFileSync(pngFile, png);
+console.log(`✓ ${pngFile} (${WIDTH}x${HEIGHT}, ${png.length} bytes)`);
+
+// Sayt index.html'dagi og:image / twitter:image / JSON-LD manzillari
+// og-image.jpg ga qaraydi (308 KB png o'rniga ~30 KB jpg — tezroq yuklanadi).
+// Sharp mavjud bo'lsa jpg ham yaratamiz (devDependencies).
+try {
+  const sharp = (await import('sharp')).default;
+  await sharp(pngFile)
+    .flatten({ background: '#0d0d10' })
+    .jpeg({ quality: 82 })
+    .toFile(path.join(OUT_DIR, 'og-image.jpg'));
+  console.log(`✓ ${path.join(OUT_DIR, 'og-image.jpg')} (~30 KB)`);
+} catch {
+  console.warn('⚠️ sharp topilmadi — og-image.jpg yaratilmadi. npm i -D sharp ishga tushiring.');
+}

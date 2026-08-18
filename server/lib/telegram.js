@@ -9,11 +9,14 @@
 //   - webhook orqali buyruqlar: /start /help /stats /site
 import { redis } from './redis.js';
 
-const DEFAULT_TOKEN = '8596653767:AAFj-YSQtYdPToIN4ocW9UhKeVTa4TMGQ08';
+// ⚠️ XAVFSIZLIK: Bot tokeni faqat env'da saqlanadi (TELEGRAM_BOT_TOKEN).
+// Ilgari bu yerda kodga yozilgan (default) token bor edi — u olib tashlandi
+// va almashtirilishi kerak (@BotFather → Revoke token). Token kodda tursa,
+// repoga kirgan har kim botni egallashi mumkin.
 const API_BASE = 'https://api.telegram.org/bot';
 
 export function botToken() {
-  return process.env.TELEGRAM_BOT_TOKEN || DEFAULT_TOKEN;
+  return process.env.TELEGRAM_BOT_TOKEN || '';
 }
 
 export function telegramConfigured() {

@@ -3,8 +3,21 @@ import { AppProvider, useApp } from './context/AppContext';
 import Navbar from './components/Navbar';
 import HomePage from './pages/HomePage';
 import SubscriptionGate from './components/SubscriptionGate';
+import { languages } from './data/languages';
 import { startPresence, stopPresence } from './utils/presence';
 import { startVisitsTracking } from './utils/visits';
+
+// SEO: clean URL'lar (/english, /english/beginner) uchun dastlabki yo'lni
+// hash-router holatiga aylantiramiz (vercel.json SPA fallback orqali ishlaydi).
+const SEO_LEVEL_LESSON = {
+  beginner: 1,
+  elementary: 26,
+  'pre-intermediate': 51,
+  advanced: 76,
+};
+
+const DEFAULT_TITLE = "Lingohub — 130+ Tilda Bepul Til O'rganing | Online Til Kursi";
+const DEFAULT_DESCRIPTION = "Lingohub — interaktiv 130+ tilda bepul til o'rganish platformasi. Ingliz tili, koreys, yapon, xitoy, o'zbek va boshqa tillarni alifbo, reading, listening, writing va speaking mashqlari bilan o'rganing. Bepul onlayn til kursi.";
 
 // ===== CODE-SPLITTING =====
 // Bosh sahifa tez ochilishi uchun faqat kerakli qismlar darhol yuklanadi,
@@ -65,6 +78,43 @@ function applyAnimatedBg() {
 function AppContent() {
   const { state, dispatch } = useApp();
   const [showSidebar, setShowSidebar] = useState(false);
+
+  // SEO: /english yoki /english/beginner kabi clean URL'lar bilan kelganda
+  // tegishli til/darsni ochamiz (faqat birinchi yuklanishda).
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (!path || path === '/') return;
+    const parts = path.split('/').filter(Boolean);
+    const first = (parts[0] || '').toLowerCase();
+    if (languages.some((l) => l.id === first)) {
+      dispatch({ type: 'SELECT_LANGUAGE', payload: first });
+      if (parts[1] && SEO_LEVEL_LESSON[parts[1]]) {
+        dispatch({ type: 'SET_CURRENT_LEVEL', payload: `lesson-${SEO_LEVEL_LESSON[parts[1]]}` });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // SEO: tanlangan tilga qarab sahifa title/description/canonical yangilanadi
+  // (Google har bir til sahifasini alohida ko'rsatishi uchun).
+  useEffect(() => {
+    const lang = languages.find((l) => l.id === state.selectedLanguage);
+    let title = DEFAULT_TITLE;
+    let description = DEFAULT_DESCRIPTION;
+    let canonical = `${window.location.origin}/`;
+    if (lang) {
+      title = `${lang.name} tilini bepul o'rganing | Lingohub`;
+      description = `${lang.name} tilini interaktiv o'rganing — alifbo, reading, listening, writing va speaking mashqlari bilan. Bepul onlayn til kursi.`;
+      canonical = `${window.location.origin}/${lang.id}`;
+    }
+    document.title = title;
+    try {
+      const meta = document.querySelector('meta[name="description"]');
+      if (meta) meta.setAttribute('content', description);
+      const link = document.querySelector('link[rel="canonical"]');
+      if (link) link.setAttribute('href', canonical);
+    } catch { /* noop */ }
+  }, [state.selectedLanguage]);
   // Obuna shlyuzi — saytga kirishdan oldin kanallarga obuna talab qilinadi.
   // Adminlar ham ko'radi — o'z tugmasi bilan 1 bosishda o'tadi.
   const [gatePassed, setGatePassed] = useState(() => hasGatePassed());

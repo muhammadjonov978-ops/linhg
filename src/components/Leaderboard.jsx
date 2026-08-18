@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
-import { ref, onValue, set, serverTimestamp } from 'firebase/database';
-import { db, HAS_FIREBASE } from '../firebase';
+import { db, HAS_FIREBASE, ensureFirebaseInit } from '../firebase';
 import { fetchLeaderboard, getServerUid, reportScore, computeScore } from '../lib/server';
 import {
   FaTrophy as Trophy, FaCrown as Crown, FaMedal as Medal, FaFire as Flame,
@@ -98,27 +97,41 @@ export default function Leaderboard({ onBack }) {
       setSynced(false);
       return;
     }
-    const uid = savedUser?.sub || getDeviceId();
-    const myRef = ref(db, `leaderboard/${uid}`);
-    set(myRef, {
-      name: myName,
-      score: Math.round(myScore),
-      lessons: completedCount,
-      coins: state.coins || 0,
-      streak: state.streak || 0,
-      updatedAt: serverTimestamp(),
-    }).catch(() => {});
+    let cancelled = false;
+    let unsub = null;
+    (async () => {
+      try {
+        const { ref, set, onValue, serverTimestamp } = await import('firebase/database');
+        await ensureFirebaseInit();
+        const uid = savedUser?.sub || getDeviceId();
+        const myRef = ref(db, `leaderboard/${uid}`);
+        set(myRef, {
+          name: myName,
+          score: Math.round(myScore),
+          lessons: completedCount,
+          coins: state.coins || 0,
+          streak: state.streak || 0,
+          updatedAt: serverTimestamp(),
+        }).catch(() => {});
 
-    const listRef = ref(db, 'leaderboard');
-    const unsub = onValue(listRef, (snap) => {
-      const data = snap.val() || {};
-      const users = Object.entries(data)
-        .filter(([, u]) => u && typeof u.score === 'number')
-        .map(([key, u]) => ({ ...u, key }))
-        .sort((a, b) => b.score - a.score);
-      setOnlineUsers(users);
-    });
-    return () => unsub();
+        const listRef = ref(db, 'leaderboard');
+        unsub = onValue(listRef, (snap) => {
+          if (cancelled) return;
+          const data = snap.val() || {};
+          const users = Object.entries(data)
+            .filter(([, u]) => u && typeof u.score === 'number')
+            .map(([key, u]) => ({ ...u, key }))
+            .sort((a, b) => b.score - a.score);
+          setOnlineUsers(users);
+        });
+      } catch {
+        /* firebase sozlanmagan/xato — server yoki demo rejim ishlayveradi */
+      }
+    })();
+    return () => {
+      cancelled = true;
+      if (unsub) unsub();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [myScore]);
 

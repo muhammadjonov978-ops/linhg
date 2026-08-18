@@ -41,6 +41,7 @@ import dailyBonus from '../server/handlers/daily-bonus.js';
 import dailyContent from '../server/handlers/daily-content.js';
 import tournament from '../server/handlers/tournament.js';
 import stats from '../server/handlers/stats.js';
+import gateCode from '../server/handlers/gate-code.js';
 
 // Route jadvali: yo'l → handler.
 // `method` ko'rsatilgan bo'lsa router tekshiradi; ko'rsatilmagan bo'lsa
@@ -76,6 +77,10 @@ const routes = [
   { path: '/tournament/claim', method: 'POST', handler: tournament },
   { path: '/stats/event', method: 'POST', handler: stats },
   { path: '/stats/dashboard', method: 'GET', handler: stats },
+  // ===== KIRISH SHLYUZI (haqiqiy tekshiruv) =====
+  { path: '/gate/code/status', method: 'GET', handler: gateCode },
+  { path: '/gate/code/check', method: 'POST', handler: gateCode },
+  { path: '/gate/code/set', method: 'POST', handler: gateCode },
 ];
 
 export default async function handler(req, res) {

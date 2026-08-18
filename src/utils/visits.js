@@ -21,8 +21,17 @@
 //   subscribeVisits(cb) -> unsub   — get live { total, today, last7d, unique, mode }
 //   refreshVisits()                — force re-aggregate (the "Yangilash" button)
 
-import { ref, runTransaction, onValue, get, serverTimestamp } from 'firebase/database';
-import { db, HAS_FIREBASE } from '../firebase';
+import { db, HAS_FIREBASE, ensureFirebaseInit } from '../firebase';
+
+// firebase/database moduli lazy yuklanadi — faqat Firebase sozlangan bo'lsa
+let dbModCache = null;
+async function fdb() {
+  if (!dbModCache) {
+    await ensureFirebaseInit();
+    dbModCache = await import('firebase/database');
+  }
+  return dbModCache;
+}
 
 const LOCAL_KEY = 'lingohub_visits';
 const CHANNEL_NAME = 'lingohub-visits';
@@ -104,7 +113,8 @@ function aggregateNodes(nodes) {
 
 // ---------- FIREBASE MODE ----------
 
-function firebaseRecord() {
+async function firebaseRecord() {
+  const { ref, runTransaction, serverTimestamp } = await fdb();
   const uid = getDeviceId();
   const today = dayKey();
   const entryRef = ref(db, `visits/${uid}`);
@@ -130,9 +140,10 @@ function firebaseAggregate(snapshot) {
   emit();
 }
 
-function startFirebase() {
+async function startFirebase() {
+  const { ref, onValue } = await fdb();
   _unsubFirebase = onValue(ref(db, 'visits'), firebaseAggregate);
-  firebaseRecord();
+  await firebaseRecord();
 }
 
 // ---------- LOCAL (fallback) MODE ----------
@@ -203,7 +214,7 @@ export function startVisitsTracking() {
   if (started) return;
   started = true;
   if (HAS_FIREBASE) {
-    startFirebase();
+    startFirebase().catch(() => {});
   } else {
     startLocal();
   }
@@ -214,6 +225,7 @@ export async function refreshVisits() {
   if (!started) return;
   if (HAS_FIREBASE) {
     try {
+      const { ref, get } = await fdb();
       const snap = await get(ref(db, 'visits'));
       firebaseAggregate(snap);
     } catch {

@@ -15,8 +15,18 @@
 //   subscribePresence(cb) -> unsubscribe — get live { total, site, admin, mode }
 //   stopPresence()                        — stop + remove own entry
 
-import { ref, set, onValue, onDisconnect, serverTimestamp, remove } from 'firebase/database';
-import { db, HAS_FIREBASE } from '../firebase';
+import { db, HAS_FIREBASE, ensureFirebaseInit } from '../firebase';
+
+// firebase/database moduli lazy yuklanadi — faqat Firebase sozlangan bo'lsa
+// (bundle'ni kichikroq qilish uchun). Has_FIREBASE false bo'lsa hech qachon chaqirilmaydi.
+let dbModCache = null;
+async function fdb() {
+  if (!dbModCache) {
+    await ensureFirebaseInit();
+    dbModCache = await import('firebase/database');
+  }
+  return dbModCache;
+}
 
 const HEARTBEAT_MS = 20000; // write heartbeat every 20s
 const STALE_MS = 45000;     // an entry older than 45s is considered offline
@@ -66,7 +76,8 @@ export function subscribePresence(cb) {
 
 // ---------- FIREBASE MODE ----------
 
-function firebaseWrite() {
+async function firebaseWrite() {
+  const { ref, set, serverTimestamp } = await fdb();
   const entryRef = ref(db, `presence/${getSessionId()}`);
   set(entryRef, {
     location: currentLocation,
@@ -92,14 +103,15 @@ function firebaseCount(snapshot) {
   emit();
 }
 
-function startFirebase() {
+async function startFirebase() {
+  const { ref, onValue, onDisconnect } = await fdb();
   const entryRef = ref(db, `presence/${getSessionId()}`);
   // Remove own entry when the client disconnects abruptly
   onDisconnect(entryRef).remove();
   // Listen for live count changes
   unsubFirebase = onValue(ref(db, 'presence'), firebaseCount);
   // First write + periodic heartbeat
-  firebaseWrite();
+  await firebaseWrite();
   heartbeatTimer = setInterval(firebaseWrite, HEARTBEAT_MS);
 }
 
@@ -182,7 +194,7 @@ export function startPresence(location = 'site') {
   started = true;
   currentLocation = location;
   if (HAS_FIREBASE) {
-    startFirebase();
+    startFirebase().catch(() => {});
   } else {
     startLocal();
   }
@@ -192,14 +204,14 @@ export function setPresenceLocation(location) {
   if (!started) return; // presence not running — nothing to update
   currentLocation = location;
   if (HAS_FIREBASE) {
-    firebaseWrite();
+    firebaseWrite().catch(() => {});
   } else {
     localWrite();
     localCount();
   }
 }
 
-export function stopPresence() {
+export async function stopPresence() {
   started = false;
   if (heartbeatTimer) clearInterval(heartbeatTimer);
   if (pruneTimer) clearInterval(pruneTimer);
@@ -221,8 +233,12 @@ export function stopPresence() {
 
   // Remove own entry so the counter drops immediately
   if (HAS_FIREBASE) {
-    const entryRef = ref(db, `presence/${getSessionId()}`);
-    remove(entryRef).catch(() => {});
+    try {
+      const { ref, remove } = await fdb();
+      remove(ref(db, `presence/${getSessionId()}`)).catch(() => {});
+    } catch {
+      /* noop */
+    }
   } else {
     const map = readLocalMap();
     delete map[getSessionId()];

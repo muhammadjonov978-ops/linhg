@@ -28,7 +28,7 @@ import {
   FaTelegramPlane as TelegramPlane, FaExclamationTriangle as AlertIcon, FaGlobe as Globe,
   FaUserClock as UserClock, FaServer as ServerIcon, FaHistory as HistoryIcon,
   FaTachometerAlt as Gauge, FaBars as MenuIcon,
-  FaSms as SmsIcon, FaMobileAlt as MobileAlt,
+  FaSms as SmsIcon, FaMobileAlt as MobileAlt,  FaLock as LockIcon, FaKey as KeyIcon,
 } from 'react-icons/fa';
 
 const LOG_KEY = 'lingohub_admin_log';
@@ -660,6 +660,160 @@ function TelegramTab() {
           <b className="text-white/70">TELEGRAM_CHAT_ID</b> env o\u2018zgaruvchilarini qo\u2018shing, so\u2018ng yuqoridagi
           skriptni ishga tushiring. Botga <b className="text-[#38bdf8]">/start</b> yuborish orqali chat ID avtomatik eslab qolinadi.
         </p>
+      </div>
+    </div>
+  );
+}
+
+// ================= KIRISH SHLYUZI (haqiqiy obuna tekshiruvi) =================
+function GateTab({ session }) {
+  const { t } = useI18n();
+  const token = session?.token || '';
+  const [code, setCode] = useState('');
+  const [hasCode, setHasCode] = useState(null); // null = yuklanmoqda
+  const [msg, setMsg] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [tgInfo, setTgInfo] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/gate/code/status')
+      .then((r) => r.json())
+      .then((d) => setHasCode(!!d.hasCode))
+      .catch(() => setHasCode(false));
+    fetch('/api/telegram/verify', { method: 'POST' })
+      .then((r) => r.json())
+      .then((d) => setTgInfo(d))
+      .catch(() => setTgInfo({ configured: false }));
+  }, []);
+
+  const save = async () => {
+    const value = code.trim();
+    if (value.length < 3) { setMsg('❌ Kod kamida 3 belgidan iborat bo\u2018lishi kerak'); return; }
+    setBusy(true);
+    setMsg('');
+    try {
+      const res = await fetch('/api/gate/code/set', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ code: value }),
+      });
+      const data = await res.json();
+      if (data?.ok) {
+        setHasCode(true);
+        setCode('');
+        setMsg("✅ Kod saqlandi — endi uni Instagram story/post'da e'lon qiling!");
+      } else {
+        setMsg(`❌ ${data?.error || 'Xato yuz berdi'}`);
+      }
+    } catch {
+      setMsg('❌ Serverga ulanishmadi');
+    }
+    setBusy(false);
+    setTimeout(() => setMsg(''), 5000);
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Instagram story-kod */}
+      <div className="rounded-xl bg-gradient-to-br from-[#dd2a7b]/15 to-[#8134af]/[0.05] border border-[#dd2a7b]/30 p-4 sm:p-5 relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-[#dd2a7b]/10 blur-2xl pointer-events-none" />
+        <div className="flex flex-wrap items-center gap-3 relative">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] flex items-center justify-center shadow-lg shadow-[#dd2a7b]/30 shrink-0">
+            <KeyIcon className="w-5 h-5 text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+              Instagram story-kod
+              {hasCode ? (
+                <span className="badge badge-success badge-xs gap-1 border-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" /> Kod o\u2018rnatilgan
+                </span>
+              ) : hasCode === false ? (
+                <span className="badge badge-warning badge-xs gap-1 border-0">Kod yo\u2018q</span>
+              ) : (
+                <span className="badge badge-ghost badge-xs border-0">Yuklanmoqda...</span>
+              )}
+            </h3>
+            <p className="text-[11px] text-white/50 mt-0.5 leading-relaxed">
+              Foydalanuvchi saytga kirishda shu kodni kiritishi shart. Kodni Instagram kanalingizdagi
+              so\u2018nggi post/story da e\u2019lon qiling — har kuni yangilab turing.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 mt-4 relative">
+          <input
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') save(); }}
+            placeholder="Yangi maxfiy kod (masalan: LINGO2026)"
+            maxLength={16}
+            className="input input-bordered input-sm flex-1 min-w-[220px] bg-white/[0.03] border-white/10 text-white placeholder:text-white/30 focus:border-[#dd2a7b] transition-colors tracking-widest uppercase"
+          />
+          <button
+            onClick={save}
+            disabled={busy}
+            className="btn btn-primary btn-sm gap-1.5 border-0 bg-gradient-to-r from-[#f58529] via-[#dd2a7b] to-[#8134af] text-white hover:brightness-110 disabled:opacity-50"
+          >
+            {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <KeyIcon className="w-3.5 h-3.5" />}
+            {busy ? 'Saqlanmoqda...' : 'Kodni o\u2018rnatish'}
+          </button>
+        </div>
+        {msg && <div className="text-xs font-medium mt-2 animate-[fadeIn_0.3s_ease-out]">{msg}</div>}
+      </div>
+
+      {/* Telegram kanal tekshiruvi */}
+      <div className="rounded-xl bg-gradient-to-br from-[#38bdf8]/15 to-[#0ea5e9]/[0.05] border border-[#38bdf8]/30 p-4 sm:p-5 relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-36 h-36 rounded-full bg-[#38bdf8]/10 blur-2xl pointer-events-none" />
+        <div className="flex flex-wrap items-center gap-3 relative">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#38bdf8] to-[#0ea5e9] flex items-center justify-center shadow-lg shadow-[#38bdf8]/30 shrink-0">
+            <TelegramPlane className="w-5 h-5 text-white" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="font-bold text-sm text-white flex items-center gap-2">
+              Telegram kanal — haqiqiy tekshiruv
+              {tgInfo?.configured ? (
+                <span className="badge badge-success badge-xs gap-1 border-0">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse" /> Bot faol
+                </span>
+              ) : tgInfo ? (
+                <span className="badge badge-error badge-xs gap-1 border-0">Bot sozlanmagan</span>
+              ) : (
+                <span className="badge badge-ghost badge-xs border-0">Tekshirilmoqda...</span>
+              )}
+            </h3>
+            <p className="text-[11px] text-white/50 mt-0.5 leading-relaxed">
+              Foydalanuvchi botga /start yuborganda server getChatMember orqali kanal a\u2018zoligini tekshiradi.
+              Kanal: <b className="text-[#38bdf8]">@khoja_akbar</b>{tgInfo?.botUsername ? ` · Bot: @${tgInfo.botUsername}` : ''}
+            </p>
+          </div>
+        </div>
+        <div className="rounded-lg bg-black/25 border border-white/10 px-3 py-2.5 mt-4 relative">
+          <p className="text-[11px] text-white/60 leading-relaxed">
+            ⚠️ <b className="text-white">Bot kanalga ADMIN qo\u2018shilgan bo\u2018lishi shart</b> — aks holda
+            tekshiruv ishlamaydi. Kanalni o\u2018zgartirmoqchi bo\u2018lsangiz:
+            <span className="font-mono text-[#38bdf8]"> src/data/gateChannels.js</span> (GATE_TELEGRAM_CHANNEL) va
+            <span className="font-mono text-[#38bdf8]"> server/handlers/telegram-verify.js</span> (CHANNEL_MAP) ni
+            bir xil qilib o\u2018zgartiring. Webhook o\u2018rnatilmagan bo\u2018lsa — "Telegram" bo\u2018limiga qarang.
+          </p>
+        </div>
+      </div>
+
+      {/* Kanallar ro'yxati */}
+      <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4">
+        <h3 className="font-bold text-sm flex items-center gap-2 mb-2 text-white">
+          <LockIcon className="w-4 h-4 text-[#a78bfa]" /> Saytga kirish talablari
+        </h3>
+        <div className="space-y-1.5 text-[11px] text-white/50 leading-relaxed">
+          <p>• <b className="text-white/80">Telegram kanal</b> — bot orqali haqiqiy a\u2018zolik tekshiriladi (getChatMember).</p>
+          <p>• <b className="text-white/80">Instagram kanallar</b> — story-kod kiritish talab qilinadi (kod yuqorida o\u2018rnatiladi).</p>
+          <p>
+            • Agar server tekshiruvi sozlanmagan bo\u2018lsa (bot yo\u2018q / kod yo\u2018q) — shlyuz
+            vaqtinchalik qo\u2018lda tasdiqlash rejimiga tushadi.
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -1830,6 +1984,7 @@ function Dashboard({ session, onLogout }) {
     { id: 'tanga', label: t('admin.tab.coins'), icon: Gift },
     { id: 'matnlar', label: t('admin.tab.texts'), icon: Type },
     { id: 'telegram', label: t('admin.tab.telegram'), icon: PaperPlane },
+    { id: 'gate', label: 'Kirish shlyuzi', icon: LockIcon },
     { id: 'sms', label: 'SMS eslatma', icon: SmsIcon },
     { id: 'statistika', label: 'Server statistika', icon: Gauge },
     { id: 'aktivlik', label: t('admin.activityTitle'), icon: UserClock },
@@ -2036,6 +2191,7 @@ function Dashboard({ session, onLogout }) {
                     { id: 'hisoblar', icon: Users, label: t('admin.tab.accounts'), desc: 'Admin qo\'shish', color: '#818cf8' },
                     { id: 'tanga', icon: Gift, label: t('admin.tab.coins'), desc: 'Tanga berish', color: '#fbbf24' },
                     { id: 'telegram', icon: PaperPlane, label: t('admin.tab.telegram'), desc: 'Bot holati', color: '#38bdf8' },
+                    { id: 'gate', icon: LockIcon, label: 'Kirish shlyuzi', desc: 'Obuna tekshiruvi', color: '#a78bfa' },
                     { id: 'sms', icon: SmsIcon, label: 'SMS eslatma', desc: 'Eskiz.uz', color: '#34d399' },
                     { id: 'statistika', icon: Gauge, label: 'Server statistika', desc: 'Darslar · tashriflar', color: '#a78bfa' },
                     { id: 'aktivlik', icon: UserClock, label: t('admin.activityTitle'), desc: 'Jonli kuzatuv', color: '#34d399' },
@@ -2087,6 +2243,11 @@ function Dashboard({ session, onLogout }) {
             {tab === 'telegram' && (
               <div className="admin-pro-card p-4 md:p-5">
                 <TelegramTab />
+              </div>
+            )}
+            {tab === 'gate' && (
+              <div className="admin-pro-card p-4 md:p-5">
+                <GateTab session={session} />
               </div>
             )}
             {tab === 'sms' && (

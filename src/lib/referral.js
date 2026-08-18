@@ -103,10 +103,11 @@ export function claimInviterReward(dispatch) {
 // Firebase sozlanmagan bo'lsa — shunchaki o'tkazib yuboriladi.
 export async function syncInviteToCloud(inviterCode) {
   try {
-    const [{ db }, { ref, set }] = await Promise.all([
+    const [{ db, ensureFirebaseInit }, { ref, set }] = await Promise.all([
       import('../firebase'),
       import('firebase/database'),
     ]);
+    await ensureFirebaseInit();
     if (!db) return false;
     const user = JSON.parse(localStorage.getItem('lingohub_user') || 'null');
     if (!user?.sub || !inviterCode) return false;
@@ -123,10 +124,11 @@ export async function syncInviteToCloud(inviterCode) {
 // Inviter uchun bulutdan takliflar sonini o'qish (kirgan bo'lsa)
 export async function fetchInviteCount(code) {
   try {
-    const [{ db }, { ref, get }] = await Promise.all([
+    const [{ db, ensureFirebaseInit }, { ref, get }] = await Promise.all([
       import('../firebase'),
       import('firebase/database'),
     ]);
+    await ensureFirebaseInit();
     if (!db) return null;
     const snap = await get(ref(db, `referrals/${code}`));
     const val = snap.val();
@@ -164,10 +166,11 @@ export function getInvitesMade() {
 // Kirgan foydalanuvchi uchun: referrals/{inviterCode}/{uid} da completed: true
 export async function markInviteeCompleted(inviterCode) {
   try {
-    const [{ db }, { ref, update }] = await Promise.all([
+    const [{ db, ensureFirebaseInit }, { ref, update }] = await Promise.all([
       import('../firebase'),
       import('firebase/database'),
     ]);
+    await ensureFirebaseInit();
     if (!db) return false;
     const user = JSON.parse(localStorage.getItem('lingohub_user') || 'null');
     const inviter = inviterCode || localStorage.getItem('lingohub_ref_inviter');

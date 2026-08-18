@@ -11,8 +11,13 @@
 import { telegramApi, telegramConfigured, getChatMember, resolveVerifyCode } from '../lib/telegram.js';
 
 // Kanal nomi → Telegram chat username (tekshirish uchun)
+// Sayt shlyuzidagi Telegram kanal shu yerda ro'yxatga olinadi.
+// ⚠️ Bot shu kanalga ADMIN qo'shilgan bo'lishi shart — aks holda getChatMember
+// 400 xato qaytaradi va tekshiruv ishlamaydi. Kanalni o'zgartirsangiz —
+// src/data/gateChannels.js dagi GATE_TELEGRAM_CHANNEL bilan bir xil qiling!
 const CHANNEL_MAP = {
   'khoja_akbar': '@khoja_akbar',
+  'telegram_khoja_akbar': '@khoja_akbar',
 };
 
 function makeCode() {

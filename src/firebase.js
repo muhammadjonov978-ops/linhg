@@ -1,14 +1,11 @@
-import { initializeApp } from 'firebase/app';
-import { getDatabase } from 'firebase/database';
-import {
-  getAuth, GoogleAuthProvider, signInWithPopup, signOut,
-  createUserWithEmailAndPassword, signInWithEmailAndPassword,
-  updateProfile, sendPasswordResetEmail,
-} from 'firebase/auth';
-
 // ==== FIREBASE REALTIME DATABASE (live visitor counter) + AUTH ====
 // Fill these in a .env file (see .env.example) to enable REAL cross-device
 // live counting + REAL Google sign-in + email/password accounts.
+//
+// ⚠️ PERFORMANCE: Firebase SDK (~150 KB) endi LAZY yuklanadi — faqat .env'da
+// VITE_FIREBASE_* kalitlari sozlangan bo'lsa import qilinadi. Sozlanmagan
+// bo'lsa SDK bundle'ga umuman kirmaydi / yuklanmaydi (birinchi yuklash tezroq).
+// Barcha firebase funksiyalari ishlatishdan oldin ensureFirebaseInit()'ni kutadi.
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
@@ -29,19 +26,36 @@ let app = null;
 let db = null;
 let auth = null;
 let googleProvider = null;
+let authModRef = null; // firebase/auth modulining o'zi (funksiyalar uchun)
+let initPromise = null;
 
-if (HAS_FIREBASE) {
-  app = initializeApp(firebaseConfig);
-  db = getDatabase(app);
-  auth = getAuth(app);
-  googleProvider = new GoogleAuthProvider();
+// Firebase'ni (kerak bo'lganda) ishga tushiradi. SDK faqat shu yerda dinamik
+// import qilinadi — HAS_FIREBASE false bo'lsa hech narsa yuklanmaydi.
+export function ensureFirebaseInit() {
+  if (!HAS_FIREBASE) return Promise.resolve();
+  if (!initPromise) {
+    initPromise = (async () => {
+      const [{ initializeApp }, { getDatabase }, authMod] = await Promise.all([
+        import('firebase/app'),
+        import('firebase/database'),
+        import('firebase/auth'),
+      ]);
+      authModRef = authMod;
+      app = initializeApp(firebaseConfig);
+      db = getDatabase(app);
+      auth = authMod.getAuth(app);
+      googleProvider = new authMod.GoogleAuthProvider();
+    })();
+  }
+  return initPromise;
 }
 
 // ===== GOOGLE SIGN-IN (real Firebase Auth) =====
 // Returns a profile object or null when Firebase is not configured.
 export async function signInWithGoogle() {
-  if (!auth || !googleProvider) return null;
-  const result = await signInWithPopup(auth, googleProvider);
+  await ensureFirebaseInit();
+  if (!auth || !googleProvider || !authModRef) return null;
+  const result = await authModRef.signInWithPopup(auth, googleProvider);
   const u = result.user;
   return {
     sub: u.uid,
@@ -56,10 +70,11 @@ export async function signInWithGoogle() {
 // ===== EMAIL / PASSWORD SIGN-UP (real Firebase Auth) =====
 // Creates a new account and signs the user in. Returns a profile object.
 export async function registerWithEmail(name, email, password) {
-  if (!auth) return null;
-  const result = await createUserWithEmailAndPassword(auth, email, password);
+  await ensureFirebaseInit();
+  if (!auth || !authModRef) return null;
+  const result = await authModRef.createUserWithEmailAndPassword(auth, email, password);
   // Foydalanuvchi ko'rinadigan ismini o'rnatamiz
-  await updateProfile(result.user, { displayName: name }).catch(() => {});
+  await authModRef.updateProfile(result.user, { displayName: name }).catch(() => {});
   const u = result.user;
   return {
     sub: u.uid,
@@ -74,8 +89,9 @@ export async function registerWithEmail(name, email, password) {
 // ===== EMAIL / PASSWORD LOGIN (real Firebase Auth) =====
 // Signs an existing user in. Returns a profile object.
 export async function loginWithEmail(email, password) {
-  if (!auth) return null;
-  const result = await signInWithEmailAndPassword(auth, email, password);
+  await ensureFirebaseInit();
+  if (!auth || !authModRef) return null;
+  const result = await authModRef.signInWithEmailAndPassword(auth, email, password);
   const u = result.user;
   return {
     sub: u.uid,
@@ -90,15 +106,17 @@ export async function loginWithEmail(email, password) {
 // ===== PASSWORD RESET =====
 // Sends a password reset email to the given address.
 export async function sendPasswordReset(email) {
-  if (!auth) return null;
-  await sendPasswordResetEmail(auth, email);
+  await ensureFirebaseInit();
+  if (!auth || !authModRef) return null;
+  await authModRef.sendPasswordResetEmail(auth, email);
   return true;
 }
 
 export async function signOutGoogle() {
-  if (!auth) return;
+  await ensureFirebaseInit();
+  if (!auth || !authModRef) return;
   try {
-    await signOut(auth);
+    await authModRef.signOut(auth);
   } catch {
     /* noop */
   }
