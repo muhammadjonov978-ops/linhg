@@ -48,6 +48,7 @@ const DictionaryPage = lazy(() => import('./pages/DictionaryPage'));
 const MissionsPage = lazy(() => import('./pages/MissionsPage'));
 const ReferralPage = lazy(() => import('./pages/ReferralPage'));
 const CertificatesPage = lazy(() => import('./pages/CertificatesPage'));
+const GamesPage = lazy(() => import('./pages/GamesPage'));
 
 // Lazy-chunk yuklanayotganda ko'rsatiladigan yengil loader
 function PageLoader() {
@@ -99,20 +100,82 @@ function AppContent() {
   // (Google har bir til sahifasini alohida ko'rsatishi uchun).
   useEffect(() => {
     const lang = languages.find((l) => l.id === state.selectedLanguage);
+    const currentHash = window.location.hash;
     let title = DEFAULT_TITLE;
     let description = DEFAULT_DESCRIPTION;
     let canonical = `${window.location.origin}/`;
-    if (lang) {
+    let ogImage = `${window.location.origin}/og-image.jpg`;
+
+      // Schema.org structured data for game pages
+    try {
+      const existingScript = document.getElementById('game-schema-ld');
+      if (existingScript) existingScript.remove();
+      if (currentHash.startsWith('#/games')) {
+        const langName = lang?.name || 'Ingliz';
+        const gameName = currentHash.includes('word-match') ? 'Word Match' :
+          currentHash.includes('sentence-builder') ? 'Sentence Builder' :
+          currentHash.includes('speed-typing') ? 'Speed Typing' : "Lingohub O'yinlar";
+        const gameDesc = currentHash.includes('word-match') ? `${langName} so'zlarini moslashtiring` :
+          currentHash.includes('sentence-builder') ? `${langName} gap tuzing` :
+          currentHash.includes('speed-typing') ? `${langName} tezda yozing` : 'Til o\'rganish o\'yinlari';
+        const script = document.createElement('script');
+        script.id = 'game-schema-ld';
+        script.type = 'application/ld+json';
+        script.textContent = JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'Game',
+          name: gameName,
+          description: gameDesc,
+          url: canonical,
+          genre: 'Educational Game',
+          applicationCategory: 'EducationalApplication',
+          operatingSystem: 'Web Browser',
+          offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+          creator: { '@type': 'Organization', name: 'Lingohub', url: 'https://lingohub.uz' },
+        });
+        document.head.appendChild(script);
+      }
+    } catch { /* noop */ }
+
+    // O'yin sahifalari uchun dinamik OG metadata
+    if (currentHash.startsWith('#/games/word-match')) {
+      const langName = lang?.name || 'Ingliz';
+      title = `Word Match — ${langName} So'zlarini Moslashtiring | Lingohub O'yinlar`;
+      description = `${langName} tilidagi so'zlarni o'zbekcha tarjimasi bilan moslashtiring. Taymer, combo va tovush effektlari bilan interaktiv o'yin.`;
+      canonical = `${window.location.origin}/#/games/word-match`;
+    } else if (currentHash.startsWith('#/games/sentence-builder')) {
+      const langName = lang?.name || 'Ingliz';
+      title = `Sentence Builder — ${langName} Gap Tuzing | Lingohub O'yinlar`;
+      description = `${langName} tilida so'z bloklarini to'g'ri tartibda joylashtirib grammatik jihatdan to'g'ri gap tuzing.`;
+      canonical = `${window.location.origin}/#/games/sentence-builder`;
+    } else if (currentHash.startsWith('#/games/speed-typing')) {
+      const langName = lang?.name || 'Ingliz';
+      title = `Speed Typing — ${langName} Tezda Yozing | Lingohub O'yinlar`;
+      description = `${langName} tilidagi aralashtirilgan so'zlarni tezda yozing. Tezlik va xotira mashqi.`;
+      canonical = `${window.location.origin}/#/games/speed-typing`;
+    } else if (currentHash.startsWith('#/games')) {
+      title = `Til O'rganish O'yinlari | Lingohub`;
+      description = `Word Match, Sentence Builder, Speed Typing va boshqa interaktiv til o'rganish o'yinlari. So'z boyligingizni oshiring!`;
+      canonical = `${window.location.origin}/#/games`;
+    } else if (lang) {
       title = `${lang.name} tilini bepul o'rganing | Lingohub`;
       description = `${lang.name} tilini interaktiv o'rganing — alifbo, reading, listening, writing va speaking mashqlari bilan. Bepul onlayn til kursi.`;
       canonical = `${window.location.origin}/${lang.id}`;
     }
+
     document.title = title;
     try {
       const meta = document.querySelector('meta[name="description"]');
       if (meta) meta.setAttribute('content', description);
       const link = document.querySelector('link[rel="canonical"]');
       if (link) link.setAttribute('href', canonical);
+      // Open Graph
+      const ogTitle = document.querySelector('meta[property="og:title"]');
+      if (ogTitle) ogTitle.setAttribute('content', title);
+      const ogDesc = document.querySelector('meta[property="og:description"]');
+      if (ogDesc) ogDesc.setAttribute('content', description);
+      const ogUrl = document.querySelector('meta[property="og:url"]');
+      if (ogUrl) ogUrl.setAttribute('content', canonical);
     } catch { /* noop */ }
   }, [state.selectedLanguage]);
   // Obuna shlyuzi — saytga kirishdan oldin kanallarga obuna talab qilinadi.
@@ -218,10 +281,11 @@ function AppContent() {
   const showMissions = hash.startsWith('#/missions');
   const showReferral = hash.startsWith('#/referral');
   const showCertificates = hash.startsWith('#/certificates');
+  const showGames = hash.startsWith('#/games');
 
   // Barcha to'liq sahifa route'lari (sidebar va AI tutor yashiriladi)
   const isFullPageRoute = showPortfolio || showShop || showLeaderboard || showTournament || showFlashcards ||
-    showReport || showPlacement || showGrammar || showDictionary || showMissions || showReferral || showCertificates;
+    showReport || showPlacement || showGrammar || showDictionary || showMissions || showReferral || showCertificates || showGames;
 
   const goHome = () => {
     window.location.hash = '#/';
@@ -265,6 +329,7 @@ function AppContent() {
             {showMissions && <MissionsPage onBack={goHome} />}
             {showReferral && <ReferralPage onBack={goHome} />}
             {showCertificates && <CertificatesPage onBack={goHome} />}
+            {showGames && <GamesPage onBack={goHome} />}
             {!isFullPageRoute && showHome && <HomePage />}
             {!isFullPageRoute && showDashboard && (
               <LanguageDashboard onSelectLevel={handleSelectLevel} />

@@ -6,6 +6,21 @@ import { pushToCloud, pullFromCloud, mergeState } from '../lib/cloudSync';
 import { markInviteeCompleted } from '../lib/referral';
 import { sendStatEvent, reportScore, getServerUid } from '../lib/server';
 
+// ===== XP & LEVEL SYSTEM =====
+// Level har 100 tanga uchun 1 daraja (100 tanga = Lv.2, 200 = Lv.3, ...)
+// Maksimal daraja: 100. Har yangi darajada +5% bonus tanga.
+export const XP_PER_LEVEL = 100;
+export const MAX_LEVEL = 100;
+
+export function calculateLevel(coins) {
+  const level = Math.min(Math.floor(coins / XP_PER_LEVEL) + 1, MAX_LEVEL);
+  const currentLevelXp = (level - 1) * XP_PER_LEVEL;
+  const nextLevelXp = level < MAX_LEVEL ? level * XP_PER_LEVEL : coins;
+  const progress = level >= MAX_LEVEL ? 100 : Math.round(((coins - currentLevelXp) / (nextLevelXp - currentLevelXp)) * 100);
+  const levelBonus = Math.floor(level * 0.05 * 10) / 10; // 5% bonus per level
+  return { level, progress, levelBonus };
+}
+
 const AppContext = createContext();
 
 export const STORAGE_KEY = 'lingohub_data';
@@ -413,6 +428,14 @@ export function AppProvider({ children }) {
     const html = document.documentElement;
     html.setAttribute('data-theme', isThemeId(state.theme) ? state.theme : DEFAULT_THEME);
   }, [state.theme]);
+
+  // XP & Level: tangalar o'zgarganda darajani qayta hisoblash
+  useEffect(() => {
+    const { level } = calculateLevel(state.coins);
+    if (level !== state.level) {
+      dispatch({ type: 'SET_LEVEL', payload: level });
+    }
+  }, [state.coins]);
 
   // Taklif qilingan foydalanuvchi birinchi darsni tugatganda — inviter mukofoti
   // uchun bulutga belgi qo'yiladi (har qurilmada bir marta).

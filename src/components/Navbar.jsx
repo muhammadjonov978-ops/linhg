@@ -10,6 +10,7 @@ import {
   FaBell as Bell, FaGift as Gift, FaTrophy as Trophy, FaLayerGroup as Layers,
   FaChartBar as ChartBar, FaBullseye as Target, FaBookOpen as BookOpen,
   FaBook as Book, FaTasks as Tasks, FaMedal as Medal, FaCrown as Crown,
+  FaGamepad as Gamepad,
 } from 'react-icons/fa';
 import ThemePicker from './ThemePicker';
 import GoogleAuthModal, { USER_EVENT } from './GoogleAuthModal';
@@ -118,6 +119,12 @@ export default function Navbar({ onToggleTutor }) {
       label: t('nav.tournament'),
       href: '#/tournament',
       icon: <Crown className="w-4 h-4 text-violet-400" />,
+    },
+    {
+      key: 'games',
+      label: t('nav.games') || "O'yinlar",
+      href: '#/games',
+      icon: <Gamepad className="w-4 h-4 text-emerald-400" />,
     },
     {
       key: 'flashcards',
@@ -364,6 +371,11 @@ export default function Navbar({ onToggleTutor }) {
             <li>
               <a href="#/tournament" className="gap-2">
                 <Crown className="w-4 h-4 text-violet-400" /> {t('nav.tournament')}
+              </a>
+            </li>
+            <li>
+              <a href="#/games" className="gap-2">
+                <Gamepad className="w-4 h-4 text-emerald-400" /> {t('nav.games') || "O'yinlar"}
               </a>
             </li>
             <li>
