@@ -7,7 +7,7 @@ import {
   loadSessionVerified, saveSessionVerified,
 } from '../lib/gate';
 import {
-  LuInstagram, LuSend as LuTelegram, LuShieldCheck, LuCheck, LuExternalLink,
+  LuInstagram, LuSend as LuTelegram, LuShieldCheck, LuExternalLink,
   LuArrowRight, LuSparkles, LuGlobe, LuCrown, LuBadgeCheck,
   LuCircleCheck, LuLock, LuRefreshCw, LuKeyRound, LuLoader,
 } from 'react-icons/lu';
@@ -163,18 +163,13 @@ export default function SubscriptionGate({ onPass }) {
         </span>
       );
     }
-    // Bot sozlanmagan — vaqtinchalik qo'lda tasdiqlash
+    // Bot sozlanmagan — O'TISH YO'Q. Sayt egasi botni sozlamaguncha
+    // bu kanalni tasdiqlab bo'lmaydi (qo'lda tasdiqlash qasddan YO'Q).
     if (tgConfigured === false) {
       return (
-        <div className="flex flex-col items-end gap-1.5 shrink-0">
-          <button
-            onClick={() => markVerified(tgChannel.id)}
-            className="btn btn-xs gap-1 border-0 bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] text-white hover:brightness-110"
-          >
-            <LuCheck className="w-3 h-3" /> {t('gate.manualConfirm')}
-          </button>
-          <span className="text-[9px] text-white/35 text-right max-w-[140px]">{t('gate.manualNote')}</span>
-        </div>
+        <span className="text-[10px] text-amber-300/80 text-right max-w-[180px] leading-snug shrink-0">
+          {t('gate.tgNotSetup')}
+        </span>
       );
     }
     if (tg.phase === 'idle') {
@@ -228,18 +223,13 @@ export default function SubscriptionGate({ onPass }) {
         </span>
       );
     }
-    // Egasi kod o'rnatmagan — vaqtinchalik qo'lda tasdiqlash
+    // Egasi kod o'rnatmagan — O'TISH YO'Q. Kod e'lon qilinmaguncha
+    // bu kanalni tasdiqlab bo'lmaydi (qo'lda tasdiqlash qasddan YO'Q).
     if (igHasCode === false) {
       return (
-        <div className="flex flex-col items-end gap-1.5 shrink-0">
-          <button
-            onClick={() => markVerified(ch.id)}
-            className="btn btn-xs gap-1 border-0 bg-gradient-to-r from-[#f58529] via-[#dd2a7b] to-[#8134af] text-white hover:brightness-110"
-          >
-            <LuCheck className="w-3 h-3" /> {t('gate.manualConfirm')}
-          </button>
-          <span className="text-[9px] text-white/35 text-right max-w-[140px]">{t('gate.manualNote')}</span>
-        </div>
+        <span className="text-[10px] text-amber-300/80 text-right max-w-[180px] leading-snug shrink-0">
+          {t('gate.igNoCode')}
+        </span>
       );
     }
     return (
