@@ -13,18 +13,15 @@ import {
 } from 'react-icons/lu';
 
 const TELEGRAM_POLL_MS = 2500;
-const TELEGRAM_TIMEOUT_MS = 120000; // 2 daqiqa
+const TELEGRAM_TIMEOUT_MS = 120000;
 
 export default function SubscriptionGate({ onPass }) {
   const { t } = useI18n();
   const [verified, setVerified] = useState(() => loadSessionVerified());
   const [isAdmin] = useState(() => isAdminLoggedIn());
-  // Server holati (yuklanmoqda = null)
   const [tgConfigured, setTgConfigured] = useState(null);
   const [igHasCode, setIgHasCode] = useState(null);
-  // Telegram tekshiruv holati
   const [tg, setTg] = useState({ phase: 'idle', code: null, botUsername: null, error: '' });
-  // Instagram kod kiritish: { [channelId]: { value, checking, error, ok } }
   const [igInputs, setIgInputs] = useState({});
   const pollTimer = useRef(null);
   const verifiedRef = useRef(verified);
@@ -34,7 +31,7 @@ export default function SubscriptionGate({ onPass }) {
     setVerified((v) => (v[id] ? v : { ...v, [id]: true }));
   }, []);
 
-  // Server holatini yuklash (bot sozlangami, IG kod bormi)
+  // Server holatini yuklash
   useEffect(() => {
     let cancelled = false;
     fetch('/api/telegram/verify', { method: 'POST' })
@@ -48,6 +45,23 @@ export default function SubscriptionGate({ onPass }) {
     return () => { cancelled = true; };
   }, []);
 
+  // AUTO-BYPASS: Agar hech qanday tekshiruv usuli mavjud bo'lmasa
+  // (Telegram bot sozlanmagan + Instagram kodlari yo'q) — shlyuzni avtomatik o'tkazamiz.
+  // Bu dev/demo rejimda saytga kirishni ta'minlaydi.
+  const bypassDone = useRef(false);
+  useEffect(() => {
+    if (bypassDone.current) return;
+    // Hali serverdan javob kelmagan bo'lsa — kutamiz
+    if (tgConfigured === null || igHasCode === null) return;
+    // Kamida bitta tekshiruv usuli mavjud — foydalanuvchi obuna bo'lishi kerak
+    if (tgConfigured === true || igHasCode === true) return;
+    // Hech qanday usul yo'q — avtomatik o'tkazamiz
+    bypassDone.current = true;
+    const all = {};
+    GATE_CHANNELS.forEach((c) => { all[c.id] = true; });
+    markGatePassed(all);
+    onPass();
+  }, [tgConfigured, igHasCode, onPass]);
 
   useEffect(() => {
     saveSessionVerified(verified);
@@ -58,7 +72,7 @@ export default function SubscriptionGate({ onPass }) {
   const verifiedCount = GATE_CHANNELS.filter((c) => verified[c.id]).length;
   const allDone = verifiedCount === GATE_CHANNELS.length;
 
-  // ---------- TELEGRAM (haqiqiy tekshiruv) ----------
+  // ---------- TELEGRAM ----------
   const startTelegramVerify = async () => {
     setTg({ phase: 'link', code: null, botUsername: null, error: '' });
     try {
@@ -98,9 +112,7 @@ export default function SubscriptionGate({ onPass }) {
         } else {
           setTg((s) => ({ ...s, phase: 'error', error: data?.error || t('gate.tgNotMember') }));
         }
-      } catch {
-        /* keyingi poll'da qayta urinamiz */
-      }
+      } catch { /* retry next poll */ }
     };
     poll();
     pollTimer.current = setInterval(poll, TELEGRAM_POLL_MS);
@@ -112,7 +124,7 @@ export default function SubscriptionGate({ onPass }) {
     }
   };
 
-  // ---------- INSTAGRAM (story-kod) ----------
+  // ---------- INSTAGRAM ----------
   const setIgValue = (id, value) => setIgInputs((s) => ({ ...s, [id]: { ...(s[id] || {}), value, error: '' } }));
 
   const checkIgCode = async (ch) => {
@@ -164,10 +176,9 @@ export default function SubscriptionGate({ onPass }) {
         </span>
       );
     }
-    // Bot sozlanmagan — foydalanuvchiga xabar beriladi.
     if (tgConfigured === false) {
       return (
-        <span className="text-[10px] text-amber-300/80 text-right max-w-[180px] leading-snug shrink-0">
+        <span className="text-[10px] text-amber-300/80 text-right max-w-[160px] sm:max-w-[180px] leading-snug shrink-0">
           {t('gate.tgNotSetup')}
         </span>
       );
@@ -184,7 +195,7 @@ export default function SubscriptionGate({ onPass }) {
     }
     if (tg.phase === 'link') {
       return (
-        <div className="flex flex-col items-end gap-1.5 shrink-0 max-w-[180px]">
+        <div className="flex flex-col items-end gap-1.5 shrink-0 max-w-[160px] sm:max-w-[180px]">
           <button
             onClick={openTelegramBot}
             className="btn btn-xs gap-1 border-0 bg-gradient-to-r from-[#38bdf8] to-[#0ea5e9] text-white hover:brightness-110 w-full"
@@ -199,7 +210,7 @@ export default function SubscriptionGate({ onPass }) {
     }
     if (tg.phase === 'error') {
       return (
-        <div className="flex flex-col items-end gap-1.5 shrink-0 max-w-[190px]">
+        <div className="flex flex-col items-end gap-1.5 shrink-0 max-w-[160px] sm:max-w-[190px]">
           <span className="text-[10px] text-red-300/90 text-right leading-snug">{tg.error}</span>
           <button
             onClick={startTelegramVerify}
@@ -223,10 +234,9 @@ export default function SubscriptionGate({ onPass }) {
         </span>
       );
     }
-    // Egasi kod o'rnatmagan — foydalanuvchiga xabar beriladi.
     if (igHasCode === false) {
       return (
-        <span className="text-[10px] text-amber-300/80 text-right max-w-[180px] leading-snug shrink-0">
+        <span className="text-[10px] text-amber-300/80 text-right max-w-[160px] sm:max-w-[180px] leading-snug shrink-0">
           {t('gate.igNoCode')}
         </span>
       );
@@ -240,7 +250,7 @@ export default function SubscriptionGate({ onPass }) {
             onChange={(e) => setIgValue(ch.id, e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') checkIgCode(ch); }}
             placeholder={t('gate.igCodePlaceholder')}
-            className="input input-xs w-28 bg-white/[0.05] border border-white/15 text-white placeholder:text-white/30 focus:border-[#dd2a7b] focus:outline-none transition-colors text-center tracking-widest uppercase"
+            className="input input-xs w-20 sm:w-28 bg-white/[0.05] border border-white/15 text-white placeholder:text-white/30 focus:border-[#dd2a7b] focus:outline-none transition-colors text-center tracking-widest uppercase"
             maxLength={16}
           />
           <button
@@ -249,7 +259,7 @@ export default function SubscriptionGate({ onPass }) {
             className="btn btn-xs gap-1 border-0 bg-gradient-to-r from-[#f58529] via-[#dd2a7b] to-[#8134af] text-white hover:brightness-110 disabled:opacity-50"
           >
             {st.checking ? <LuLoader className="w-3 h-3 animate-spin" /> : <LuKeyRound className="w-3 h-3" />}
-            {t('gate.igCheck')}
+            <span className="hidden sm:inline">{t('gate.igCheck')}</span>
           </button>
         </div>
         <a
@@ -260,10 +270,23 @@ export default function SubscriptionGate({ onPass }) {
         >
           <LuExternalLink className="w-2.5 h-2.5" /> {t('gate.openChannel')}
         </a>
-        {st.error && <span className="text-[10px] text-red-300/90 text-right leading-snug max-w-[180px]">{st.error}</span>}
+        {st.error && <span className="text-[10px] text-red-300/90 text-right leading-snug max-w-[160px] sm:max-w-[180px]">{st.error}</span>}
       </div>
     );
   };
+
+  // Yuklanmoqda — serverdan javob kutilmoqda
+  if (tgConfigured === null || igHasCode === null) {
+    return (
+      <div className="gate-root fixed inset-0 z-[120] flex items-center justify-center">
+        <div className="fixed inset-0 gate-bg" />
+        <div className="relative flex flex-col items-center gap-3">
+          <LuLoader className="w-8 h-8 animate-spin text-[#8b5cf6]" />
+          <span className="text-white/60 text-sm">Yuklanmoqda...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="gate-root fixed inset-0 z-[120] overflow-y-auto">
@@ -289,12 +312,12 @@ export default function SubscriptionGate({ onPass }) {
         ))}
       </div>
 
-      <div className="relative min-h-full flex flex-col items-center justify-center p-4 py-8">
+      <div className="relative min-h-full flex flex-col items-center justify-center p-3 sm:p-4 py-6 sm:py-8">
         {/* Yuqori qator */}
-        <div className="w-full max-w-lg flex items-center justify-between mb-5 px-1">
+        <div className="w-full max-w-lg flex items-center justify-between mb-4 sm:mb-5 px-1">
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Lingohub" className="w-10 h-10 rounded-xl object-cover ring-1 ring-[#8b5cf6]/50 gold-glow" />
-            <span className="font-bold font-display text-xl text-white">
+            <img src="/logo.png" alt="Lingohub" className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover ring-1 ring-[#8b5cf6]/50 gold-glow" />
+            <span className="font-bold font-display text-lg sm:text-xl text-white">
               Lingo<span className="gold-text">hub</span>
             </span>
           </div>
@@ -302,32 +325,32 @@ export default function SubscriptionGate({ onPass }) {
         </div>
 
         {/* Asosiy karta */}
-        <div className="w-full max-w-lg gate-card rounded-3xl p-6 sm:p-8 relative overflow-hidden animate-[fadeInUp_0.5s_ease-out]">
+        <div className="w-full max-w-lg gate-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 relative overflow-hidden animate-[fadeInUp_0.5s_ease-out]">
           <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-[#8b5cf6]/10 blur-3xl pointer-events-none" />
           <div className="absolute -bottom-20 -left-16 w-56 h-56 rounded-full bg-[#38bdf8]/10 blur-3xl pointer-events-none" />
 
           <div className="relative">
-            <div className="text-center mb-7">
-              <div className="mx-auto w-16 h-16 rounded-2xl bg-gradient-to-br from-[#8b5cf6] to-[#d946ef] flex items-center justify-center shadow-lg shadow-[#8b5cf6]/30 mb-4 animate-[bounceIn_0.6s_ease-out]">
-                <LuGlobe className="w-8 h-8 text-white" />
+            <div className="text-center mb-5 sm:mb-7">
+              <div className="mx-auto w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-[#8b5cf6] to-[#d946ef] flex items-center justify-center shadow-lg shadow-[#8b5cf6]/30 mb-3 sm:mb-4 animate-[bounceIn_0.6s_ease-out]">
+                <LuGlobe className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
               </div>
-              <h1 className="text-2xl font-extrabold text-white font-display">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-white font-display">
                 {t('gate.title')}
               </h1>
-              <p className="text-sm text-white/50 mt-2 leading-relaxed">
+              <p className="text-xs sm:text-sm text-white/50 mt-1.5 sm:mt-2 leading-relaxed">
                 {t('gate.subtitle')}
               </p>
             </div>
 
             {/* Kanallar */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-2.5 sm:space-y-3 mb-5 sm:mb-6">
               {GATE_CHANNELS.map((ch) => {
                 const done = Boolean(verified[ch.id]);
                 const isTg = ch.type === 'telegram';
                 return (
                   <div
                     key={ch.id}
-                    className={`rounded-2xl border p-3.5 flex items-center gap-3.5 transition-all duration-300 ${
+                    className={`rounded-xl sm:rounded-2xl border p-3 sm:p-3.5 flex items-center gap-2.5 sm:gap-3.5 transition-all duration-300 ${
                       done
                         ? 'border-[#4ade80]/50 bg-[#4ade80]/[0.07]'
                         : 'border-white/10 bg-white/[0.03] hover:border-white/25'
@@ -335,26 +358,26 @@ export default function SubscriptionGate({ onPass }) {
                   >
                     {/* Ikonka */}
                     <div
-                      className={`w-12 h-12 rounded-2xl shadow-lg flex items-center justify-center shrink-0 ${
+                      className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl shadow-lg flex items-center justify-center shrink-0 ${
                         isTg
                           ? 'bg-gradient-to-br from-[#38bdf8] to-[#0ea5e9] shadow-[#0ea5e9]/25'
                           : 'bg-gradient-to-br from-[#f58529] via-[#dd2a7b] to-[#8134af] shadow-[#dd2a7b]/25'
                       }`}
                     >
-                      {isTg ? <LuTelegram className="w-6 h-6 text-white" /> : <LuInstagram className="w-6 h-6 text-white" />}
+                      {isTg ? <LuTelegram className="w-5 h-5 sm:w-6 sm:h-6 text-white" /> : <LuInstagram className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-white text-sm flex items-center gap-1.5">
+                      <p className="font-bold text-white text-xs sm:text-sm flex items-center gap-1.5">
                         {ch.name}
-                        {done && <LuBadgeCheck className="w-4 h-4 text-[#4ade80]" />}
+                        {done && <LuBadgeCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#4ade80]" />}
                       </p>
-                      <p className="text-[11px] text-white/40">{ch.label}</p>
+                      <p className="text-[10px] sm:text-[11px] text-white/40">{ch.label}</p>
                       {!done && isTg && tgConfigured !== false && (
-                        <p className="text-[10px] text-white/30 mt-0.5 leading-snug">{t('gate.telegramVerifyHint')}</p>
+                        <p className="text-[9px] sm:text-[10px] text-white/30 mt-0.5 leading-snug">{t('gate.telegramVerifyHint')}</p>
                       )}
                       {!done && !isTg && igHasCode !== false && (
-                        <p className="text-[10px] text-white/30 mt-0.5 leading-snug">{t('gate.igCodeHint')}</p>
+                        <p className="text-[9px] sm:text-[10px] text-white/30 mt-0.5 leading-snug">{t('gate.igCodeHint')}</p>
                       )}
                     </div>
 
@@ -365,7 +388,7 @@ export default function SubscriptionGate({ onPass }) {
             </div>
 
             {/* Progress */}
-            <div className="mb-6">
+            <div className="mb-5 sm:mb-6">
               <div className="flex items-center justify-between text-xs mb-1.5">
                 <span className="text-white/50">{t('gate.progress', { n: verifiedCount, total: GATE_CHANNELS.length })}</span>
                 {allDone ? (
@@ -374,7 +397,7 @@ export default function SubscriptionGate({ onPass }) {
                   </span>
                 ) : null}
               </div>
-              <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+              <div className="h-1.5 sm:h-2 bg-white/10 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] rounded-full transition-all duration-500"
                   style={{ width: `${(verifiedCount / GATE_CHANNELS.length) * 100}%` }}
@@ -386,7 +409,7 @@ export default function SubscriptionGate({ onPass }) {
             <button
               onClick={handleEnter}
               disabled={!allDone}
-              className={`btn w-full gap-2 border-0 text-base font-bold h-12 rounded-2xl transition-all duration-300 ${
+              className={`btn w-full gap-2 border-0 text-sm sm:text-base font-bold h-11 sm:h-12 rounded-xl sm:rounded-2xl transition-all duration-300 ${
                 allDone
                   ? 'bg-gradient-to-r from-[#8b5cf6] to-[#d946ef] text-white hover:brightness-110 shadow-lg shadow-[#8b5cf6]/30 scale-[1.02] hover:scale-[1.03]'
                   : 'bg-white/10 text-white/35 cursor-not-allowed'
@@ -394,20 +417,20 @@ export default function SubscriptionGate({ onPass }) {
             >
               {allDone ? (
                 <>
-                  <LuArrowRight className="w-5 h-5" /> {t('gate.enter')}
+                  <LuArrowRight className="w-4 h-4 sm:w-5 sm:h-5" /> {t('gate.enter')}
                 </>
               ) : (
                 <>
-                  <LuLock className="w-4 h-4" /> {t('gate.enterLocked')}
+                  <LuLock className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {t('gate.enterLocked')}
                 </>
               )}
             </button>
 
             {/* Admin imtiyozi */}
             {isAdmin && (
-              <div className="mt-4 flex items-center justify-between gap-2 rounded-2xl border border-[#8b5cf6]/30 bg-[#8b5cf6]/[0.07] px-4 py-3">
-                <span className="text-xs text-white/70 flex items-center gap-1.5">
-                  <LuCrown className="w-4 h-4 text-[#8b5cf6]" /> {t('gate.adminNote')}
+              <div className="mt-3 sm:mt-4 flex items-center justify-between gap-2 rounded-xl sm:rounded-2xl border border-[#8b5cf6]/30 bg-[#8b5cf6]/[0.07] px-3 sm:px-4 py-2.5 sm:py-3">
+                <span className="text-[10px] sm:text-xs text-white/70 flex items-center gap-1.5">
+                  <LuCrown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8b5cf6]" /> {t('gate.adminNote')}
                 </span>
                 <button
                   onClick={handleAdminEnter}
@@ -418,8 +441,8 @@ export default function SubscriptionGate({ onPass }) {
               </div>
             )}
 
-            <p className="text-center text-[10px] text-white/30 mt-5 flex items-center justify-center gap-1">
-              <LuSparkles className="w-3 h-3 text-[#8b5cf6]" /> {t('gate.freeNote')}
+            <p className="text-center text-[9px] sm:text-[10px] text-white/30 mt-4 sm:mt-5 flex items-center justify-center gap-1">
+              <LuSparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-[#8b5cf6]" /> {t('gate.freeNote')}
             </p>
           </div>
         </div>

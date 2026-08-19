@@ -11,6 +11,7 @@ import { sendStatEvent, reportScore, getServerUid } from '../lib/server';
 // Maksimal daraja: 100. Har yangi darajada +5% bonus tanga.
 export const XP_PER_LEVEL = 100;
 export const MAX_LEVEL = 100;
+export const MAX_COINS = 99_999_999;
 
 export function calculateLevel(coins) {
   const level = Math.min(Math.floor(coins / XP_PER_LEVEL) + 1, MAX_LEVEL);
@@ -253,8 +254,40 @@ function appReducer(state, action) {
     case 'TOGGLE_TUTOR':
       return { ...state, isTutorOpen: !state.isTutorOpen };
 
-    case 'ADD_COINS':
-      return { ...state, coins: state.coins + action.payload };
+    case 'ADD_COINS': {
+      const newTotal = state.coins + action.payload;
+      // Coin limitdan oshsa — akkaunt to'liq reset qilinadi (ban)
+      if (newTotal > MAX_COINS) {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(LEGACY_STORAGE_KEY);
+        } catch { /* noop */ }
+        return {
+          selectedLanguage: null,
+          currentLevel: null,
+          progress: {},
+          tutorMessages: [],
+          isTutorOpen: false,
+          isPremium: false,
+          unlockedLanguages: {},
+          coins: 0,
+          streak: 0,
+          lastActive: null,
+          achievements: [],
+          dailyChallenges: null,
+          theme: DEFAULT_THEME,
+          mistakesReviewed: 0,
+          perfectWeeks: 0,
+          courseRewards: {},
+          inventory: DEFAULT_OWNED,
+          equipped: DEFAULT_EQUIPPED,
+          energy: MAX_ENERGY,
+          level: null,
+          _banned: true,
+        };
+      }
+      return { ...state, coins: newTotal };
+    }
 
     case 'BUY_SHOP_ITEM': {
       const item = getShopItem(action.payload);
@@ -282,17 +315,52 @@ function appReducer(state, action) {
     case 'SET_ACHIEVEMENTS':
       return { ...state, achievements: action.payload };
 
-    case 'CLAIM_ACHIEVEMENT_COINS':
-      return { ...state, coins: state.coins + action.payload };
+    case 'CLAIM_ACHIEVEMENT_COINS': {
+      const newTotal = state.coins + action.payload;
+      if (newTotal > MAX_COINS) {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(LEGACY_STORAGE_KEY);
+        } catch { /* noop */ }
+        return {
+          selectedLanguage: null, currentLevel: null, progress: {},
+          tutorMessages: [], isTutorOpen: false, isPremium: false,
+          unlockedLanguages: {}, coins: 0, streak: 0, lastActive: null,
+          achievements: [], dailyChallenges: null, theme: DEFAULT_THEME,
+          mistakesReviewed: 0, perfectWeeks: 0, courseRewards: {},
+          inventory: DEFAULT_OWNED, equipped: DEFAULT_EQUIPPED,
+          energy: MAX_ENERGY, level: null, _banned: true,
+        };
+      }
+      return { ...state, coins: newTotal };
+    }
 
-    case 'CLAIM_ACHIEVEMENT':
+    case 'CLAIM_ACHIEVEMENT': {
+      const added = action.payload.coinReward || 0;
+      const newTotal = state.coins + added;
+      if (newTotal > MAX_COINS) {
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+          localStorage.removeItem(LEGACY_STORAGE_KEY);
+        } catch { /* noop */ }
+        return {
+          selectedLanguage: null, currentLevel: null, progress: {},
+          tutorMessages: [], isTutorOpen: false, isPremium: false,
+          unlockedLanguages: {}, coins: 0, streak: 0, lastActive: null,
+          achievements: [], dailyChallenges: null, theme: DEFAULT_THEME,
+          mistakesReviewed: 0, perfectWeeks: 0, courseRewards: {},
+          inventory: DEFAULT_OWNED, equipped: DEFAULT_EQUIPPED,
+          energy: MAX_ENERGY, level: null, _banned: true,
+        };
+      }
       return {
         ...state,
-        coins: state.coins + (action.payload.coinReward || 0),
+        coins: newTotal,
         achievements: (state.achievements || []).map(a =>
           a.id === action.payload.id ? { ...a, claimed: true } : a
         ),
       };
+    }
 
     case 'REMOVE_ACHIEVEMENT':
       return { ...state, achievements: state.achievements.filter(a => a.id !== action.payload) };

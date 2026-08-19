@@ -259,6 +259,28 @@ function AppContent() {
     );
   }
 
+  // Akkaunt ban qilingan (coin limit oshirilgani uchun)
+  if (state._banned) {
+    return (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+        <div className="text-center p-8 max-w-sm mx-4">
+          <div className="text-6xl mb-4">🚫</div>
+          <h1 className="text-2xl font-bold text-red-400 mb-2">Akkaunt bloklandi</h1>
+          <p className="text-white/60 text-sm mb-4">
+            Coin limitdan oshilganligi sababli akkaunt qayta tiklandi.
+            Barcha ma'lumotlar o'chirildi.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="btn btn-primary rounded-full px-6"
+          >
+            Saytni qayta yuklash
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Obuna shlyuzi — kanallarga obuna bo'lmaganlar uchun sayt bloklanadi
   if (!gatePassed) {
     return <SubscriptionGate onPass={() => setGatePassed(true)} />;
