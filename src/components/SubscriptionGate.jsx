@@ -48,6 +48,7 @@ export default function SubscriptionGate({ onPass }) {
     return () => { cancelled = true; };
   }, []);
 
+
   useEffect(() => {
     saveSessionVerified(verified);
   }, [verified]);
@@ -163,8 +164,7 @@ export default function SubscriptionGate({ onPass }) {
         </span>
       );
     }
-    // Bot sozlanmagan — O'TISH YO'Q. Sayt egasi botni sozlamaguncha
-    // bu kanalni tasdiqlab bo'lmaydi (qo'lda tasdiqlash qasddan YO'Q).
+    // Bot sozlanmagan — foydalanuvchiga xabar beriladi.
     if (tgConfigured === false) {
       return (
         <span className="text-[10px] text-amber-300/80 text-right max-w-[180px] leading-snug shrink-0">
@@ -223,8 +223,7 @@ export default function SubscriptionGate({ onPass }) {
         </span>
       );
     }
-    // Egasi kod o'rnatmagan — O'TISH YO'Q. Kod e'lon qilinmaguncha
-    // bu kanalni tasdiqlab bo'lmaydi (qo'lda tasdiqlash qasddan YO'Q).
+    // Egasi kod o'rnatmagan — foydalanuvchiga xabar beriladi.
     if (igHasCode === false) {
       return (
         <span className="text-[10px] text-amber-300/80 text-right max-w-[180px] leading-snug shrink-0">

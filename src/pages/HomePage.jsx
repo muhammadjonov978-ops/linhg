@@ -297,14 +297,14 @@ export default function HomePage() {
                     <div className="card-body p-5">
                       <div className="flex items-center justify-between mb-3">
                         <Flag lang={lang} size={52} className="drop-shadow-md" />
-                        <span className="badge badge-ghost badge-sm bg-white/[0.04] border-white/10">
+                        <span className="badge badge-ghost badge-sm bg-white/[0.08] border-white/15 text-slate-200 font-semibold">
                           {Math.round((completedCount / totalLessons) * 100)}%
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mb-1">
-                        <h2 className="text-lg font-bold">{lang.name}</h2>
+                        <h2 className="text-lg font-bold text-white">{lang.name}</h2>
                       </div>
-                      <p className="text-xs opacity-60 mb-3">{lang.description}</p>
+                      <p className="text-xs text-slate-300 mb-3">{lang.description}</p>
 
                       {/* Progress bar */}
                       <div className="w-full h-1.5 bg-base-200 rounded-full overflow-hidden mb-2">
@@ -318,15 +318,15 @@ export default function HomePage() {
 
                       {/* Stats */}
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1 text-xs opacity-50">
-                          <TrendingUp className="w-3 h-3" />
+                        <div className="flex items-center gap-1 text-xs text-slate-300">
+                          <TrendingUp className="w-3 h-3 opacity-60" />
                           <span>{t('home.lessons', { n: `${completedCount}/${totalLessons}` })}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-primary">
+                          <span className="text-xs font-semibold text-violet-300">
                             {t(completedCount === 0 ? 'home.startFromAlphabet' : 'home.continue')}
                           </span>
-                          <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all text-primary" />
+                          <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all text-violet-300" />
                         </div>
                       </div>
                     </div>

@@ -332,25 +332,26 @@ export default function AITutor() {
               >
                 <div className="flex items-center gap-2 mb-1">
                   {msg.isAI ? (
-                    <Bot className="w-4 h-4 text-primary" />
+                    <Bot className="w-4 h-4 text-primary shrink-0" />
                   ) : (
-                    <User className="w-4 h-4" />
+                    <User className="w-4 h-4 shrink-0" />
                   )}
                   <span className="text-xs font-medium opacity-70">
                     {msg.isAI ? 'AI Tutor' : 'Siz'}
                   </span>
                 </div>
-                <p className="text-sm">{msg.text}</p>
-                <div className="flex justify-end gap-2 mt-1">
+                <p className="text-sm leading-relaxed break-words">{msg.text}</p>
+                <div className="flex items-center justify-end gap-3 mt-2 pt-1 border-t border-base-300/40">
                   {msg.isAI && (
                     <button
                       onClick={() => speakText(msg.text, `msg-${i}`)}
-                      className="btn btn-ghost btn-xs btn-circle"
+                      className="btn btn-ghost btn-xs btn-circle h-5 min-h-0 w-5"
+                      title="Tinglash"
                     >
-                      <Volume2 className={`w-3 h-3 ${speakingId === `msg-${i}` ? 'text-primary animate-pulse' : ''}`} />
+                      <Volume2 className={`w-2.5 h-2.5 ${speakingId === `msg-${i}` ? 'text-primary animate-pulse' : ''}`} />
                     </button>
                   )}
-                  <span className="text-[10px] opacity-40">
+                  <span className="text-[10px] opacity-40 tabular-nums">
                     {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -359,10 +360,11 @@ export default function AITutor() {
           ))}
 
           {isTyping && (
-            <div className="flex justify-start">
+            <div className="flex justify-start animate-[fadeIn_0.3s_ease-out]">
               <div className="bg-base-100 border border-base-300 rounded-2xl rounded-tl-sm px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  <Bot className="w-4 h-4 text-primary shrink-0" />
+                  <Loader2 className="w-3 h-3 animate-spin text-primary" />
                   <span className="text-sm opacity-70">Yozmoqda...</span>
                 </div>
               </div>
