@@ -380,6 +380,62 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* ===== MEN HAQIMDA — Asoschisi haqida qisqacha ===== */}
+      <section className="max-w-5xl mx-auto px-4 py-12">
+        <div className="relative overflow-hidden rounded-3xl glass-panel-strong border border-primary/20 gold-glow">
+          <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-20 -left-12 w-56 h-56 rounded-full bg-secondary/10 blur-3xl pointer-events-none" />
+
+          <div className="relative p-6 md:p-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            {/* Avatar */}
+            <div className="shrink-0">
+              <div className="relative">
+                <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-primary to-secondary blur-md opacity-40 scale-110" />
+                <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-full bg-gradient-to-tr from-primary to-secondary p-1 shadow-xl shadow-primary/20">
+                  <img
+                    src="/logo.png"
+                    alt="Akbarshox"
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Matn */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
+                <h2 className="text-xl md:text-2xl font-extrabold font-display">
+                  <span className="gold-text">Muhammadjonov Akbarshox</span>
+                </h2>
+                <span className="badge badge-primary badge-sm gap-1">🚀 Asoschi</span>
+              </div>
+              <p className="text-sm md:text-base opacity-70 mb-3 leading-relaxed">
+                12 yoshli yosh frontend dasturchi va 135+ tilda ishlaydigan
+                <span className="font-bold text-primary"> Lingohub </span>
+                onlayn til o'rganish platformasi asoschisi. Toshkent, O'zbekiston.
+              </p>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                <span className="badge badge-ghost badge-sm gap-1 border border-base-300/60">
+                  💻 100+ loyiha
+                </span>
+                <span className="badge badge-ghost badge-sm gap-1 border border-base-300/60">
+                  🌍 135+ til
+                </span>
+                <span className="badge badge-ghost badge-sm gap-1 border border-base-300/60">
+                  ⚡ React / Vite / Firebase
+                </span>
+                <a
+                  href="https://lingohub.uz/#/portfolio"
+                  className="badge badge-primary badge-sm gap-1 cursor-pointer hover:badge-primary/80 transition-colors"
+                >
+                  📄 Portfolio →
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <div className="bg-base-300/30 py-16">
         <div className="max-w-6xl mx-auto px-4">
