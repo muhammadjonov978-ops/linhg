@@ -808,7 +808,7 @@ export const languages = [
   {
     id: 'welsh',
     name: 'Cymraeg',
-    flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿',
+    flag: '🇬🇧',
     color: 'error',
     description: 'Uels tili',
     totalLearners: 4000,
@@ -816,7 +816,7 @@ export const languages = [
   {
     id: 'scottish',
     name: 'Gàidhlig',
-    flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+    flag: '🇬🇧',
     color: 'info',
     description: 'Shotlandiya tili',
     totalLearners: 3000,
