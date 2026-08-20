@@ -140,6 +140,21 @@ export const SPEECH_LANGS = {
   zazaki: 'diq-TR',
 };
 
+// Google Translate TTS supported languages (subset that works well)
+const GOOGLE_TTS_LANGS = new Set([
+  'en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ko', 'ja', 'zh', 'ar',
+  'hi', 'tr', 'nl', 'pl', 'sv', 'nb', 'da', 'fi', 'el', 'he', 'th',
+  'vi', 'id', 'ro', 'cs', 'uk', 'uz', 'kk', 'ky', 'tg', 'az', 'hy',
+  'ka', 'be', 'bg', 'hr', 'sr', 'bs', 'sl', 'sk', 'hu', 'et', 'lv',
+  'lt', 'is', 'ga', 'mt', 'sq', 'mk', 'ur', 'bn', 'pa', 'mr', 'ta',
+  'te', 'kn', 'ml', 'gu', 'ne', 'si', 'my', 'km', 'lo', 'ms', 'fil',
+  'mn', 'fa', 'ps', 'sw', 'am', 'so', 'ha', 'yo', 'ig', 'zu', 'xh',
+  'af', 'sn', 'rw', 'mg', 'wo', 'ti', 'om', 'qu', 'gn', 'ay', 'ht',
+  'iu', 'nv', 'eo', 'la', 'cy', 'gd', 'eu', 'ca', 'gl', 'oc', 'br',
+  'co', 'fy', 'lb', 'fo', 'se', 'ks', 'sd', 'as', 'dv', 'haw', 'mi',
+  'sm', 'to', 'fj', 'bo', 'zgh',
+]);
+
 // Cache voices (voices load asynchronously in some browsers)
 let cachedVoices = [];
 if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -159,19 +174,179 @@ export function getSpeechLang(langId) {
   return SPEECH_LANGS[langId] || 'en-US';
 }
 
-function pickVoice(langCode) {
+/**
+ * Get the language prefix (e.g. 'en' from 'en-US') for a given langId.
+ */
+function getLangPrefix(langId) {
+  const code = getSpeechLang(langId);
+  return code.split('-')[0].toLowerCase();
+}
+
+/**
+ * Check if a native voice exists for the given language.
+ * Returns the voice object or null.
+ */
+function findNativeVoice(langId) {
   if (!cachedVoices.length) cachedVoices = window.speechSynthesis.getVoices();
+  const langCode = getSpeechLang(langId);
   const langPrefix = langCode.split('-')[0].toLowerCase();
-  // Prefer exact match, then language prefix match
-  return (
-    cachedVoices.find(v => v.lang.toLowerCase() === langCode.toLowerCase()) ||
-    cachedVoices.find(v => v.lang.toLowerCase().startsWith(langPrefix)) ||
-    null
-  );
+
+  // 1) Exact match (e.g. "en-US")
+  const exact = cachedVoices.find(v => v.lang.toLowerCase() === langCode.toLowerCase());
+  if (exact) return exact;
+
+  // 2) Prefix match (e.g. "en-GB" for "en-US")
+  const prefix = cachedVoices.find(v => v.lang.toLowerCase().startsWith(langPrefix));
+  if (prefix) return prefix;
+
+  // 3) Any voice with matching language family (e.g. "en-XX")
+  const family = cachedVoices.find(v => v.lang.split('-')[0].toLowerCase() === langPrefix);
+  if (family) return family;
+
+  return null;
+}
+
+/**
+ * Check if the browser has a native voice for the given language.
+ * Useful for showing voice availability to the user.
+ */
+export function hasNativeVoice(langId) {
+  return findNativeVoice(langId) !== null;
+}
+
+/**
+ * Get list of all available browser voices.
+ */
+export function getAvailableVoices() {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return [];
+  if (!cachedVoices.length) cachedVoices = window.speechSynthesis.getVoices();
+  return cachedVoices;
+}
+
+// ===== Google Translate TTS =====
+// Uses the free Google Translate TTS endpoint (no API key needed).
+// We split long texts into chunks of ~200 chars to avoid 414 / truncation.
+
+const GOOGLE_TTS_URL = 'https://translate.google.com/translate_tts';
+
+function chunkText(text, maxLen = 200) {
+  if (text.length <= maxLen) return [text];
+  const chunks = [];
+  const sentences = text.replace(/([.!?])\s+/g, '$1|').split('|');
+  let current = '';
+  for (const s of sentences) {
+    if ((current + ' ' + s).trim().length > maxLen) {
+      if (current) chunks.push(current.trim());
+      current = s;
+    } else {
+      current = (current + ' ' + s).trim();
+    }
+  }
+  if (current.trim()) chunks.push(current.trim());
+  // If a single "sentence" is still too long, split by words
+  const result = [];
+  for (const c of chunks) {
+    if (c.length <= maxLen) {
+      result.push(c);
+    } else {
+      const words = c.split(/\s+/);
+      let buf = '';
+      for (const w of words) {
+        if ((buf + ' ' + w).trim().length > maxLen) {
+          if (buf) result.push(buf.trim());
+          buf = w;
+        } else {
+          buf = (buf + ' ' + w).trim();
+        }
+      }
+      if (buf.trim()) result.push(buf.trim());
+    }
+  }
+  return result;
+}
+
+/**
+ * Play audio via Google Translate TTS.
+ * Returns a Promise that resolves when done (or on error).
+ */
+function playGoogleTTS(text, langId, { rate = 0.85, onEnd, onError } = {}) {
+  const langPrefix = getLangPrefix(langId);
+  // Google TTS only supports certain languages
+  if (!GOOGLE_TTS_LANGS.has(langPrefix)) {
+    onError?.(new Error(`Google TTS does not support: ${langPrefix}`));
+    return false;
+  }
+
+  const chunks = chunkText(text);
+  let idx = 0;
+
+  const playNext = () => {
+    if (idx >= chunks.length) {
+      onEnd?.();
+      return;
+    }
+    const chunk = chunks[idx];
+    idx++;
+    const url = `${GOOGLE_TTS_URL}?ie=UTF-8&tl=${langPrefix}&client=tw-ob&q=${encodeURIComponent(chunk)}`;
+
+    const audio = new Audio(url);
+    audio.playbackRate = rate;
+
+    audio.onended = () => {
+      if (idx < chunks.length) {
+        // Small gap between chunks
+        setTimeout(playNext, 80);
+      } else {
+        onEnd?.();
+      }
+    };
+
+    audio.onerror = () => {
+      // Google TTS failed — try native browser speech as last resort
+      playNativeFallback(text, langId, { rate, onEnd, onError });
+    };
+
+    audio.play().catch(() => {
+      playNativeFallback(text, langId, { rate, onEnd, onError });
+    });
+  };
+
+  playNext();
+  return true;
+}
+
+/**
+ * Last resort: use native browser speech (may speak in wrong language).
+ */
+function playNativeFallback(text, langId, { rate = 0.85, onEnd, onError } = {}) {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    onError?.();
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  const langCode = getSpeechLang(langId);
+  utterance.lang = langCode;
+  utterance.rate = rate;
+  utterance.pitch = 1;
+
+  const voice = findNativeVoice(langId);
+  if (voice) utterance.voice = voice;
+
+  if (onEnd) utterance.onend = onEnd;
+  if (onError) utterance.onerror = onError;
+
+  window.speechSynthesis.speak(utterance);
 }
 
 /**
  * Speak the given text in the given language.
+ *
+ * Strategy:
+ * 1) If browser has a native voice for this language → use it (fastest, best quality)
+ * 2) Otherwise → use Google Translate TTS (works for 100+ languages)
+ * 3) Last resort → native browser synthesis (may speak in wrong voice)
+ *
  * Returns false if speech synthesis is unsupported.
  */
 export function speak(text, langId, { rate = 0.85, pitch = 1, onEnd, onError } = {}) {
@@ -180,26 +355,46 @@ export function speak(text, langId, { rate = 0.85, pitch = 1, onEnd, onError } =
     return false;
   }
 
+  // Cancel any ongoing speech
   window.speechSynthesis.cancel();
 
-  const utterance = new SpeechSynthesisUtterance(text);
-  const langCode = getSpeechLang(langId);
-  utterance.lang = langCode;
-  utterance.rate = rate;
-  utterance.pitch = pitch;
+  const nativeVoice = findNativeVoice(langId);
 
-  const voice = pickVoice(langCode);
-  if (voice) utterance.voice = voice;
+  if (nativeVoice) {
+    // Native voice available — use browser speech synthesis (best quality)
+    const utterance = new SpeechSynthesisUtterance(text);
+    const langCode = getSpeechLang(langId);
+    utterance.lang = langCode;
+    utterance.rate = rate;
+    utterance.pitch = pitch;
+    utterance.voice = nativeVoice;
 
-  if (onEnd) utterance.onend = onEnd;
-  if (onError) utterance.onerror = onError;
+    if (onEnd) utterance.onend = onEnd;
+    if (onError) utterance.onerror = onError;
 
-  window.speechSynthesis.speak(utterance);
+    window.speechSynthesis.speak(utterance);
+    return true;
+  }
+
+  // No native voice — try Google Translate TTS
+  const langPrefix = getLangPrefix(langId);
+  if (GOOGLE_TTS_LANGS.has(langPrefix)) {
+    return playGoogleTTS(text, langId, { rate, onEnd, onError });
+  }
+
+  // Nothing available — use native browser synthesis as last resort
+  playNativeFallback(text, langId, { rate, onEnd, onError });
   return true;
 }
 
 export function stopSpeaking() {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     window.speechSynthesis.cancel();
+  }
+  // Also stop any Google TTS audio elements
+  if (typeof window !== 'undefined') {
+    document.querySelectorAll('audio[src*="translate.google.com"]').forEach(a => {
+      try { a.pause(); a.src = ''; } catch { /* ignore */ }
+    });
   }
 }

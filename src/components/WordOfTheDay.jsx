@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n';
-import { getSpeechLang } from '../utils/speech';
+import { speak, stopSpeaking, getSpeechLang } from '../utils/speech';
 import { fetchDailyContent } from '../lib/server';
 import { FaVolumeUp as Volume2, FaRegBookmark as Bookmark, FaBookmark as BookmarkCheck, FaMagic as Sparkles, FaRobot as Bot, FaCheckCircle as CheckCircle, FaTimes as X } from 'react-icons/fa';
 
@@ -96,12 +96,8 @@ export default function WordOfTheDay() {
   const isAi = serverWord?.source === 'ai';
 
   const speakWord = (text) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = getSpeechLang(langId);
-      utterance.rate = 0.8;
-      window.speechSynthesis.speak(utterance);
-    }
+    stopSpeaking();
+    speak(text, langId, { rate: 0.8 });
   };
 
   return (

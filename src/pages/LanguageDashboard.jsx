@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { useI18n } from '../i18n';
 import { languages, getLessons, getLanguageStats } from '../data/languages';
@@ -17,6 +17,7 @@ import StreakCalendar from '../components/StreakCalendar';
 import CertificateModal from '../components/CertificateModal';
 import Flag from '../components/Flag';
 import { getCefrInfo } from '../lib/placement';
+import { hasNativeVoice, getSpeechLang } from '../utils/speech';
 
 function loadSavedUser() {
   try {
@@ -48,6 +49,17 @@ export default function LanguageDashboard({ onSelectLevel }) {
   const [showCompleted, setShowCompleted] = useState(true);
   const [certificateOpen, setCertificateOpen] = useState(false);
   const [streakCertOpen, setStreakCertOpen] = useState(false);
+  const [voiceAvailable, setVoiceAvailable] = useState(null);
+
+  // Check voice availability on language change
+  useEffect(() => {
+    if (!state.selectedLanguage) return;
+    // Small delay to let voices load
+    const timer = setTimeout(() => {
+      setVoiceAvailable(hasNativeVoice(state.selectedLanguage));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [state.selectedLanguage]);
 
   const currentLang = languages.find(l => l.id === state.selectedLanguage);
 
@@ -381,6 +393,29 @@ export default function LanguageDashboard({ onSelectLevel }) {
               </div>
             </div>
 
+            {/* Ovoz holati */}
+            {voiceAvailable !== null && (
+              <div className={`card border ${
+                voiceAvailable
+                  ? 'bg-success/5 border-success/20'
+                  : 'bg-info/5 border-info/20'
+              }`}>
+                <div className="card-body p-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{voiceAvailable ? '🔊' : '🌐'}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold">{voiceAvailable ? 'Ovoz tayyor' : 'Google TTS'}</p>
+                      <p className="text-[10px] opacity-60">
+                        {voiceAvailable
+                          ? `${currentLang.name} uchun mahalliy ovoz topildi`
+                          : `${currentLang.name} uchun Google TTS ishlatilmoqda`
+                        }
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
             <DailyChallenge />
             <AchievementsPanel limit={4} />
             <StatsDashboard />

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { getSpeechLang } from '../utils/speech';
+import { speak, stopSpeaking, getSpeechLang } from '../utils/speech';
 import { FaBookOpen as BookOpen, FaCheckCircle as CheckCircle, FaTimesCircle as XCircle, FaArrowRight as ArrowRight, FaUndo as RotateCcw, FaVolumeUp as Volume2 } from 'react-icons/fa';
 
 export default function ReadingSection({ exercises, langId, levelId: _levelId, onComplete }) {
@@ -51,12 +51,8 @@ export default function ReadingSection({ exercises, langId, levelId: _levelId, o
   };
 
   const speakText = (text) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = getSpeechLang(langId);
-      utterance.rate = 0.8;
-      window.speechSynthesis.speak(utterance);
-    }
+    stopSpeaking();
+    speak(text, langId, { rate: 0.8 });
   };
 
   const progress = completedExs.size;

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getSpeechLang } from '../utils/speech';
+import { speak, stopSpeaking, getSpeechLang } from '../utils/speech';
 import { calculateAccuracy, scoreFeedback } from '../lib/pronunciation';
 import { FaMicrophone as Mic, FaMicrophoneSlash as MicOff, FaVolumeUp as Volume2, FaCheckCircle as CheckCircle, FaTimesCircle as XCircle, FaArrowRight as ArrowRight, FaUndo as RotateCcw } from 'react-icons/fa';
 
@@ -62,20 +62,16 @@ export default function SpeakingSection({ exercises, langId, levelId: _levelId, 
   }, [langId]);
 
   const speakText = useCallback((text, callback) => {
-    if ('speechSynthesis' in window) {
-      setIsPlaying(true);
-      window.speechSynthesis.cancel(); // Cancel any ongoing speech
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = getSpeechLang(langId);
-      utterance.rate = 0.8;
-      utterance.pitch = 1;
-      utterance.onend = () => {
+    setIsPlaying(true);
+    stopSpeaking();
+    speak(text, langId, {
+      rate: 0.8,
+      onEnd: () => {
         setIsPlaying(false);
         callback?.();
-      };
-      utterance.onerror = () => setIsPlaying(false);
-      window.speechSynthesis.speak(utterance);
-    }
+      },
+      onError: () => setIsPlaying(false),
+    });
   }, [langId]);
 
   const playCurrentItem = useCallback(() => {
@@ -87,7 +83,7 @@ export default function SpeakingSection({ exercises, langId, levelId: _levelId, 
       setRecognitionResult('');
       setIsListening(true);
       // Stop any ongoing speech
-      window.speechSynthesis.cancel();
+      stopSpeaking();
 
       try {
         recognition.start();

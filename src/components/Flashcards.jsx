@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
-import { getSpeechLang } from '../utils/speech';
+import { speak, stopSpeaking, getSpeechLang } from '../utils/speech';
 import {
   buildDeck, loadSrs, saveSrs, mergeDeckInto, getDueCards,
   rateCard, getSrsStats, RATINGS, MAX_BOX, resetSrs,
@@ -15,12 +15,9 @@ import {
 import { downloadAnkiTsv, downloadCsv } from '../lib/anki';
 
 function speakWord(text, langId) {
-  if (!text || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = getSpeechLang(langId);
-  u.rate = 0.85;
-  window.speechSynthesis.speak(u);
+  if (!text) return;
+  stopSpeaking();
+  speak(text, langId, { rate: 0.85 });
 }
 
 export default function Flashcards({ onBack }) {

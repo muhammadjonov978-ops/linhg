@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { getSpeechLang } from '../utils/speech';
+import { speak, stopSpeaking, getSpeechLang } from '../utils/speech';
 import { FaHeadphones as Headphones, FaVolumeUp as Volume2, FaCheckCircle as CheckCircle, FaTimesCircle as XCircle, FaArrowRight as ArrowRight, FaUndo as RotateCcw } from 'react-icons/fa';
 
 export default function ListeningSection({ exercises, langId, levelId: _levelId, onComplete }) {
@@ -20,23 +20,15 @@ export default function ListeningSection({ exercises, langId, levelId: _levelId,
   // Hook'lar har doim chaqirilishi kerak — `if (!exercise) return null`
   // hammasidan keyin turadi (rules-of-hooks).
   const speakText = useCallback((text, callback) => {
-    if ('speechSynthesis' in window) {
-      setIsPlaying(true);
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = getSpeechLang(langId);
-      utterance.rate = isWordExercise ? 0.7 : 0.8;
-      utterance.pitch = 1;
-      utterance.onend = () => {
+    setIsPlaying(true);
+    speak(text, langId, {
+      rate: isWordExercise ? 0.7 : 0.8,
+      onEnd: () => {
         setIsPlaying(false);
         callback?.();
-      };
-      utterance.onerror = () => {
-        setIsPlaying(false);
-      };
-      window.speechSynthesis.speak(utterance);
-    } else {
-      alert('Sizning brauzeringiz matnni ovozga aylantirishni qo\'llamaydi.');
-    }
+      },
+      onError: () => setIsPlaying(false),
+    });
   }, [langId, isWordExercise]);
 
   const handlePlay = () => {

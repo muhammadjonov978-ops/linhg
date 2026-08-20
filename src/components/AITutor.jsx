@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages } from '../data/languages';
-import { getSpeechLang } from '../utils/speech';
+import { speak, stopSpeaking, getSpeechLang } from '../utils/speech';
 import {
   FaPaperPlane as Send, FaRobot as Bot, FaUser as User, FaMicrophone as Mic,
   FaMicrophoneSlash as MicOff, FaVolumeUp as Volume2, FaTimes as X, FaSpinner as Loader2,
@@ -247,16 +247,13 @@ export default function AITutor() {
   };
 
   const speakText = (text, messageId) => {
-    if ('speechSynthesis' in window) {
-      setSpeakingId(messageId);
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = getSpeechLang(currentLang?.id);
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
-      utterance.onend = () => setSpeakingId(null);
-      utterance.onerror = () => setSpeakingId(null);
-      window.speechSynthesis.speak(utterance);
-    }
+    setSpeakingId(messageId);
+    stopSpeaking();
+    speak(text, currentLang?.id, {
+      rate: 0.9,
+      onEnd: () => setSpeakingId(null),
+      onError: () => setSpeakingId(null),
+    });
   };
 
   if (!state.isTutorOpen) return null;
