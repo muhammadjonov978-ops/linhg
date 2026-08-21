@@ -68,6 +68,7 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [googleConfirm, setGoogleConfirm] = useState(false); // Google kirish tasdig'i
 
   // Escape tugmasi — modalni yopadi
   useEffect(() => {
@@ -187,11 +188,14 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
       <div className="relative bg-base-100 rounded-3xl shadow-2xl max-w-md w-full animate-[fadeIn_0.3s_ease-out] overflow-hidden border border-primary/20 gold-glow">
         <button
           onClick={onClose}
-          className="absolute top-3.5 right-3.5 z-10 w-9 h-9 rounded-full flex items-center justify-center bg-base-200/90 border border-base-300 text-white/80 hover:text-white hover:bg-error hover:border-error hover:scale-110 active:scale-95 transition-all duration-200 modal-close-focus shadow-lg"
+          className="absolute top-4 right-4 z-10 flex flex-col items-center gap-1 group cursor-pointer"
           title="Yopish (Esc)"
           aria-label="Yopish"
         >
-          <X className="w-4.5 h-4.5" />
+          <div className="w-12 h-12 rounded-full flex items-center justify-center bg-base-200 border-2 border-base-300 text-base-content/70 hover:text-white hover:bg-error hover:border-error hover:scale-110 active:scale-95 transition-all duration-200 shadow-lg">
+            <X className="w-5 h-5" />
+          </div>
+          <span className="text-[10px] font-medium opacity-50 group-hover:opacity-100 transition-opacity">Yopish</span>
         </button>
 
         {user ? (
@@ -256,21 +260,43 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
               </button>
             </div>
 
-            {/* GOOGLE SIGN-IN (haqiqiy) — asosiy usul */}
-            <button
-              onClick={handleGoogleSignIn}
-              disabled={busy}
-              className="btn w-full gap-3 border-0 bg-gradient-to-r from-[#4285F4] to-[#1a73E8] text-white hover:brightness-110 shadow-lg shadow-[#4285F4]/25 transition-all mb-2 h-12 rounded-2xl font-bold"
-            >
-              {busy ? (
-                <span className="loading loading-spinner loading-sm" />
-              ) : (
+            {/* GOOGLE SIGN-IN — tasdiqlash bilan */}
+            {googleConfirm ? (
+              <div className="mb-2 animate-[fadeIn_0.2s_ease-out]">
+                <div className="rounded-2xl border-2 border-[#4285F4]/30 bg-[#4285F4]/[0.05] p-4 text-center">
+                  <FcGoogle className="w-8 h-8 mx-auto mb-2" />
+                  <p className="text-sm font-bold mb-1">Google orqali {mode === 'register' ? 'ro\'yxatdan o\'tishni' : 'kirishni'} tasdiqlaysizmi?</p>
+                  <p className="text-[11px] opacity-60 mb-3">Haqiqiy Google hisobingiz ishlatiladi</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { setGoogleConfirm(false); handleGoogleSignIn(); }}
+                      disabled={busy}
+                      className="btn btn-sm flex-1 gap-2 bg-gradient-to-r from-[#4285F4] to-[#1a73E8] text-white border-0 hover:brightness-110 shadow-md"
+                    >
+                      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <FcGoogle className="w-4 h-4" />}
+                      Ha, tasdiqlayman
+                    </button>
+                    <button
+                      onClick={() => setGoogleConfirm(false)}
+                      className="btn btn-sm btn-ghost"
+                    >
+                      Bekor qilish
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setGoogleConfirm(true)}
+                disabled={busy}
+                className="btn w-full gap-3 border-0 bg-gradient-to-r from-[#4285F4] to-[#1a73E8] text-white hover:brightness-110 shadow-lg shadow-[#4285F4]/25 transition-all mb-2 h-12 rounded-2xl font-bold"
+              >
                 <FcGoogle className="w-5 h-5" />
-              )}
-              Google bilan {mode === 'register' ? 'ro\'yxatdan o\'tish' : 'kirish'}
-            </button>
+                Google bilan {mode === 'register' ? 'ro\'yxatdan o\'tish' : 'kirish'}
+              </button>
+            )}
             <p className="text-center text-[10px] opacity-40 mb-4 -mt-1">
-              Haqiqiy Google hisobingiz bilan — demo emas
+              Himoyalangan kirish — Google tomonidan tasdiqlangan
             </p>
 
             <div className="flex items-center gap-3 mb-4 opacity-40 text-xs">
@@ -358,7 +384,15 @@ export default function GoogleAuthModal({ isOpen, onClose }) {
               </button>
             </form>
 
-            <div className="flex items-center justify-center gap-1.5 mt-4 text-[11px] opacity-50">
+            {/* "Keyinroq" tugmasi — osongina chiqish */}
+            <button
+              onClick={onClose}
+              className="w-full mt-4 py-2.5 text-sm font-medium text-base-content/50 hover:text-base-content/80 rounded-xl border border-dashed border-base-300 hover:border-primary/40 hover:bg-primary/5 transition-all duration-200"
+            >
+              ⏭️ Keyinroq, hozircha kirmasdan foydalanaman
+            </button>
+
+            <div className="flex items-center justify-center gap-1.5 mt-3 text-[11px] opacity-50">
               <Sparkles className="w-3 h-3 text-warning" />
                 Hisobingiz brauzerda saqlanadi — istalgan qurilmada davom eting
             </div>
