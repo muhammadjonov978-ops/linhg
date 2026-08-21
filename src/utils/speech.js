@@ -387,6 +387,37 @@ export function speak(text, langId, { rate = 0.85, pitch = 1, onEnd, onError } =
   return true;
 }
 
+/**
+ * Speak text using a phonetic/romanized fallback.
+ * Useful for scripts that TTS engines struggle with (Arabic, some Cyrillic, etc.).
+ * The `phonetic` text is spoken instead of `text` using English TTS as a neutral voice.
+ */
+export function speakPhonetic(text, langId, { phonetic, rate = 0.85, onEnd, onError } = {}) {
+  if (!text || typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    onError?.();
+    return false;
+  }
+  window.speechSynthesis.cancel();
+
+  // If a phonetic override is provided and the script is non-Latin,
+  // speak the phonetic version with English voice for clear pronunciation
+  if (phonetic) {
+    const utterance = new SpeechSynthesisUtterance(phonetic);
+    utterance.lang = 'en-US';
+    utterance.rate = rate;
+    utterance.pitch = 1;
+    const enVoice = findNativeVoice('english');
+    if (enVoice) utterance.voice = enVoice;
+    if (onEnd) utterance.onend = onEnd;
+    if (onError) utterance.onerror = onError;
+    window.speechSynthesis.speak(utterance);
+    return true;
+  }
+
+  // Fallback to normal speak
+  return speak(text, langId, { rate, onEnd, onError });
+}
+
 export function stopSpeaking() {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     window.speechSynthesis.cancel();

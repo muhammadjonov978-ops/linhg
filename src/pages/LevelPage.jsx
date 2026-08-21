@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { languages, getLessons } from '../data/languages';
-import { speak, stopSpeaking } from '../utils/speech';
+import { speak, speakPhonetic, stopSpeaking } from '../utils/speech';
 import {
   FaArrowLeft as ArrowLeft, FaCheckCircle as CheckCircle, FaTrophy as Trophy,
   FaLock as Lock, FaChevronLeft as ChevronLeft, FaChevronRight as ChevronRight,
@@ -62,16 +62,32 @@ export default function LevelPage({ onBack }) {
     setSpeakingIdx(null);
   };
 
+  // Get phonetic data for the current lesson's letters
+  const letterPhonetics = useMemo(() => {
+    if (!lesson?.content?.letters) return {};
+    const map = {};
+    lesson.content.letters.forEach((item) => {
+      if (item.phonetic) map[item.letter] = item.phonetic;
+    });
+    return map;
+  }, [lesson]);
+
   const speakLetter = (letter, idx, example) => {
     if (!letter) return;
     stopPlaybackRef.current = true; // cancel any running play-all sequence
     setSpeakingIdx(idx);
-    // Speak the letter itself, then the example word for full pronunciation
-    speak(letter, state.selectedLanguage, {
+    // Use phonetic hint if available for better pronunciation
+    const phonetic = letterPhonetics[letter];
+    speakPhonetic(letter, state.selectedLanguage, {
+      phonetic: phonetic || undefined,
       onEnd: () => {
         const cleaned = cleanExample(example);
         if (cleaned) {
-          speak(cleaned, state.selectedLanguage, {
+          // Extract phonetic from example if available (e.g. 'باب (bab)' → 'bab')
+          const exMatch = example.match(/\(([^)]+)\)/);
+          const exPhonetic = exMatch ? exMatch[1] : undefined;
+          speakPhonetic(cleaned, state.selectedLanguage, {
+            phonetic: exPhonetic || phonetic || undefined,
             onEnd: () => setSpeakingIdx(null),
             onError: () => setSpeakingIdx(null),
           });
@@ -101,10 +117,16 @@ export default function LevelPage({ onBack }) {
       const item = letters[idx];
       setSpeakingIdx(idx);
       const cleaned = cleanExample(item.example);
-      speak(item.letter, state.selectedLanguage, {
+      const phonetic = item.phonetic || letterPhonetics[item.letter];
+      // Extract phonetic from example if available (e.g. 'باب (bab)' → 'bab')
+      const exMatch = item.example.match(/\(([^)]+)\)/);
+      const exPhonetic = exMatch ? exMatch[1] : undefined;
+      speakPhonetic(item.letter, state.selectedLanguage, {
+        phonetic: phonetic || undefined,
         onEnd: () => {
           if (cleaned) {
-            speak(cleaned, state.selectedLanguage, {
+            speakPhonetic(cleaned, state.selectedLanguage, {
+              phonetic: exPhonetic || phonetic || undefined,
               onEnd: () => {
                 idx += 1;
                 playNext();
