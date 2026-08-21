@@ -12,6 +12,7 @@ import {
   FaGlobe as Globe,
 } from 'react-icons/fa';
 import StypingAdBanner from '../components/StypingAdBanner';
+import PaymentModal from '../components/PaymentModal';
 import Flag from '../components/Flag';
 
 const features = [
@@ -77,6 +78,7 @@ export default function HomePage() {
   const config = useSiteConfig();
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState('all');
+  const [paymentLang, setPaymentLang] = useState(null); // { id, name, price }
 
   // Admin sozlagan bo'lsa — sozlangan matn, aks holda tanlangan til tarjimasi
   const heroText = (key, fallback) => {
@@ -86,6 +88,12 @@ export default function HomePage() {
   };
 
   const handleLanguageSelect = (langId) => {
+    const lang = languages.find(l => l.id === langId);
+    // Pullik til va hali ochilmagan bo'lsa — to'lov modalini ko'rsatamiz
+    if (lang?.price && !state.unlockedLanguages?.[langId]) {
+      setPaymentLang({ id: langId, name: lang.name, price: lang.price });
+      return;
+    }
     dispatch({ type: 'SELECT_LANGUAGE', payload: langId });
   };
 
@@ -297,9 +305,19 @@ export default function HomePage() {
                     <div className="card-body p-5">
                       <div className="flex items-center justify-between mb-3">
                         <Flag lang={lang} size={52} className="drop-shadow-md" />
-                        <span className="badge badge-ghost badge-sm bg-white/[0.08] border-white/15 text-slate-200 font-semibold">
-                          {Math.round((completedCount / totalLessons) * 100)}%
-                        </span>
+                        {lang.price && !state.unlockedLanguages?.[lang.id] ? (
+                          <span className="badge badge-sm bg-amber-500/90 border-amber-400 text-white font-bold gap-1 px-2 py-1 shadow-lg shadow-amber-500/30">
+                            💰 {Math.round(lang.price / 1000)}K so'm
+                          </span>
+                        ) : lang.price && state.unlockedLanguages?.[lang.id] ? (
+                          <span className="badge badge-sm bg-success/80 border-success text-white font-bold gap-1 px-2 py-1">
+                            ✅ Ochildi
+                          </span>
+                        ) : (
+                          <span className="badge badge-ghost badge-sm bg-white/[0.08] border-white/15 text-slate-200 font-semibold">
+                            {Math.round((completedCount / totalLessons) * 100)}%
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-2 mb-1">
                         <h2 className="text-lg font-bold text-white">{lang.name}</h2>
@@ -323,9 +341,15 @@ export default function HomePage() {
                           <span>{t('home.lessons', { n: `${completedCount}/${totalLessons}` })}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-semibold text-violet-300">
-                            {t(completedCount === 0 ? 'home.startFromAlphabet' : 'home.continue')}
-                          </span>
+                          {lang.price && !state.unlockedLanguages?.[lang.id] ? (
+                            <span className="text-xs font-bold text-amber-300">
+                              💳 To'lash ›
+                            </span>
+                          ) : (
+                            <span className="text-xs font-semibold text-violet-300">
+                              {t(completedCount === 0 ? 'home.startFromAlphabet' : 'home.continue')}
+                            </span>
+                          )}
                           <ArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all text-violet-300" />
                         </div>
                       </div>
@@ -507,6 +531,17 @@ export default function HomePage() {
           </p>
         </div>
       </footer>
+
+      {/* To'lov modali — pullik tillar uchun */}
+      {paymentLang && (
+        <PaymentModal
+          isOpen={!!paymentLang}
+          onClose={() => setPaymentLang(null)}
+          langId={paymentLang.id}
+          langName={paymentLang.name}
+          price={paymentLang.price}
+        />
+      )}
     </div>
   );
 }

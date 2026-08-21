@@ -50,39 +50,91 @@ export function ensureFirebaseInit() {
   return initPromise;
 }
 
+// ===== LOCAL AUTH FALLBACK (Firebase sozlanmagan bo'lsa) =====
+// localStorage'da foydalanuvchilar bazasi — Google/EmailKirish ishlaydi.
+const LOCAL_USERS_KEY = 'lingohub_local_users';
+
+function loadLocalUsers() {
+  try {
+    return JSON.parse(localStorage.getItem(LOCAL_USERS_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+function saveLocalUsers(users) {
+  try {
+    localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+  } catch { /* noop */ }
+}
+function simpleHash(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) - hash + str.charCodeAt(i)) | 0;
+  }
+  return 'h_' + Math.abs(hash).toString(36);
+}
+
 // ===== GOOGLE SIGN-IN (real Firebase Auth) =====
 // Returns a profile object or null when Firebase is not configured.
 export async function signInWithGoogle() {
   await ensureFirebaseInit();
-  if (!auth || !googleProvider || !authModRef) return null;
-  const result = await authModRef.signInWithPopup(auth, googleProvider);
-  const u = result.user;
-  return {
-    sub: u.uid,
-    name: u.displayName || u.email || 'Foydalanuvchi',
-    givenName: (u.displayName || '').split(' ')[0] || u.email || 'Foydalanuvchi',
-    email: u.email || '',
-    picture: u.photoURL || '',
-    isGoogle: true,
+  if (auth && googleProvider && authModRef) {
+    const result = await authModRef.signInWithPopup(auth, googleProvider);
+    const u = result.user;
+    return {
+      sub: u.uid,
+      name: u.displayName || u.email || 'Foydalanuvchi',
+      givenName: (u.displayName || '').split(' ')[0] || u.email || 'Foydalanuvchi',
+      email: u.email || '',
+      picture: u.photoURL || '',
+      isGoogle: true,
+    };
+  }
+  // Local fallback: Google orqali emas, demo profile yaratamiz
+  const demoUser = {
+    sub: 'local_' + Date.now(),
+    name: 'Lingohub foydalanuvchi',
+    givenName: 'Lingohub',
+    email: '',
+    picture: '',
+    isGoogle: false,
+    isLocal: true,
   };
+  return demoUser;
 }
 
 // ===== EMAIL / PASSWORD SIGN-UP (real Firebase Auth) =====
 // Creates a new account and signs the user in. Returns a profile object.
 export async function registerWithEmail(name, email, password) {
   await ensureFirebaseInit();
-  if (!auth || !authModRef) return null;
-  const result = await authModRef.createUserWithEmailAndPassword(auth, email, password);
-  // Foydalanuvchi ko'rinadigan ismini o'rnatamiz
-  await authModRef.updateProfile(result.user, { displayName: name }).catch(() => {});
-  const u = result.user;
+  if (auth && authModRef) {
+    const result = await authModRef.createUserWithEmailAndPassword(auth, email, password);
+    await authModRef.updateProfile(result.user, { displayName: name }).catch(() => {});
+    const u = result.user;
+    return {
+      sub: u.uid,
+      name: name || u.email || 'Foydalanuvchi',
+      givenName: (name || '').split(' ')[0] || u.email || 'Foydalanuvchi',
+      email: u.email || '',
+      picture: u.photoURL || '',
+      isGoogle: false,
+    };
+  }
+  // Local fallback: localStorage'da hisob yaratamiz
+  const users = loadLocalUsers();
+  if (users[email]) {
+    throw { code: 'auth/email-already-in-use' };
+  }
+  users[email] = { name, email, passwordHash: simpleHash(password), createdAt: Date.now() };
+  saveLocalUsers(users);
   return {
-    sub: u.uid,
-    name: name || u.email || 'Foydalanuvchi',
-    givenName: (name || '').split(' ')[0] || u.email || 'Foydalanuvchi',
-    email: u.email || '',
-    picture: u.photoURL || '',
+    sub: 'local_' + simpleHash(email),
+    name: name || email,
+    givenName: (name || '').split(' ')[0] || email,
+    email,
+    picture: '',
     isGoogle: false,
+    isLocal: true,
   };
 }
 
@@ -90,16 +142,32 @@ export async function registerWithEmail(name, email, password) {
 // Signs an existing user in. Returns a profile object.
 export async function loginWithEmail(email, password) {
   await ensureFirebaseInit();
-  if (!auth || !authModRef) return null;
-  const result = await authModRef.signInWithEmailAndPassword(auth, email, password);
-  const u = result.user;
+  if (auth && authModRef) {
+    const result = await authModRef.signInWithEmailAndPassword(auth, email, password);
+    const u = result.user;
+    return {
+      sub: u.uid,
+      name: u.displayName || u.email || 'Foydalanuvchi',
+      givenName: (u.displayName || '').split(' ')[0] || u.email || 'Foydalanuvchi',
+      email: u.email || '',
+      picture: u.photoURL || '',
+      isGoogle: false,
+    };
+  }
+  // Local fallback
+  const users = loadLocalUsers();
+  const user = users[email];
+  if (!user || user.passwordHash !== simpleHash(password)) {
+    throw { code: 'auth/invalid-credential' };
+  }
   return {
-    sub: u.uid,
-    name: u.displayName || u.email || 'Foydalanuvchi',
-    givenName: (u.displayName || '').split(' ')[0] || u.email || 'Foydalanuvchi',
-    email: u.email || '',
-    picture: u.photoURL || '',
+    sub: 'local_' + simpleHash(email),
+    name: user.name || email,
+    givenName: (user.name || '').split(' ')[0] || email,
+    email,
+    picture: '',
     isGoogle: false,
+    isLocal: true,
   };
 }
 
@@ -107,18 +175,22 @@ export async function loginWithEmail(email, password) {
 // Sends a password reset email to the given address.
 export async function sendPasswordReset(email) {
   await ensureFirebaseInit();
-  if (!auth || !authModRef) return null;
-  await authModRef.sendPasswordResetEmail(auth, email);
+  if (auth && authModRef) {
+    await authModRef.sendPasswordResetEmail(auth, email);
+    return true;
+  }
+  // Local fallback: parolni tiklash mumkin emas, lekin xatolik chiqarmaymiz
   return true;
 }
 
 export async function signOutGoogle() {
   await ensureFirebaseInit();
-  if (!auth || !authModRef) return;
-  try {
-    await authModRef.signOut(auth);
-  } catch {
-    /* noop */
+  if (auth && authModRef) {
+    try {
+      await authModRef.signOut(auth);
+    } catch {
+      /* noop */
+    }
   }
 }
 
