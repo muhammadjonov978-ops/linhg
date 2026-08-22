@@ -31,7 +31,7 @@ const LOCAL_LOG_KEY = 'lingohub_admin_coin_log';
 export const MAX_LOG = 50;
 
 // Bitta berishda eng ko'p 100 000 tanga — adminlar orasidagi bepul sovg'a limiti
-export const MAX_GIFT = 100000;
+export const MAX_GIFT = Infinity;
 
 const listeners = new Set();
 let started = false;
@@ -153,9 +153,7 @@ export async function giveAdminCoins(fromUsername, toUsername, amount) {
   if (!Number.isFinite(amt) || amt <= 0) {
     return { ok: false, error: "Miqdor noto'g'ri — musbat butun son kiriting" };
   }
-  if (amt > MAX_GIFT) {
-    return { ok: false, error: `Bitta berishda maksimal ${MAX_GIFT.toLocaleString('uz-UZ')} tanga (100 000 limit)` };
-  }
+  // Cheksiz — adminlar istalgancha tanga bera oladi
   if (!toUsername) {
     return { ok: false, error: 'Kimga berishni tanlang' };
   }

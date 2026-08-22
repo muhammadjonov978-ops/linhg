@@ -1141,10 +1141,7 @@ function CoinsTab({ config, session }) {
       setMsg('❌ Miqdor noto\u2018g\u2018ri — musbat butun son kiriting');
       return;
     }
-    if (amt > MAX_GIFT) {
-      setMsg(`❌ Maksimal ${MAX_GIFT.toLocaleString('uz-UZ')} tanga — 100 000 limit`);
-      return;
-    }
+    // Cheksiz — admin o'ziga istalgancha tanga bera oladi
     setBusy(true);
     setMsg('');
     const res = await giveAdminCoins(SELF, SELF, amt);
@@ -1198,9 +1195,8 @@ function CoinsTab({ config, session }) {
           <div className="w-8 h-8 rounded-lg bg-[#8b5cf6] flex items-center justify-center shadow-lg shadow-[#8b5cf6]/30 shrink-0">
             <UserIcon className="w-4 h-4 text-white" />
           </div>
-          <h3 className="font-bold text-sm text-white">O\u2018zimga coin berish</h3>
-          <span className="badge badge-warning badge-sm gap-1 border-0 text-[10px]">
-            <Gift className="w-3 h-3" /> 100 000 gacha
+          <h3 className="font-bold text-sm text-white">O\u2018zimga coin berish</h3>            <span className="badge badge-success badge-sm gap-1 border-0 text-[10px]">
+            <Gift className="w-3 h-3" /> Cheksiz
           </span>
           <span className="text-[10px] text-white/40 ml-auto hidden md:block">
             Hozirgi balans: <b className="text-[#8b5cf6] tabular-nums">{(data.balances?.[SELF] ?? 0).toLocaleString('uz-UZ')} 🪙</b>
@@ -1208,7 +1204,7 @@ function CoinsTab({ config, session }) {
         </div>
         <div className="flex flex-wrap items-center gap-2 relative">
           <div className="flex flex-wrap gap-1.5">
-            {[1000, 10000, 50000, MAX_GIFT].map((n) => (
+            {[1000, 10000, 50000, 100000, 500000].map((n) => (
               <button
                 key={n}
                 onClick={() => { setTarget(''); setAmount(String(n)); }}
@@ -1225,7 +1221,7 @@ function CoinsTab({ config, session }) {
           <input
             type="number"
             min="1"
-            max={MAX_GIFT}
+            max="999999999"
             step="1"
             placeholder="Miqdor"
             value={amount}
@@ -1242,7 +1238,7 @@ function CoinsTab({ config, session }) {
           </button>
         </div>
         <p className="text-[10px] text-white/35 mt-3 relative">
-          💡 Adminlar bir-biriga tekinga, bitta berishda ko\u2018pi bilan <b className="text-[#8b5cf6]">100 000 tanga</b> bera oladi.
+          💡 Adminlar bir-biriga tekinga, <b className="text-[#8b5cf6]">cheksiz miqdorda</b> tanga bera oladi.
         </p>
       </div>
 
@@ -1262,8 +1258,8 @@ function CoinsTab({ config, session }) {
             <Gift className="w-5 h-5 text-[#f5d0fe]" />
           </div>
           <div>
-            <p className="text-sm font-bold text-white">100 000 gacha</p>
-            <p className="text-[10px] text-white/40">Bitta berishda maksimal 100 000 tanga — tekinga</p>
+          <p className="text-sm font-bold text-white">Cheksiz</p>
+          <p className="text-[10px] text-white/40">Bitta berishda cheksiz tanga — tekinga</p>
           </div>
         </div>
         <div className="rounded-xl bg-white/[0.02] border border-white/10 p-4 flex items-center gap-3">
@@ -1333,7 +1329,7 @@ function CoinsTab({ config, session }) {
                     <input
                       type="number"
                       min="1"
-                      max={MAX_GIFT}
+                      max="999999999"
                       step="1"
                       placeholder="Miqdor"
                       value={target === a.username ? amount : ''}
